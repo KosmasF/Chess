@@ -14,10 +14,15 @@ public:
 
 	int CollectedPiece = -1;
 
+	void* WhiteEnPassant;
+	void* BlackEnPassant;
+
 	Board(int size);
 
-	void CheckInput(void** Ipieces , void* WhiteDefaultPromotionPiece,void* BlackDefaultPromotionPiece);
+	~Board();
+
+	void CheckInput(void** Ipieces , void* WhiteDefaultPromotionPiece,void* BlackDefaultPromotionPiece, bool* allowCastling);
 	void Draw();
-	char* MovementNotation(void** Ipieces , int Destination , int Location);
+	char* MovementNotation(void** Ipieces , int Destination , int Location,bool* allowCastling);
 	Vector2 Get2DCords(Vector2 pos);
 };

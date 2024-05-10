@@ -30,17 +30,17 @@ Position Piece::Get2DCords(int idx, int numSquares)
 	return { x, y};
 }
 
-bool Piece::IsLegal(Piece** pieces, int Original , int ToCheck, Board* board , bool oppositePieceIgnorance , bool ignoreColor)
+bool Piece::IsLegal(Piece** pieces, int Original , int ToCheck, Board* board, bool* allowCastling, bool oppositePieceIgnorance , bool ignoreColor)
 {
 	return false;
 }
 
-void Piece::DrawLegal(Piece** pieces, int idx , Board* board)
+void Piece::DrawLegal(Piece** pieces, int idx , Board* board, bool* allowCastling)
 {
 	DrawColor = { 255,0,0,100 };
 	for (int i = 0; i < board->totalNumSquares; i++)
 	{
-		if (IsLegal(pieces,idx, i , board))
+		if (IsLegal(pieces,idx, i , board, allowCastling))
 		{
 			Piece::Draw(i, board, nullptr);
 		}

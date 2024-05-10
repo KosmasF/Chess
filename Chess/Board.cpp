@@ -6,13 +6,19 @@ Board::Board(int size)
 {
 	width = size;
 	height = size;
-	if (width == height)
-	{
-		SquareSize = width / numSquares;
-	}
+	SquareSize = width / numSquares;
+
+	WhiteEnPassant = new EnPassantPawn(WHITE);
+	BlackEnPassant = new EnPassantPawn(BLACK);
 }
 
-void Board::CheckInput(void** Ipieces , void* WhiteDefaultPromotionPiece, void* BlackDefaultPromotionPiece)
+Board::~Board()
+{
+	delete WhiteEnPassant;
+	delete BlackEnPassant;
+}
+
+void Board::CheckInput(void** Ipieces , void* WhiteDefaultPromotionPiece, void* BlackDefaultPromotionPiece, bool* allowCastling)
 {
 	Piece** pieces = (Piece**)Ipieces;
 
@@ -28,35 +34,129 @@ void Board::CheckInput(void** Ipieces , void* WhiteDefaultPromotionPiece, void* 
 
 			if (CollectedPiece != -1)
 			{
-				if (pieces[CollectedPiece]->IsLegal(pieces, CollectedPiece, idx, this))
+				if (pieces[CollectedPiece]->IsLegal(pieces, CollectedPiece, idx, this , allowCastling))
 				{
 					std::cout << "MOVEMENT LOG: ";
-					printf(MovementNotation((void**)pieces, idx, CollectedPiece));
+					const char* notation = MovementNotation((void**)pieces, idx, CollectedPiece, allowCastling);
+					if(!(pieces[CollectedPiece]->GetName() == "K" && abs(idx-CollectedPiece) == 2))
+						std::cout<<(notation);
 
-					pieces[idx] = pieces[CollectedPiece];
-					pieces[CollectedPiece] = nullptr;
-					CollectedPiece = -1;
+					if (pieces[idx] == WhiteEnPassant && pieces[CollectedPiece]->GetName() == "")
+					{
+						pieces[idx - 8] = nullptr;
+					}
+					if (pieces[idx] == BlackEnPassant && pieces[CollectedPiece]->GetName() == "")
+					{
+						pieces[idx + 8] = nullptr;
+					}
 
 					for (int i = 0; i < totalNumSquares; i++)
 					{
-						if (pieces[i] != nullptr)
-							if (typeid(*pieces[i]).name() == typeid(King).name())
+						if (pieces[i] == WhiteEnPassant && pieces[CollectedPiece]->IsWhite())
+							pieces[i] = nullptr;
+						if (pieces[i] == BlackEnPassant && !pieces[CollectedPiece]->IsWhite())
+							pieces[i] = nullptr;
+					}
+
+					pieces[idx] = pieces[CollectedPiece];
+					pieces[CollectedPiece] = nullptr;
+
+					//Castling
+					if (pieces[idx]->GetName() == "K")
+					{
+						if (idx - CollectedPiece == 2)
+						{
+							if (pieces[idx]->IsWhite())
 							{
-								if (((King*)(pieces[i]))->IsAttacked(pieces, i, this))
+								pieces[61] = pieces[63];
+								pieces[63] = nullptr;
+							}
+							else
+							{
+								pieces[5] = pieces[7];
+								pieces[7] = nullptr;
+							}
+							std::cout << "O-O";
+
+						}
+						if (idx - CollectedPiece == -2)
+						{
+							if (pieces[idx]->IsWhite())
+							{
+								pieces[59] = pieces[56];
+								pieces[56] = nullptr;
+							}
+							else
+							{
+								pieces[3] = pieces[0];
+								pieces[0] = nullptr;
+
+							}
+							std::cout << "O-O-O";
+						}
+					}
+
+					//Is king attacked!
+					for (int i = 0; i < totalNumSquares; i++)
+					{
+						if (pieces[i] != nullptr)
+							if (pieces[i]->GetName() == "K")
+							{
+								if (((King*)(pieces[i]))->IsAttacked(pieces, i, this, allowCastling))
 									std::cout << "+";
 							}
 					}
 
 					std::cout << std::endl;
 
-					if (typeid(*pieces[idx]).name() == typeid(Pawn).name())
+					if (pieces[idx]->GetName() == "")
+					{
 						if (pieces[idx]->IsWhite() && (int)(idx / 8) == 0)
 							pieces[idx] = (Piece*)WhiteDefaultPromotionPiece;
 						if (!pieces[idx]->IsWhite() && (int)(idx / 8) == 7)
 							pieces[idx] = (Piece*)BlackDefaultPromotionPiece;
+						if (abs(CollectedPiece - idx) == 16)
+						{
+							if (pieces[idx]->IsWhite())
+								pieces[idx + 8] = (Piece*)WhiteEnPassant;
+							else
+								pieces[idx - 8] = (Piece*)BlackEnPassant;
+						}
+					}
 
 					std::cout << "Piece: " << CollectedPiece << " moved to: " << idx << std::endl;
 
+
+					//Check for allowCastling!
+					if (pieces[idx]->GetName() == "K")
+					{
+						if (pieces[idx]->IsWhite())
+						{
+							allowCastling[0] = false;
+							allowCastling[1] = false;
+						}
+						if (!(pieces[idx]->IsWhite()))
+						{
+							allowCastling[2] = false;
+							allowCastling[3] = false;
+						}
+					}
+					if (pieces[idx]->GetName() == "R")
+					{
+						if (CollectedPiece == 56)
+							allowCastling[0] = false;
+						if (CollectedPiece == 63)
+							allowCastling[1] = false;
+						if (CollectedPiece == 0)
+							allowCastling[4] = false;
+						if (CollectedPiece == 7)
+							allowCastling[3] = false;
+					}
+					std::cout << "Allow castling :  ";
+					for (int i = 0; i < 4; i++)
+						std::cout << allowCastling[i] << ", ";
+					std::cout << std::endl;
+					CollectedPiece = -1;
 					return;
 				}
 			}
@@ -101,11 +201,15 @@ void Board::Draw()
 	}
 }
 
-char* Board::MovementNotation(void** Ipieces, int Destination, int Location)
+char* Board::MovementNotation(void** Ipieces, int Destination, int Location , bool* allowCastling)
 {
 	Piece** pieces = (Piece**)Ipieces;
-	char notation[6];//Max length + null termination
+	char notation[9];//Max length + null termination
 	int buffer = 0;
+
+#ifdef _DEBUG
+	buffer++;
+#endif
 
 	const char* name = pieces[Location]->GetName();
 	int nameBuffer = strlen(name);
@@ -118,7 +222,25 @@ char* Board::MovementNotation(void** Ipieces, int Destination, int Location)
 
 	Piece piece;
 
-	if (pieces[Destination] != nullptr)
+	for (int i = 0; i < totalNumSquares; i++)
+	{
+		if (pieces[i] != nullptr && i != Location)
+			if (pieces[i]->GetName() == pieces[Location]->GetName())
+			{
+				if (pieces[i]->IsLegal(pieces, i, Destination, this, allowCastling))
+				{
+					Position pos = piece.Get2DCords(Location, numSquares);
+
+					notation[buffer] = (char)(pos.x + 97);
+					buffer++;
+					notation[buffer] = (char)(pos.y + 49);
+					buffer++;
+				}
+			}
+
+	}
+
+	if (pieces[Destination] != nullptr && (!(pieces[Destination]->GetName() == "Invalid!")  || pieces[Location]->GetName() == ""))
 	{
 		if (typeid(*pieces[Location]).name() == typeid(Pawn).name())
 		{

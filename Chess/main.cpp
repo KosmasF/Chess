@@ -43,6 +43,10 @@ int main() {
     Piece* WhiteDefaultPromotionPiece = WhiteQueen;
     Piece* BlackDefaultPromotionPiece = BlackQueen;
 
+    bool allowCastling[4] = {
+        true, true,
+        true, true
+    };
     Piece* pieces[board->totalNumSquares];
     for (int i = 0; i < board->totalNumSquares; i++)
     {
@@ -66,7 +70,7 @@ int main() {
     pieces[14] = BlackPawn;
     pieces[15] = BlackPawn;
 
-
+    pieces[30];
 
     pieces[48] = WhitePawn;
     pieces[49] = WhitePawn;
@@ -91,7 +95,7 @@ int main() {
         BeginDrawing();
 
         ClearBackground(RAYWHITE);
-        board->CheckInput((void**)pieces,(void*)WhiteDefaultPromotionPiece,(void*)BlackDefaultPromotionPiece);
+        board->CheckInput((void**)pieces,(void*)WhiteDefaultPromotionPiece,(void*)BlackDefaultPromotionPiece,allowCastling);
 
         board->Draw();
         for (int i = 0; i < board->totalNumSquares; i++)
@@ -103,11 +107,12 @@ int main() {
         }
 
         if (board->CollectedPiece != -1 && pieces[board->CollectedPiece] != nullptr)
-            pieces[board->CollectedPiece]->DrawLegal(pieces, board->CollectedPiece, board);
+            pieces[board->CollectedPiece]->DrawLegal(pieces, board->CollectedPiece, board,allowCastling);
 
 
         EndDrawing();
     }
+
 
     delete board;
     delete sprites;

@@ -1,7 +1,7 @@
 ﻿  Board.cpp
-C:\Users\Others\source\repos\Chess\Chess\Board.cpp(26,12): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\Others\source\repos\Chess\Chess\Board.cpp(111,17): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\Others\source\repos\Chess\Chess\Board.cpp(150,8): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\Others\source\repos\Chess\Chess\Board.cpp(151,8): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\Others\source\repos\Chess\Chess\Board.cpp(145,1): warning C4172: returning address of local variable or temporary: notation
+C:\Users\Others\source\repos\Chess\Chess\Board.cpp(32,12): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\Others\source\repos\Chess\Chess\Board.cpp(215,17): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Others\source\repos\Chess\Chess\Board.cpp(272,8): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\Others\source\repos\Chess\Chess\Board.cpp(273,8): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\Others\source\repos\Chess\Chess\Board.cpp(267,1): warning C4172: returning address of local variable or temporary: notation
   Chess.vcxproj -> C:\Users\Others\source\repos\Chess\x64\Debug\Chess.exe

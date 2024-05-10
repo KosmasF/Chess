@@ -23,9 +23,9 @@ public:
 
 	Position Get2DCords(int idx, int numSquares);
 
-	virtual bool IsLegal(Piece** pieces, int Original, int ToCheck, Board* board , bool oppositePieceIgnorance = true, bool ignoreColor = false);
+	virtual bool IsLegal(Piece** pieces, int Original, int ToCheck, Board* board , bool* allowCastling, bool oppositePieceIgnorance = true, bool ignoreColor = false);
 
-	void DrawLegal(Piece** pieces, int idx , Board* board);
+	void DrawLegal(Piece** pieces, int idx , Board* board , bool* allowCastling);
 
 	virtual bool IsWhite();
 };
