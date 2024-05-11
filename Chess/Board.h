@@ -6,6 +6,7 @@ class Board
 {
 public:
 	int width, height;
+	int offsetX, offsetY;
 	static const int numSquares = 8;
 	static const int totalNumSquares = numSquares * numSquares;
 	const Color lightColor = {240, 217, 181,255 };
@@ -17,7 +18,9 @@ public:
 	void* WhiteEnPassant;
 	void* BlackEnPassant;
 
-	Board(int size);
+	bool Inversed;
+
+	Board(int size , int xOFFSET, int yOFFSET , bool inversed);
 
 	~Board();
 

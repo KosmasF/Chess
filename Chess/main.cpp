@@ -4,14 +4,16 @@
 #include "Piece.h"
 #include "PieceTypes.h"
 #include "Sprites.h"
+#include "InversedPieces.h"
 
 #define print(x) std::cout<<x<<std::endl;
 
 
 int main() {
 
-    const int screenWidth = 1920 / 2;
     const int screenHeight = 536;
+    const int LogSize = 200;
+    const int screenWidth = screenHeight*2 + LogSize;
 
     const char* spritesheetPath = "spritesheet.png";
 
@@ -19,12 +21,17 @@ int main() {
     InitWindow(screenWidth, screenHeight, "Chess");
     SetTargetFPS(60);
 
-    Board* board = new Board(screenHeight);   
+    Board* board = new Board(screenHeight, 0 ,0,false);
+    Board* BLACK_board = new Board(screenHeight, screenHeight + LogSize, 0,true);
+    Board* boards[] = {board ,BLACK_board};
+
+
     if (screenHeight % 8 != 0)
     {
         throw "Screen height is not divisible by 8";
     }
-    Sprites* sprites = new Sprites(spritesheetPath,board);
+
+    Sprites* sprites = new Sprites(spritesheetPath, board);
 
     Pawn* WhitePawn = new Pawn(WHITE);
     Pawn* BlackPawn = new Pawn(BLACK);
@@ -48,6 +55,8 @@ int main() {
         true, true
     };
     Piece* pieces[board->totalNumSquares];
+    //InversedPieces inversedPieces(pieces,64);
+
     for (int i = 0; i < board->totalNumSquares; i++)
     {
         pieces[i] = nullptr;
@@ -70,8 +79,6 @@ int main() {
     pieces[14] = BlackPawn;
     pieces[15] = BlackPawn;
 
-    pieces[30];
-
     pieces[48] = WhitePawn;
     pieces[49] = WhitePawn;
     pieces[50] = WhitePawn;
@@ -89,32 +96,72 @@ int main() {
     pieces[62] = WhiteKnight;
     pieces[63] = WhiteRook;
 
-    while (!WindowShouldClose()) 
+    while (!WindowShouldClose())
     {
 
         BeginDrawing();
 
-        ClearBackground(RAYWHITE);
-        board->CheckInput((void**)pieces,(void*)WhiteDefaultPromotionPiece,(void*)BlackDefaultPromotionPiece,allowCastling);
 
-        board->Draw();
-        for (int i = 0; i < board->totalNumSquares; i++)
+        ClearBackground(RAYWHITE);
+
+
+        for (Board* board : boards)
         {
-            if (pieces[i] != nullptr)
+            board->Draw();
+            
+            if (!board->Inversed)
             {
-                pieces[i]->Draw(i, board , sprites);
+                board->CheckInput((void**)pieces, (void*)WhiteDefaultPromotionPiece, (void*)BlackDefaultPromotionPiece, allowCastling);
+
+                for (int i = 0; i < board->totalNumSquares; i++)
+                {
+                    if (pieces[i] != nullptr)
+                    {
+                        pieces[i]->Draw(i, board, sprites);
+                    }
+                }
+
+
+                if (board->CollectedPiece != -1 && pieces[board->CollectedPiece] != nullptr)
+                    pieces[board->CollectedPiece]->DrawLegal(pieces, board->CollectedPiece, board, allowCastling);
+            }
+            else
+            {
+                Piece* reversedArr[64];
+                for (int i = 0; i < 64; i++) {
+                    reversedArr[i] = pieces[64 - i - 1];
+                }
+
+                //board->CheckInput((void**)reversedArr, (void*)WhiteDefaultPromotionPiece, (void*)BlackDefaultPromotionPiece, allowCastling);
+
+                for (int i = 0; i < board->totalNumSquares; i++)
+                {
+                    if (reversedArr[i] != nullptr)
+                    {
+                        reversedArr[i]->Draw(i, board, sprites);
+                    }
+                }
+
+                if (board->CollectedPiece != -1 && pieces[board->CollectedPiece] != nullptr)
+                    pieces[board->CollectedPiece]->DrawLegal(pieces, board->CollectedPiece, board, allowCastling);
             }
         }
 
-        if (board->CollectedPiece != -1 && pieces[board->CollectedPiece] != nullptr)
-            pieces[board->CollectedPiece]->DrawLegal(pieces, board->CollectedPiece, board,allowCastling);
 
+        const char* text = "MOVEMENT LOG";
+        int fontSize = 20;
+        DrawText(text, 
 
+            screenHeight+LogSize/2-MeasureText(text, fontSize)/2,
+
+            0, fontSize, BLACK);
+        //DrawFPS(0, 0);
         EndDrawing();
     }
 
 
     delete board;
+    delete BLACK_board;
     delete sprites;
     delete WhitePawn;
     delete BlackPawn;

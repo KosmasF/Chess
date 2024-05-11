@@ -1,11 +1,6 @@
-﻿  Board.cpp
-C:\Users\Others\source\repos\Chess\Chess\Board.cpp(32,12): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\Others\source\repos\Chess\Chess\Board.cpp(144,17): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\Others\source\repos\Chess\Chess\Board.cpp(201,8): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\Others\source\repos\Chess\Chess\Board.cpp(202,8): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+﻿  main.cpp
   Generating code
-C:\Users\Others\source\repos\Chess\Chess\Board.cpp(196): warning C4172: returning address of local variable or temporary: notation
-  3 of 73 functions ( 4.1%) were compiled, the rest were copied from previous compilation.
+  1 of 73 functions ( 1.4%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
     0 functions had inline decision re-evaluated but remain unchanged
   Finished generating code

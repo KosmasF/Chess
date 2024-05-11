@@ -3,7 +3,7 @@
 
 void Pawn::Draw(int idx, Board* board, Sprites* sprites)
 {
-	Position pos = Get2DCordsDrawable(idx, board->numSquares , board->SquareSize);
+	Position pos = Get2DCordsDrawable(idx, board);
 
 	if (IsWhite())
 		DrawTexture(sprites->WhitePawn, pos.x, pos.y, WHITE);
@@ -93,7 +93,7 @@ Bishop::Bishop(Color inputColor)
 
 void Bishop::Draw(int idx, Board* board, Sprites* sprites)
 {
-	Position pos = Get2DCordsDrawable(idx, board->numSquares, board->SquareSize);
+	Position pos = Get2DCordsDrawable(idx, board);
 
 	if (IsWhite())
 		DrawTexture(sprites->WhiteBishop, pos.x, pos.y, WHITE);
@@ -152,7 +152,7 @@ Knight::Knight(Color inputColor)
 
 void Knight::Draw(int idx, Board* board, Sprites* sprites)
 {
-	Position pos = Get2DCordsDrawable(idx, board->numSquares, board->SquareSize);
+	Position pos = Get2DCordsDrawable(idx, board);
 
 	if (IsWhite())
 		DrawTexture(sprites->WhiteKnight, pos.x, pos.y, WHITE);
@@ -215,7 +215,7 @@ Rook::Rook(Color inputColor)
 
 void Rook::Draw(int idx, Board* board, Sprites* sprites)
 {
-	Position pos = Get2DCordsDrawable(idx, board->numSquares, board->SquareSize);
+	Position pos = Get2DCordsDrawable(idx, board);
 
 	if (IsWhite())
 		DrawTexture(sprites->WhiteRook, pos.x, pos.y, WHITE);
@@ -287,7 +287,7 @@ Queen::~Queen()
 
 void Queen::Draw(int idx, Board* board, Sprites* sprites)
 {
-	Position pos = Get2DCordsDrawable(idx, board->numSquares, board->SquareSize);
+	Position pos = Get2DCordsDrawable(idx, board);
 
 	if (IsWhite())
 		DrawTexture(sprites->WhiteQueen, pos.x, pos.y, WHITE);
@@ -316,7 +316,7 @@ King::King(Color inputColor)
 
 void King::Draw(int idx, Board* board, Sprites* sprites)
 {
-	Position pos = Get2DCordsDrawable(idx, board->numSquares, board->SquareSize);
+	Position pos = Get2DCordsDrawable(idx, board);
 
 	if (IsWhite())
 		DrawTexture(sprites->WhiteKing, pos.x, pos.y, WHITE);

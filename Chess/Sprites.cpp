@@ -7,7 +7,7 @@ Texture2D Sprites::GetAndResize(Image loadedImage ,Rectangle crop , Board* board
 	return LoadTextureFromImage(loadedImage);
 }
 
-Sprites::Sprites(const char* spritesheetPath, Board* board)
+Sprites::Sprites(const char* spritesheetPath, Board* board)// Default board is okay
 {
 	Image image = LoadImage(spritesheetPath);
 	float width = image.width / 6;//Num of horizontal pieces

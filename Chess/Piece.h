@@ -19,7 +19,7 @@ public:
 
 	virtual void Draw(int idx, Board* board, Sprites* sprites);
 
-	Position Get2DCordsDrawable(int idx, int numSquares, int SquareSize);
+	Position Get2DCordsDrawable(int idx, Board* board);
 
 	Position Get2DCords(int idx, int numSquares);
 

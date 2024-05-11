@@ -8,17 +8,17 @@ const char* Piece::GetName()
 
 void Piece::Draw(int idx, Board* board, Sprites* sprites)
 {
-	Position pos = Get2DCordsDrawable(idx, board->numSquares , board->SquareSize);
+	Position pos = Get2DCordsDrawable(idx, board);
 	DrawRectangle(pos.x, pos.y, board->SquareSize, board->SquareSize, DrawColor);
 }
 
-Position Piece::Get2DCordsDrawable(int idx , int numSquares , int SquareSize)
+Position Piece::Get2DCordsDrawable(int idx , Board* board)
 {
 	int x, y;
-	x = idx % numSquares;
-	y = idx / numSquares;
+	x = idx % board->numSquares;
+	y = idx / board->numSquares;
 
-	return {x* SquareSize, y* SquareSize };
+	return {x* board->SquareSize + board->offsetX, y* board->SquareSize + board->offsetY};
 }
 
 Position Piece::Get2DCords(int idx, int numSquares)

@@ -1,12 +1,17 @@
 #include "Board.h"
 #include "Piece.h"
 #include "PieceTypes.h"
+#include "InversedPieces.h"
 
-Board::Board(int size)
+Board::Board(int size, int xOFFSET, int yOFFSET, bool inversed)
 {
 	width = size;
 	height = size;
+	offsetX = xOFFSET;
+	offsetY = yOFFSET;
 	SquareSize = width / numSquares;
+
+	Inversed = inversed;
 
 	WhiteEnPassant = new EnPassantPawn(WHITE);
 	BlackEnPassant = new EnPassantPawn(BLACK);
@@ -26,7 +31,7 @@ void Board::CheckInput(void** Ipieces , void* WhiteDefaultPromotionPiece, void* 
 	{
 		Vector2 pos = GetMousePosition();
 
-		if (pos.x < width && pos.y < height)
+		if (pos.x - offsetX < width && pos.x > offsetX && pos.y - offsetY < height && pos.y > offsetY)
 		{
 			Vector2 cords = Get2DCords(pos);
 			int idx = cords.x + (cords.y * numSquares);
@@ -52,10 +57,13 @@ void Board::CheckInput(void** Ipieces , void* WhiteDefaultPromotionPiece, void* 
 
 					for (int i = 0; i < totalNumSquares; i++)
 					{
-						if (pieces[i] == WhiteEnPassant && pieces[CollectedPiece]->IsWhite())
-							pieces[i] = nullptr;
-						if (pieces[i] == BlackEnPassant && !pieces[CollectedPiece]->IsWhite())
-							pieces[i] = nullptr;
+						if (pieces[i] != nullptr)
+						{
+							if (pieces[i]->GetName() == "Invalid!" && pieces[CollectedPiece]->IsWhite() && pieces[i]->IsWhite())
+								pieces[i] = nullptr;
+							else if (pieces[i]->GetName() == "Invalid!" && !pieces[CollectedPiece]->IsWhite() && !pieces[i]->IsWhite())
+								pieces[i] = nullptr;
+						}
 					}
 
 					pieces[idx] = pieces[CollectedPiece];
@@ -191,11 +199,11 @@ void Board::Draw()
 		{
 			if (!((y + x) % 2))
 			{
-				DrawRectangle(x * SquareSize, y * SquareSize, SquareSize, SquareSize, lightColor);
+				DrawRectangle(x * SquareSize + offsetX, y * SquareSize + offsetY, SquareSize, SquareSize, lightColor);
 			}
 			else
 			{
-				DrawRectangle(x * SquareSize, y * SquareSize, SquareSize, SquareSize, darkColor);
+				DrawRectangle(x * SquareSize + offsetX, y * SquareSize + offsetY, SquareSize, SquareSize, darkColor);
 			}
 		}
 	}
@@ -269,8 +277,8 @@ char* Board::MovementNotation(void** Ipieces, int Destination, int Location , bo
 
 Vector2 Board::Get2DCords(Vector2 pos)
 {
-	int x = pos.x / SquareSize;
-	int y = pos.y / SquareSize;
+	int x = (pos.x - offsetX)/ SquareSize;
+	int y = (pos.y - offsetY)/ SquareSize;
 
 	return { (float)x,(float)y };
 }
