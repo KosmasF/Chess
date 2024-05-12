@@ -35,22 +35,31 @@ bool Piece::IsLegal(Piece** pieces, int Original , int ToCheck, Board* board, bo
 	return false;
 }
 
-void Piece::DrawLegal(Piece** pieces, int idx , Board* board, bool* allowCastling)
+void Piece::DrawLegal(Piece** pieces, int idx , Board* board, bool* allowCastling , bool inversed)
 {
 	DrawColor = { 255,0,0,100 };
 	for (int i = 0; i < board->totalNumSquares; i++)
 	{
 		if (IsLegal(pieces,idx, i , board, allowCastling))
 		{
-			Piece::Draw(i, board, nullptr);
+			Piece::Draw(inversed ? InverseIndex(i) : i, board, nullptr);
 		}
 	}
 	DrawColor = { 0,255,0,100 };
-	Piece::Draw(idx, board, nullptr);
+	Piece::Draw(inversed ? InverseIndex(idx) : idx, board, nullptr);
 	DrawColor = RED;
 }
 
 bool Piece::IsWhite()
 {
 	return false;
+}
+
+int Piece::InverseIndex(int idx)
+{
+	Position cords = Get2DCords(idx , 8);
+
+	cords.y = 7 - cords.y;
+
+	return cords.y * 8 + cords.x;
 }

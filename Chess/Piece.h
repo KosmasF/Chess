@@ -25,8 +25,10 @@ public:
 
 	virtual bool IsLegal(Piece** pieces, int Original, int ToCheck, Board* board , bool* allowCastling, bool oppositePieceIgnorance = true, bool ignoreColor = false);
 
-	void DrawLegal(Piece** pieces, int idx , Board* board , bool* allowCastling);
+	void DrawLegal(Piece** pieces, int idx, Board* board, bool* allowCastling, bool inversed = false);
 
 	virtual bool IsWhite();
+
+	int InverseIndex(int idx);
 };
 

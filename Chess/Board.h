@@ -1,6 +1,7 @@
 #pragma once
 #include "raylib.h"
 #include <iostream>
+#include "InversedPieces.h"
 
 class Board
 {
@@ -24,8 +25,8 @@ public:
 
 	~Board();
 
-	void CheckInput(void** Ipieces , void* WhiteDefaultPromotionPiece,void* BlackDefaultPromotionPiece, bool* allowCastling);
+	void CheckInput(PiecesArray pieces , void* WhiteDefaultPromotionPiece,void* BlackDefaultPromotionPiece, bool* allowCastling);
 	void Draw();
-	char* MovementNotation(void** Ipieces , int Destination , int Location,bool* allowCastling);
+	char* MovementNotation(PiecesArray pieces , int Destination , int Location,bool* allowCastling);
 	Vector2 Get2DCords(Vector2 pos);
 };

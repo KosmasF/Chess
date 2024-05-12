@@ -1,32 +1,38 @@
 #include "InversedPieces.h"
+#include "Piece.h"
 
-InversedPieces::InversedPieces(Piece** InputPieces, int size)
+PiecesArray::PiecesArray(Piece** InputPieces, int size)
 {
 	pieces = InputPieces;
 	Size = size;
 }
 
-InversedPieces::operator Piece**& ()
+PiecesArray::operator Piece**& ()
 {
 	return pieces;
 }
 
-InversedPieces::operator void**& ()
+PiecesArray::operator void**& ()
 {
 	return ((void**&)pieces);
 }
 
-Piece*& InversedPieces::operator[](unsigned int index)
+Piece*& PiecesArray::operator[](unsigned int index)
 {
-	return pieces[index];
+	bool inversed = false;
+	if (inversed)
+		return pieces[index];
+	else
+		return pieces[index];
 }
 
-InversedPiecesIterator InversedPieces::begin()
+/*
+InversedPiecesIterator PiecesArray::begin()
 {
 	return InversedPiecesIterator(pieces);
 }
 
-InversedPiecesIterator InversedPieces::end()
+InversedPiecesIterator PiecesArray::end()
 {
 	return InversedPiecesIterator(pieces+Size);
 }
@@ -86,3 +92,4 @@ bool InversedPiecesIterator::operator!=(const InversedPiecesIterator& other)
 {
 	return !(*this == other);
 }
+*/

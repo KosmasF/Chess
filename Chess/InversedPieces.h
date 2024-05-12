@@ -1,7 +1,8 @@
 #pragma once
-#include "Piece.h"
 
+class Piece;
 
+/*
 class InversedPiecesIterator
 {
 	using ValueType = typename Piece*;
@@ -28,19 +29,19 @@ public:
 private:
 	ValueType* pointer;
 };
-
-class InversedPieces
+*/
+class PiecesArray
 {
-	public:
-	using ValueType = typename Piece*;
-	using Iterator = InversedPiecesIterator;
+	//public:
+	//using ValueType = typename Piece*;
+	//using Iterator = InversedPiecesIterator;
 private:
 	Piece** pieces;
 	int Size;
 
 public:
 
-	InversedPieces(Piece** InputPieces , int size);
+	PiecesArray(Piece** InputPieces , int size);
 
 	operator Piece**& ();
 
@@ -48,8 +49,8 @@ public:
 
 	Piece*& operator[](unsigned int index);
 
-	InversedPiecesIterator begin();
-	InversedPiecesIterator end();
+	//InversedPiecesIterator begin();
+	//InversedPiecesIterator end();
 };
 
 

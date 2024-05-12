@@ -3,8 +3,9 @@
 #include <iostream>
 #include "Piece.h"
 #include "PieceTypes.h"
-#include "Sprites.h"
 #include "InversedPieces.h"
+#include "Sprites.h"
+
 
 #define print(x) std::cout<<x<<std::endl;
 
@@ -55,7 +56,7 @@ int main() {
         true, true
     };
     Piece* pieces[board->totalNumSquares];
-    //InversedPieces inversedPieces(pieces,64);
+    PiecesArray Pieces(pieces,64);
 
     for (int i = 0; i < board->totalNumSquares; i++)
     {
@@ -108,42 +109,42 @@ int main() {
         for (Board* board : boards)
         {
             board->Draw();
+            board->CheckInput(Pieces, (void*)WhiteDefaultPromotionPiece, (void*)BlackDefaultPromotionPiece, allowCastling);
             
             if (!board->Inversed)
             {
-                board->CheckInput((void**)pieces, (void*)WhiteDefaultPromotionPiece, (void*)BlackDefaultPromotionPiece, allowCastling);
 
                 for (int i = 0; i < board->totalNumSquares; i++)
                 {
-                    if (pieces[i] != nullptr)
+                    if (Pieces[i] != nullptr)
                     {
-                        pieces[i]->Draw(i, board, sprites);
+                        Pieces[i]->Draw(i, board, sprites);
                     }
                 }
 
+                if (board->CollectedPiece != -1 && Pieces[board->CollectedPiece] != nullptr)
+                    Pieces[board->CollectedPiece]->DrawLegal(Pieces, board->CollectedPiece, board, allowCastling);
 
-                if (board->CollectedPiece != -1 && pieces[board->CollectedPiece] != nullptr)
-                    pieces[board->CollectedPiece]->DrawLegal(pieces, board->CollectedPiece, board, allowCastling);
             }
             else
             {
-                Piece* reversedArr[64];
-                for (int i = 0; i < 64; i++) {
-                    reversedArr[i] = pieces[64 - i - 1];
-                }
-
-                //board->CheckInput((void**)reversedArr, (void*)WhiteDefaultPromotionPiece, (void*)BlackDefaultPromotionPiece, allowCastling);
-
-                for (int i = 0; i < board->totalNumSquares; i++)
+                Position idx = { 7,0 };
+                for (int i = board->totalNumSquares-1; i > -1; i--)
                 {
-                    if (reversedArr[i] != nullptr)
+                    if (Pieces[i] != nullptr)
                     {
-                        reversedArr[i]->Draw(i, board, sprites);
+                        Pieces[i]->Draw(idx.y*board->numSquares + idx.x, board, sprites);
+                    }
+                    idx.x--;
+                    if (idx.x == -1)
+                    {
+                        idx.x = 7;
+                        idx.y++;
                     }
                 }
 
-                if (board->CollectedPiece != -1 && pieces[board->CollectedPiece] != nullptr)
-                    pieces[board->CollectedPiece]->DrawLegal(pieces, board->CollectedPiece, board, allowCastling);
+                if (board->CollectedPiece != -1 && Pieces[board->CollectedPiece] != nullptr)
+                    Pieces[board->CollectedPiece]->DrawLegal(Pieces, board->CollectedPiece, board, allowCastling , true);
             }
         }
 

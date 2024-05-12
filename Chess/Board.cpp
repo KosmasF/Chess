@@ -1,7 +1,6 @@
 #include "Board.h"
 #include "Piece.h"
 #include "PieceTypes.h"
-#include "InversedPieces.h"
 
 Board::Board(int size, int xOFFSET, int yOFFSET, bool inversed)
 {
@@ -23,10 +22,8 @@ Board::~Board()
 	delete BlackEnPassant;
 }
 
-void Board::CheckInput(void** Ipieces , void* WhiteDefaultPromotionPiece, void* BlackDefaultPromotionPiece, bool* allowCastling)
+void Board::CheckInput(PiecesArray pieces , void* WhiteDefaultPromotionPiece, void* BlackDefaultPromotionPiece, bool* allowCastling)
 {
-	Piece** pieces = (Piece**)Ipieces;
-
 	if (IsMouseButtonPressed(0))
 	{
 		Vector2 pos = GetMousePosition();
@@ -42,9 +39,11 @@ void Board::CheckInput(void** Ipieces , void* WhiteDefaultPromotionPiece, void* 
 				if (pieces[CollectedPiece]->IsLegal(pieces, CollectedPiece, idx, this , allowCastling))
 				{
 					std::cout << "MOVEMENT LOG: ";
-					const char* notation = MovementNotation((void**)pieces, idx, CollectedPiece, allowCastling);
+					const char* notation = MovementNotation(pieces, idx, CollectedPiece, allowCastling);
 					if(!(pieces[CollectedPiece]->GetName() == "K" && abs(idx-CollectedPiece) == 2))
 						std::cout<<(notation);
+
+					delete notation;
 
 					if (pieces[idx] == WhiteEnPassant && pieces[CollectedPiece]->GetName() == "")
 					{
@@ -209,14 +208,13 @@ void Board::Draw()
 	}
 }
 
-char* Board::MovementNotation(void** Ipieces, int Destination, int Location , bool* allowCastling)
+char* Board::MovementNotation(PiecesArray pieces, int Destination, int Location , bool* allowCastling)
 {
-	Piece** pieces = (Piece**)Ipieces;
-	char notation[9];//Max length + null termination
+	char* notation = new char[9];//Max length + null termination
 	int buffer = 0;
 
 #ifdef _DEBUG
-	buffer++;
+	//buffer++;
 #endif
 
 	const char* name = pieces[Location]->GetName();
@@ -279,6 +277,9 @@ Vector2 Board::Get2DCords(Vector2 pos)
 {
 	int x = (pos.x - offsetX)/ SquareSize;
 	int y = (pos.y - offsetY)/ SquareSize;
+
+	if (Inversed)
+		y = 7 - y;
 
 	return { (float)x,(float)y };
 }
