@@ -2,6 +2,7 @@
 #include "raylib.h"
 #include <iostream>
 #include "InversedPieces.h"
+#include "MovementLog.h"
 
 class Board
 {
@@ -25,7 +26,7 @@ public:
 
 	~Board();
 
-	void CheckInput(PiecesArray pieces , void* WhiteDefaultPromotionPiece,void* BlackDefaultPromotionPiece, bool* allowCastling);
+	void CheckInput(PiecesArray pieces , void* WhiteDefaultPromotionPiece,void* BlackDefaultPromotionPiece, bool* allowCastling , MovementLog* movementLog);
 	void Draw();
 	char* MovementNotation(PiecesArray pieces , int Destination , int Location,bool* allowCastling);
 	Vector2 Get2DCords(Vector2 pos);

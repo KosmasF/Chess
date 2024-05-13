@@ -130,6 +130,7 @@
     <ClCompile Include="Board.cpp" />
     <ClCompile Include="InversedPieces.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MovementLog.cpp" />
     <ClCompile Include="Piece.cpp" />
     <ClCompile Include="PieceTypes.cpp" />
     <ClCompile Include="Sprites.cpp" />
@@ -137,6 +138,7 @@
   <ItemGroup>
     <ClInclude Include="Board.h" />
     <ClInclude Include="InversedPieces.h" />
+    <ClInclude Include="MovementLog.h" />
     <ClInclude Include="Piece.h" />
     <ClInclude Include="PieceTypes.h" />
     <ClInclude Include="Sprites.h" />

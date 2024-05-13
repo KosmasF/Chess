@@ -5,6 +5,7 @@
 #include "PieceTypes.h"
 #include "InversedPieces.h"
 #include "Sprites.h"
+#include "MovementLog.h"
 
 
 #define print(x) std::cout<<x<<std::endl;
@@ -31,6 +32,8 @@ int main() {
     {
         throw "Screen height is not divisible by 8";
     }
+
+    MovementLog* movementLog = new MovementLog(LogSize , screenHeight);
 
     Sprites* sprites = new Sprites(spritesheetPath, board);
 
@@ -109,7 +112,7 @@ int main() {
         for (Board* board : boards)
         {
             board->Draw();
-            board->CheckInput(Pieces, (void*)WhiteDefaultPromotionPiece, (void*)BlackDefaultPromotionPiece, allowCastling);
+            board->CheckInput(Pieces, (void*)WhiteDefaultPromotionPiece, (void*)BlackDefaultPromotionPiece, allowCastling , movementLog);
             
             if (!board->Inversed)
             {
@@ -149,13 +152,9 @@ int main() {
         }
 
 
-        const char* text = "MOVEMENT LOG";
-        int fontSize = 20;
-        DrawText(text, 
+        movementLog->Draw();
 
-            screenHeight+LogSize/2-MeasureText(text, fontSize)/2,
-
-            0, fontSize, BLACK);
+        
         //DrawFPS(0, 0);
         EndDrawing();
     }
@@ -163,6 +162,7 @@ int main() {
 
     delete board;
     delete BLACK_board;
+    delete movementLog;
     delete sprites;
     delete WhitePawn;
     delete BlackPawn;

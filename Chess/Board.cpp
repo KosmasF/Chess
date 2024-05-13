@@ -22,7 +22,7 @@ Board::~Board()
 	delete BlackEnPassant;
 }
 
-void Board::CheckInput(PiecesArray pieces , void* WhiteDefaultPromotionPiece, void* BlackDefaultPromotionPiece, bool* allowCastling)
+void Board::CheckInput(PiecesArray pieces , void* WhiteDefaultPromotionPiece, void* BlackDefaultPromotionPiece, bool* allowCastling , MovementLog* movementLog)
 {
 	if (IsMouseButtonPressed(0))
 	{
@@ -40,10 +40,12 @@ void Board::CheckInput(PiecesArray pieces , void* WhiteDefaultPromotionPiece, vo
 				{
 					std::cout << "MOVEMENT LOG: ";
 					const char* notation = MovementNotation(pieces, idx, CollectedPiece, allowCastling);
-					if(!(pieces[CollectedPiece]->GetName() == "K" && abs(idx-CollectedPiece) == 2))
-						std::cout<<(notation);
+					if (!(pieces[CollectedPiece]->GetName() == "K" && abs(idx - CollectedPiece) == 2))
+					{
+						std::cout << (notation);
+						movementLog->AddMove(notation);
+					}
 
-					delete notation;
 
 					if (pieces[idx] == WhiteEnPassant && pieces[CollectedPiece]->GetName() == "")
 					{
@@ -84,6 +86,7 @@ void Board::CheckInput(PiecesArray pieces , void* WhiteDefaultPromotionPiece, vo
 								pieces[7] = nullptr;
 							}
 							std::cout << "O-O";
+							movementLog->AddMove("O-O");
 
 						}
 						if (idx - CollectedPiece == -2)
@@ -100,6 +103,7 @@ void Board::CheckInput(PiecesArray pieces , void* WhiteDefaultPromotionPiece, vo
 
 							}
 							std::cout << "O-O-O";
+							movementLog->AddMove("O-O-O");
 						}
 					}
 
@@ -111,6 +115,7 @@ void Board::CheckInput(PiecesArray pieces , void* WhiteDefaultPromotionPiece, vo
 							{
 								if (((King*)(pieces[i]))->IsAttacked(pieces, i, this, allowCastling))
 									std::cout << "+";
+								movementLog->Check();
 							}
 					}
 
