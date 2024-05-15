@@ -112,10 +112,11 @@ int main() {
         for (Board* board : boards)
         {
             board->Draw();
-            board->CheckInput(Pieces, (void*)WhiteDefaultPromotionPiece, (void*)BlackDefaultPromotionPiece, allowCastling , movementLog);
             
             if (!board->Inversed)
             {
+                if(!(movementLog->lastMoveIndex % 2))
+                    board->CheckInput(Pieces, (void*)WhiteDefaultPromotionPiece, (void*)BlackDefaultPromotionPiece, allowCastling, movementLog);
 
                 for (int i = 0; i < board->totalNumSquares; i++)
                 {
@@ -131,6 +132,9 @@ int main() {
             }
             else
             {
+                if ((movementLog->lastMoveIndex % 2))
+                    board->CheckInput(Pieces, (void*)WhiteDefaultPromotionPiece, (void*)BlackDefaultPromotionPiece, allowCastling, movementLog);
+
                 Position idx = { 7,0 };
                 for (int i = board->totalNumSquares-1; i > -1; i--)
                 {

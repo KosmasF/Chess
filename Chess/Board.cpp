@@ -39,11 +39,10 @@ void Board::CheckInput(PiecesArray pieces , void* WhiteDefaultPromotionPiece, vo
 				if (pieces[CollectedPiece]->IsLegal(pieces, CollectedPiece, idx, this , allowCastling))
 				{
 					std::cout << "MOVEMENT LOG: ";
-					const char* notation = MovementNotation(pieces, idx, CollectedPiece, allowCastling);
+					char* notation = MovementNotation(pieces, idx, CollectedPiece, allowCastling);
 					if (!(pieces[CollectedPiece]->GetName() == "K" && abs(idx - CollectedPiece) == 2))
 					{
 						std::cout << (notation);
-						movementLog->AddMove(notation);
 					}
 
 
@@ -114,10 +113,16 @@ void Board::CheckInput(PiecesArray pieces , void* WhiteDefaultPromotionPiece, vo
 							if (pieces[i]->GetName() == "K")
 							{
 								if (((King*)(pieces[i]))->IsAttacked(pieces, i, this, allowCastling))
+								{
 									std::cout << "+";
-								movementLog->Check();
+									size_t notationSize = strlen(notation);
+									notation[notationSize] = '+';
+									notation[notationSize + 1] = 0;
+								}
 							}
 					}
+
+					movementLog->AddMove(notation);
 
 					std::cout << std::endl;
 
@@ -176,7 +181,10 @@ void Board::CheckInput(PiecesArray pieces , void* WhiteDefaultPromotionPiece, vo
 			if (pieces[idx] != nullptr)
 			{
 				if (idx != CollectedPiece)
-					CollectedPiece = idx;
+					if(!(pieces[idx]->IsWhite() ^ !Inversed))
+						CollectedPiece = idx;
+					else
+						CollectedPiece = -1;
 				else
 					CollectedPiece = -1;
 			}
@@ -215,7 +223,7 @@ void Board::Draw()
 
 char* Board::MovementNotation(PiecesArray pieces, int Destination, int Location , bool* allowCastling)
 {
-	char* notation = new char[9];//Max length + null termination
+	char* notation = new char[10];//Max length + null termination
 	int buffer = 0;
 
 #ifdef _DEBUG
@@ -238,6 +246,7 @@ char* Board::MovementNotation(PiecesArray pieces, int Destination, int Location 
 		if (pieces[i] != nullptr && i != Location)
 			if (pieces[i]->GetName() == pieces[Location]->GetName())
 			{
+				if (!(pieces[i]->IsWhite() ^ pieces[Location]->IsWhite()))
 				if (pieces[i]->IsLegal(pieces, i, Destination, this, allowCastling))
 				{
 					Position pos = piece.Get2DCords(Location, numSquares);

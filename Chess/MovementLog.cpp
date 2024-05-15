@@ -30,7 +30,7 @@ void MovementLog::Draw()
 
     int pos = 50;
 
-    for (int i = fistNumToDraw; i < lastMoveIndex; i++)
+    for (int i = fistNumToDraw; i < lastMoveIndex; i+=2)
     {
         int buffer = 0;
 
@@ -59,9 +59,17 @@ void MovementLog::Draw()
         DrawText(".", ScreenHeight + 20 + buffer, pos, fontSize, WHITE);
         buffer += MeasureText(".", fontSize);
 
+        //White Moves
         int moveLength = MeasureText(moves[i], fontSize);
         int moveSizeLeftEmpty = LogSize / 2 - moveLength;
         DrawText(moves[i], ScreenHeight + 20 + (moveSizeLeftEmpty / 2), pos, fontSize, WHITE);
+
+        //BlackMoves
+        moveLength = MeasureText(moves[i+1], fontSize);
+        moveSizeLeftEmpty = LogSize / 2 - moveLength;
+        DrawText(moves[i+1], LogCenterPos + (moveSizeLeftEmpty / 2), pos, fontSize, WHITE);
+
+
         pos += 25;
     }
 
@@ -73,15 +81,10 @@ MovementLog::~MovementLog()
         delete moves[i];
 }
 
-void MovementLog::Check()
-{
-
-}
-
 void MovementLog::AddMove(const char* move)
 {
     moves[lastMoveIndex] = move;
-    if (lastMoveIndex > 18)
-        fistNumToDraw++;
+    if (lastMoveIndex > 18*2)
+        fistNumToDraw+=2;
     lastMoveIndex++;
 }

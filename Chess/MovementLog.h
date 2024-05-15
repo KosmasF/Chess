@@ -15,20 +15,18 @@ private:
 	int fistNumToDraw = 0;
 
 	static constexpr int maxMoves = 100;
-	int lastMoveIndex = 0;
 
 	const char* moves[maxMoves];
 
 	void DrawHeader();
 	void DrawBackground();
 public:
+	int lastMoveIndex = 0;
 	MovementLog(int logSize , int screenHeight);
 
 	void Draw();
 
 	~MovementLog();
-
-	void Check();
 
 	void AddMove(const char* move);
 
