@@ -59,10 +59,10 @@ void Board::CheckInput(PiecesArray pieces , void* WhiteDefaultPromotionPiece, vo
 					{
 						if (pieces[i] != nullptr)
 						{
-							if (pieces[i]->GetName() == "Invalid!" && pieces[CollectedPiece]->IsWhite() && pieces[i]->IsWhite())
+							if (pieces[i]->GetName() == "Invalid!" && !(pieces[CollectedPiece]->IsWhite() ^ pieces[i]->IsWhite()))
+							{
 								pieces[i] = nullptr;
-							else if (pieces[i]->GetName() == "Invalid!" && !pieces[CollectedPiece]->IsWhite() && !pieces[i]->IsWhite())
-								pieces[i] = nullptr;
+							}
 						}
 					}
 
@@ -181,15 +181,23 @@ void Board::CheckInput(PiecesArray pieces , void* WhiteDefaultPromotionPiece, vo
 			if (pieces[idx] != nullptr)
 			{
 				if (idx != CollectedPiece)
-					if(!(pieces[idx]->IsWhite() ^ !Inversed))
-						CollectedPiece = idx;
-					else
-						CollectedPiece = -1;
-				else
-					CollectedPiece = -1;
+				{
+					if (!(pieces[idx]->IsWhite() ^ !Inversed))
+					{
+						if (pieces[idx]->GetName() != "Invalid!")
+						{
+							CollectedPiece = idx;
+							std::cout << "Collected Piece: " << CollectedPiece << std::endl;
+							return;
+						}
+					}
+				}
+
 			}
 
-			std::cout << "Collected Piece: " << CollectedPiece << std::endl;
+
+			CollectedPiece = -1;
+
 
 
 

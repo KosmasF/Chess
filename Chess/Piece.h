@@ -34,5 +34,7 @@ public:
 	int InverseIndex(int idx);
 
 	bool IsKingInAttack(Piece** pieces, bool CheckKing, int Original, int ToCheck, Board* board, bool* allowCastling);
+
+	bool EnPassantOrNullptr(Piece* piece , bool pawnEating = false);
 };
 

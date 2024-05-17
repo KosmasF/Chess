@@ -42,45 +42,7 @@ Game::Game()
     allowCastling[2] = true;
     allowCastling[3] = true;
 
-
-    for (int i = 0; i < board->totalNumSquares; i++)
-    {
-        pieces[i] = nullptr;
-    }
-
-    pieces[0] = BlackRook;
-    pieces[1] = BlackKnight;
-    pieces[2] = BlackBishop;
-    pieces[3] = BlackQueen;
-    pieces[4] = BlackKing;
-    pieces[5] = BlackBishop;
-    pieces[6] = BlackKnight;
-    pieces[7] = BlackRook;
-    pieces[8] = BlackPawn;
-    pieces[9] = BlackPawn;
-    pieces[10] = BlackPawn;
-    pieces[11] = BlackPawn;
-    pieces[12] = BlackPawn;
-    pieces[13] = BlackPawn;
-    pieces[14] = BlackPawn;
-    pieces[15] = BlackPawn;
-
-    pieces[48] = WhitePawn;
-    pieces[49] = WhitePawn;
-    pieces[50] = WhitePawn;
-    pieces[51] = WhitePawn;
-    pieces[52] = WhitePawn;
-    pieces[53] = WhitePawn;
-    pieces[54] = WhitePawn;
-    pieces[55] = WhitePawn;
-    pieces[56] = WhiteRook;
-    pieces[57] = WhiteKnight;
-    pieces[58] = WhiteBishop;
-    pieces[59] = WhiteQueen;
-    pieces[60] = WhiteKing;
-    pieces[61] = WhiteBishop;
-    pieces[62] = WhiteKnight;
-    pieces[63] = WhiteRook;
+    SetPiecesAsDefault(pieces);
 }
 
 Game::~Game()
@@ -155,9 +117,58 @@ void Game::Update()
     }
 
 
+    if (IsKeyPressed(KEY_R))
+    {
+        SetPiecesAsDefault(pieces);
+    }
+
     movementLog->Draw();
 
 
     //DrawFPS(0, 0);
     EndDrawing();
+}
+
+void Game::SetPiecesAsDefault(Piece** pieces)
+{
+    for (int i = 0; i < board->totalNumSquares; i++)
+    {
+        pieces[i] = nullptr;
+    }
+
+    pieces[0] = BlackRook;
+    pieces[1] = BlackKnight;
+    pieces[2] = BlackBishop;
+    pieces[3] = BlackQueen;
+    pieces[4] = BlackKing;
+    pieces[5] = BlackBishop;
+    pieces[6] = BlackKnight;
+    pieces[7] = BlackRook;
+    pieces[8] = BlackPawn;
+    pieces[9] = BlackPawn;
+    pieces[10] = BlackPawn;
+    pieces[11] = BlackPawn;
+    pieces[12] = BlackPawn;
+    pieces[13] = BlackPawn;
+    pieces[14] = BlackPawn;
+    pieces[15] = BlackPawn;
+
+    pieces[48] = WhitePawn;
+    pieces[49] = WhitePawn;
+    pieces[50] = WhitePawn;
+    pieces[51] = WhitePawn;
+    pieces[52] = WhitePawn;
+    pieces[53] = WhitePawn;
+    pieces[54] = WhitePawn;
+    pieces[55] = WhitePawn;
+    pieces[56] = WhiteRook;
+    pieces[57] = WhiteKnight;
+    pieces[58] = WhiteBishop;
+    pieces[59] = WhiteQueen;
+    pieces[60] = WhiteKing;
+    pieces[61] = WhiteBishop;
+    pieces[62] = WhiteKnight;
+    pieces[63] = WhiteRook;
+
+    movementLog->lastMoveIndex = 0;
 }

@@ -19,31 +19,31 @@ bool Pawn::IsLegal(Piece** pieces, int Original, int ToCheck, Board* board, bool
 		if (!IsWhite())
 		{
 			if (ToCheck == Original + 8)
-				if (pieces[ToCheck] == nullptr || pieces[ToCheck] == board->WhiteEnPassant)
+				if (EnPassantOrNullptr(pieces[ToCheck]))
 					goto CheckIfKingIsAttacked;
 
 			if (Get2DCords(Original, board->numSquares).y == 1)
 				if (ToCheck == Original + 16)
 					if (IsLegal(pieces, Original, ToCheck - 8, board, allowCastling))
-						if (pieces[ToCheck] == nullptr || pieces[ToCheck] == board->WhiteEnPassant)
+						if (EnPassantOrNullptr(pieces[ToCheck]))
 							goto CheckIfKingIsAttacked;
 
 			if (Get2DCords(ToCheck, board->numSquares).y == Get2DCords(Original, board->numSquares).y + 1)
 				if (ToCheck == Original + 9 || ToCheck == Original + 7)
-					if (pieces[ToCheck] != nullptr || pieces[ToCheck] == board->WhiteEnPassant)
+					if (EnPassantOrNullptr(pieces[ToCheck],true))
 						if (pieces[ToCheck]->IsWhite())
 							goto CheckIfKingIsAttacked;
 		}
 		else
 		{
 			if (ToCheck == Original - 8)
-				if (pieces[ToCheck] == nullptr || pieces[ToCheck] == board->WhiteEnPassant)
+				if (EnPassantOrNullptr(pieces[ToCheck]))
 					goto CheckIfKingIsAttacked;
 
 			if (Get2DCords(Original, board->numSquares).y == 6)
 				if (ToCheck == Original - 16)
 					if (IsLegal(pieces, Original, ToCheck + 8, board, allowCastling))
-						if (pieces[ToCheck] == nullptr || pieces[ToCheck] == board->WhiteEnPassant)
+						if (EnPassantOrNullptr(pieces[ToCheck]))
 							goto CheckIfKingIsAttacked;
 
 			if (Get2DCords(ToCheck, board->numSquares).y == Get2DCords(Original, board->numSquares).y - 1)
@@ -107,7 +107,7 @@ void Bishop::Draw(int idx, Board* board, Sprites* sprites)
 
 bool Bishop::IsLegal(Piece** pieces, int Original, int ToCheck, Board* board, bool* allowCastling, bool oppositePieceIgnorance, bool ignoreColor, bool CheckKing)
 {
-	if (pieces[ToCheck] == nullptr || pieces[ToCheck] == board->WhiteEnPassant || ((((pieces[ToCheck]->IsWhite() && !IsWhite()) || (!pieces[ToCheck]->IsWhite() && IsWhite())) && oppositePieceIgnorance)) || ignoreColor)
+	if (EnPassantOrNullptr(pieces[ToCheck]) || ((((pieces[ToCheck]->IsWhite() && !IsWhite()) || (!pieces[ToCheck]->IsWhite() && IsWhite())) && oppositePieceIgnorance)) || ignoreColor)
 	{
 		if ((ToCheck - Original) % 9 == 0 && ToCheck - Original > 0)
 			if (Get2DCords(Original, board->numSquares).x < Get2DCords(ToCheck, board->numSquares).x)
@@ -169,7 +169,7 @@ void Knight::Draw(int idx, Board* board, Sprites* sprites)
 
 bool Knight::IsLegal(Piece** pieces, int Original, int ToCheck, Board* board, bool* allowCastling, bool oppositePieceIgnorance, bool ignoreColor , bool CheckKing)
 {
-	if (pieces[ToCheck] == nullptr || pieces[ToCheck] == board->WhiteEnPassant || ((((pieces[ToCheck]->IsWhite() && !IsWhite()) || (!pieces[ToCheck]->IsWhite() && IsWhite())) && oppositePieceIgnorance)) || ignoreColor)
+	if (EnPassantOrNullptr(pieces[ToCheck]) || ((((pieces[ToCheck]->IsWhite() && !IsWhite()) || (!pieces[ToCheck]->IsWhite() && IsWhite())) && oppositePieceIgnorance)) || ignoreColor)
 	{
 		if (ToCheck == Original + 17)
 			if (Get2DCords(ToCheck, board->numSquares).x > Get2DCords(Original, board->numSquares).x)
@@ -234,7 +234,7 @@ void Rook::Draw(int idx, Board* board, Sprites* sprites)
 
 bool Rook::IsLegal(Piece** pieces, int Original, int ToCheck, Board* board, bool* allowCastling, bool oppositePieceIgnorance, bool ignoreColor, bool CheckKing)
 {
-	if (pieces[ToCheck] == nullptr || pieces[ToCheck] == board->WhiteEnPassant || ((((pieces[ToCheck]->IsWhite() && !IsWhite()) || (!pieces[ToCheck]->IsWhite() && IsWhite())) && oppositePieceIgnorance)) || ignoreColor)
+	if (EnPassantOrNullptr(pieces[ToCheck]) || ((((pieces[ToCheck]->IsWhite() && !IsWhite()) || (!pieces[ToCheck]->IsWhite() && IsWhite())) && oppositePieceIgnorance)) || ignoreColor)
 	{
 		if ((ToCheck - Original) % 8 == 0 && ToCheck - Original > 0)
 			if ((ToCheck - Original) / 8 == 1)
@@ -339,7 +339,7 @@ void King::Draw(int idx, Board* board, Sprites* sprites)
 
 bool King::IsLegal(Piece** pieces, int Original, int ToCheck, Board* board, bool* allowCastling, bool oppositePieceIgnorance, bool ignoreColor, bool CheckKing)
 {
-	if (pieces[ToCheck] == nullptr || pieces[ToCheck] == board->WhiteEnPassant || ((((pieces[ToCheck]->IsWhite() && !IsWhite()) || (!pieces[ToCheck]->IsWhite() && IsWhite())) && oppositePieceIgnorance) || ignoreColor))
+	if (EnPassantOrNullptr(pieces[ToCheck]) || ((((pieces[ToCheck]->IsWhite() && !IsWhite()) || (!pieces[ToCheck]->IsWhite() && IsWhite())) && oppositePieceIgnorance) || ignoreColor))
 	{
 		if (ToCheck == Original + 1 && Get2DCords(Original,board->numSquares).x < Get2DCords(ToCheck, board->numSquares).x)
 		{

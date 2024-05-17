@@ -53,5 +53,7 @@ public:
 	~Game();
 
 	void Update();
+
+    void SetPiecesAsDefault(Piece** pieces);
 };
 

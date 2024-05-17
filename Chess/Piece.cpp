@@ -101,3 +101,19 @@ bool Piece::IsKingInAttack(Piece** pieces, bool CheckKing , int Original , int T
 	pieces[ToCheck] = destination;
 	return true;
 }
+
+bool Piece::EnPassantOrNullptr(Piece* piece, bool pawnEating)
+{
+	if (piece == nullptr)
+	{
+		if (!pawnEating)
+			return true;
+		else
+			return false;
+	}
+	if (piece->GetName() == "Invalid!")
+	{
+		return true;
+	}
+	return false;
+}
