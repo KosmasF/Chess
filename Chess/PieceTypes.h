@@ -15,7 +15,7 @@ public:
 
 	void Draw(int idx, Board* board , Sprites* sprites) override;
 
-	bool IsLegal(Piece** pieces, int Original, int ToCheck, Board* board, bool* allowCastling, bool oppositePieceIgnorance = true, bool ignoreColor = false) override;
+	bool IsLegal(Piece** pieces, int Original, int ToCheck, Board* board, bool* allowCastling, bool oppositePieceIgnorance = true, bool ignoreColor = false, bool CheckKing = true) override;
 
 	bool IsWhite() override;
 };
@@ -32,7 +32,7 @@ public:
 
 	void Draw(int idx, Board* board, Sprites* sprites) override;
 
-	bool IsLegal(Piece** pieces, int Original, int ToCheck, Board* board, bool* allowCastling, bool oppositePieceIgnorance = true, bool ignoreColor = false) override;
+	bool IsLegal(Piece** pieces, int Original, int ToCheck, Board* board, bool* allowCastling, bool oppositePieceIgnorance = true, bool ignoreColor = false, bool CheckKing = true) override;
 
 	bool IsWhite() override;
 };
@@ -49,7 +49,7 @@ public:
 
 	void Draw(int idx, Board* board, Sprites* sprites) override;
 
-	bool IsLegal(Piece** pieces, int Original, int ToCheck, Board* board, bool* allowCastling, bool oppositePieceIgnorance = true, bool ignoreColor = false) override;
+	bool IsLegal(Piece** pieces, int Original, int ToCheck, Board* board, bool* allowCastling, bool oppositePieceIgnorance = true, bool ignoreColor = false, bool CheckKing = true) override;
 
 	bool IsWhite() override;
 };
@@ -66,7 +66,7 @@ public:
 
 	void Draw(int idx, Board* board, Sprites* sprites) override;
 
-	bool IsLegal(Piece** pieces, int Original, int ToCheck, Board* board, bool* allowCastling, bool oppositePieceIgnorance = true, bool ignoreColor = false) override;
+	bool IsLegal(Piece** pieces, int Original, int ToCheck, Board* board, bool* allowCastling, bool oppositePieceIgnorance = true, bool ignoreColor = false, bool CheckKing = true) override;
 
 	bool IsWhite() override;
 };
@@ -88,7 +88,7 @@ public:
 
 	void Draw(int idx, Board* board, Sprites* sprites) override;
 
-	bool IsLegal(Piece** pieces, int Original, int ToCheck, Board* board, bool* allowCastling, bool oppositePieceIgnorance = true, bool ignoreColor = false) override;
+	bool IsLegal(Piece** pieces, int Original, int ToCheck, Board* board, bool* allowCastling, bool oppositePieceIgnorance = true, bool ignoreColor = false, bool CheckKing = true) override;
 
 	bool IsWhite() override;
 };
@@ -105,7 +105,7 @@ public:
 
 	void Draw(int idx, Board* board, Sprites* sprites) override;
 
-	bool IsLegal(Piece** pieces, int Original, int ToCheck, Board* board, bool* allowCastling, bool oppositePieceIgnorance = true , bool ignoreColor = false) override;
+	bool IsLegal(Piece** pieces, int Original, int ToCheck, Board* board, bool* allowCastling, bool oppositePieceIgnorance = true , bool ignoreColor = false, bool CheckKing = true) override;
 
 	bool IsAttacked(Piece** pieces, int ToCheck, Board* board, bool * allowCastling);
 

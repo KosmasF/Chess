@@ -1,6 +1,2 @@
-﻿  Board.cpp
-C:\Users\Others\source\repos\Chess\Chess\Board.cpp(34,12): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\Others\source\repos\Chess\Chess\Board.cpp(234,17): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\Others\source\repos\Chess\Chess\Board.cpp(292,8): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\Others\source\repos\Chess\Chess\Board.cpp(293,8): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+﻿  Game.cpp
   Chess.vcxproj -> C:\Users\Others\source\repos\Chess\x64\Debug\Chess.exe

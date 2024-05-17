@@ -1,5 +1,6 @@
 #include "Piece.h"
 #include <iostream>
+#include "PieceTypes.h"
 
 const char* Piece::GetName()
 {
@@ -30,7 +31,7 @@ Position Piece::Get2DCords(int idx, int numSquares)
 	return { x, y};
 }
 
-bool Piece::IsLegal(Piece** pieces, int Original , int ToCheck, Board* board, bool* allowCastling, bool oppositePieceIgnorance , bool ignoreColor)
+bool Piece::IsLegal(Piece** pieces, int Original , int ToCheck, Board* board, bool* allowCastling, bool oppositePieceIgnorance , bool ignoreColor, bool CheckKing)
 {
 	return false;
 }
@@ -62,4 +63,41 @@ int Piece::InverseIndex(int idx)
 	cords.y = 7 - cords.y;
 
 	return cords.y * 8 + cords.x;
+}
+
+bool Piece::IsKingInAttack(Piece** pieces, bool CheckKing , int Original , int ToCheck , Board* board, bool* allowCastling)
+{
+	if (!CheckKing)
+		return true;
+
+	King* king = nullptr;
+	int kingIndex = 64;
+	for (int i = 0; i < 64; i++)
+	{
+		if (pieces[i] != nullptr)
+			if (pieces[i]->GetName() == "K" && pieces[i]->IsWhite() == IsWhite())
+			{
+				king = (King*)pieces[i];
+				kingIndex = i;
+			}
+	}
+	if (king == nullptr)
+		return false;
+
+	Piece* original = pieces[Original];
+	Piece* destination = pieces[ToCheck];
+
+	pieces[ToCheck] = original;
+	pieces[Original] = nullptr;
+
+	if (king->IsAttacked(pieces, kingIndex, board, allowCastling))
+	{
+		pieces[Original] = original;
+		pieces[ToCheck] = destination;
+		return false;
+	}
+
+	pieces[Original] = original;
+	pieces[ToCheck] = destination;
+	return true;
 }

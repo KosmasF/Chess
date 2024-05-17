@@ -209,7 +209,7 @@ void Board::Draw()
 	{
 		for (int y = 0; y < numSquares; y++)
 		{
-			if (!((y + x) % 2))
+			if (!((y + x) % 2) ^ Inversed)
 			{
 				DrawRectangle(x * SquareSize + offsetX, y * SquareSize + offsetY, SquareSize, SquareSize, lightColor);
 			}
