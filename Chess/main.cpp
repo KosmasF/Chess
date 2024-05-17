@@ -1,23 +1,38 @@
 #include "Game.h"
-#include "raylib.h"
+#include <thread>
+#include "NonGraphicalBoard.h"
 
+const bool graphical = false;
 
-int main() {
-    
-
-    Game* game = new Game();
-
-    while (!WindowShouldClose())
+int main()
+{
+    if (graphical)
     {
+        Game* game = new Game();
 
-        BeginDrawing();
+        while (!WindowShouldClose())
+        {
+            game->Update();
+        }
 
+        delete game;
+    }
+    else
+    {
+        NonGraphicalBoard board = NonGraphicalBoard();
 
-        ClearBackground(RAYWHITE);
+        int* status = board.Status(true);// This is the neural network input!
 
-        game->Update();
+        board.PrintStatus(true);
+
+        std::cout << board.Move(1,8+8,true) << '\n' << std::endl;
+
+        board.PrintStatus(true);
+
+        int output[2] = { 0,0 };//Get the NN output
+
+        delete status;
     }
 
-    delete game;
     return 0;
 }

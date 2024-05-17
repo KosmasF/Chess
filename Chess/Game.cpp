@@ -68,6 +68,10 @@ Game::~Game()
 
 void Game::Update()
 {
+
+    BeginDrawing();
+    ClearBackground(RAYWHITE);
+
     for (int i =0 ; i < sizeof boards / sizeof(Board*) ; i ++)
     {
         Board* board = boards[i];
