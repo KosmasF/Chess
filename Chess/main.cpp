@@ -1,8 +1,17 @@
 #include "Game.h"
 #include <thread>
 #include "NonGraphicalBoard.h"
+#include "NeuralNetwork.h"
+
+#pragma warning (disable : 4996)
+#include <stdio.h>
 
 const bool graphical = false;
+
+int outputToMove(float x , float y)
+{
+    return (int)(x*7 + ((y*7)*8));
+}
 
 int main()
 {
@@ -18,20 +27,39 @@ int main()
         delete game;
     }
     else
-    {
+    {// This is the neural network input!
         NonGraphicalBoard board = NonGraphicalBoard();
+        int networkSizes[3] = { 64,5,4 };
 
-        int* status = board.Status(true);// This is the neural network input!
+        NeuralNetwork nnWhite = NeuralNetwork(networkSizes,3);
+        NeuralNetwork nnBlack = NeuralNetwork(networkSizes,3);
 
-        board.PrintStatus(true);
+        float* output;
 
-        std::cout << board.Move(1,8+8,true) << '\n' << std::endl;
+        output = nnWhite.Generate(board.Status(true));
 
-        board.PrintStatus(true);
+        //std::cout << outputToMove(output[0],output[1]) << " | " << outputToMove(output[2],output[3]) << std::endl;
+        bool moved = board.Move(outputToMove(output[0], output[1]), outputToMove(output[2], output[3]), true);
 
-        int output[2] = { 0,0 };//Get the NN output
+        output = nnBlack.Generate(board.Status(false));
 
-        delete status;
+        //std::cout << outputToMove(output[0], output[1]) << " | "<< outputToMove(output[2], output[3]) << std::endl;
+        moved = board.Move(outputToMove(output[0], output[1]), outputToMove(output[2], output[3]), false);
+
+
+        void* data = nnWhite.Data();
+        int dataSize = ((int*)data)[0];
+
+
+        const char* path = "data.nn";
+
+        FILE* file = fopen("networks/data.nn", "wb");
+        size_t r1 = fwrite(data,dataSize,1,file);
+        std::cout << "Saved file as: " << path << std::endl;
+        fclose(file);
+
+        free(data);
+        delete[] output;
     }
 
     return 0;

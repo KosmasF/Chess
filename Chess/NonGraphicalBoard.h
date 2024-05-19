@@ -31,7 +31,7 @@ public:
 
     ~NonGraphicalBoard();
 
-    int* Status(bool isWhite);
+    float* Status(bool isWhite);
 
     void SetPiecesAsDefault(Piece** pieces);
 

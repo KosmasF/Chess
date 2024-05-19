@@ -3,8 +3,32 @@
   "WorkspaceRootPath": "C:\\Users\\Others\\source\\repos\\Chess\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{5C52427D-B579-47B1-BB07-769E5F4DEAB6}|Chess\\Chess.vcxproj|C:\\Users\\Others\\source\\repos\\Chess\\Chess\\NeuralNetwork.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{5C52427D-B579-47B1-BB07-769E5F4DEAB6}|Chess\\Chess.vcxproj|solutionrelative:Chess\\NeuralNetwork.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5C52427D-B579-47B1-BB07-769E5F4DEAB6}|Chess\\Chess.vcxproj|C:\\Users\\Others\\source\\repos\\Chess\\Chess\\NeuralNetwork.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{5C52427D-B579-47B1-BB07-769E5F4DEAB6}|Chess\\Chess.vcxproj|solutionrelative:Chess\\NeuralNetwork.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{5C52427D-B579-47B1-BB07-769E5F4DEAB6}|Chess\\Chess.vcxproj|C:\\Users\\Others\\source\\repos\\Chess\\Chess\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{5C52427D-B579-47B1-BB07-769E5F4DEAB6}|Chess\\Chess.vcxproj|solutionrelative:Chess\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5C52427D-B579-47B1-BB07-769E5F4DEAB6}|Chess\\Chess.vcxproj|C:\\Users\\Others\\source\\repos\\Chess\\Chess\\Neuron.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{5C52427D-B579-47B1-BB07-769E5F4DEAB6}|Chess\\Chess.vcxproj|solutionrelative:Chess\\Neuron.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5C52427D-B579-47B1-BB07-769E5F4DEAB6}|Chess\\Chess.vcxproj|C:\\Users\\Others\\source\\repos\\Chess\\Chess\\Neuron.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{5C52427D-B579-47B1-BB07-769E5F4DEAB6}|Chess\\Chess.vcxproj|solutionrelative:Chess\\Neuron.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5C52427D-B579-47B1-BB07-769E5F4DEAB6}|Chess\\Chess.vcxproj|C:\\Users\\Others\\source\\repos\\Chess\\Chess\\ActivationMethods.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{5C52427D-B579-47B1-BB07-769E5F4DEAB6}|Chess\\Chess.vcxproj|solutionrelative:Chess\\ActivationMethods.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5C52427D-B579-47B1-BB07-769E5F4DEAB6}|Chess\\Chess.vcxproj|C:\\Users\\Others\\source\\repos\\Chess\\Chess\\ActivationMethods.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{5C52427D-B579-47B1-BB07-769E5F4DEAB6}|Chess\\Chess.vcxproj|solutionrelative:Chess\\ActivationMethods.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -14,21 +38,93 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
               "Title": "main.cpp",
               "DocumentMoniker": "C:\\Users\\Others\\source\\repos\\Chess\\Chess\\main.cpp",
               "RelativeDocumentMoniker": "Chess\\main.cpp",
               "ToolTip": "C:\\Users\\Others\\source\\repos\\Chess\\Chess\\main.cpp",
               "RelativeToolTip": "Chess\\main.cpp",
-              "ViewState": "AQIAAAYAAAAAAAAAAAAAAA0AAAAJAAAA",
+              "ViewState": "AQIAACgAAAAAAAAAAAAIwDcAAAA1AAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2024-05-17T10:43:06.768Z",
-              "IsPinned": true,
+              "IsPinned": true
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "NeuralNetwork.h",
+              "DocumentMoniker": "C:\\Users\\Others\\source\\repos\\Chess\\Chess\\NeuralNetwork.h",
+              "RelativeDocumentMoniker": "Chess\\NeuralNetwork.h",
+              "ToolTip": "C:\\Users\\Others\\source\\repos\\Chess\\Chess\\NeuralNetwork.h",
+              "RelativeToolTip": "Chess\\NeuralNetwork.h",
+              "ViewState": "AQIAAAMAAAAAAAAAAAAAABoAAAACAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-05-18T11:30:59.568Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "NeuralNetwork.cpp",
+              "DocumentMoniker": "C:\\Users\\Others\\source\\repos\\Chess\\Chess\\NeuralNetwork.cpp",
+              "RelativeDocumentMoniker": "Chess\\NeuralNetwork.cpp",
+              "ToolTip": "C:\\Users\\Others\\source\\repos\\Chess\\Chess\\NeuralNetwork.cpp",
+              "RelativeToolTip": "Chess\\NeuralNetwork.cpp",
+              "ViewState": "AQIAAH8AAAAAAAAAAAAAAJoAAAASAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-05-18T11:31:21.186Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Neuron.h",
+              "DocumentMoniker": "C:\\Users\\Others\\source\\repos\\Chess\\Chess\\Neuron.h",
+              "RelativeDocumentMoniker": "Chess\\Neuron.h",
+              "ToolTip": "C:\\Users\\Others\\source\\repos\\Chess\\Chess\\Neuron.h",
+              "RelativeToolTip": "Chess\\Neuron.h",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAcAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-05-18T11:35:11.206Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Neuron.cpp",
+              "DocumentMoniker": "C:\\Users\\Others\\source\\repos\\Chess\\Chess\\Neuron.cpp",
+              "RelativeDocumentMoniker": "Chess\\Neuron.cpp",
+              "ToolTip": "C:\\Users\\Others\\source\\repos\\Chess\\Chess\\Neuron.cpp",
+              "RelativeToolTip": "Chess\\Neuron.cpp",
+              "ViewState": "AQIAADcAAAAAAAAAAAAAAE0AAAAzAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-05-18T11:35:59.595Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "ActivationMethods.h",
+              "DocumentMoniker": "C:\\Users\\Others\\source\\repos\\Chess\\Chess\\ActivationMethods.h",
+              "RelativeDocumentMoniker": "Chess\\ActivationMethods.h",
+              "ToolTip": "C:\\Users\\Others\\source\\repos\\Chess\\Chess\\ActivationMethods.h",
+              "RelativeToolTip": "Chess\\ActivationMethods.h",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABAAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-05-18T11:36:35.725Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "ActivationMethods.cpp",
+              "DocumentMoniker": "C:\\Users\\Others\\source\\repos\\Chess\\Chess\\ActivationMethods.cpp",
+              "RelativeDocumentMoniker": "Chess\\ActivationMethods.cpp",
+              "ToolTip": "C:\\Users\\Others\\source\\repos\\Chess\\Chess\\ActivationMethods.cpp",
+              "RelativeToolTip": "Chess\\ActivationMethods.cpp",
+              "ViewState": "AQIAAA8AAAAAAAAAAAAAABsAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-05-18T12:14:12.923Z"
             }
           ]
         }

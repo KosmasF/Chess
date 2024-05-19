@@ -87,6 +87,12 @@ void NonGraphicalBoard::SetPiecesAsDefault(Piece** pieces)
 
 bool NonGraphicalBoard::Move(int From, int To, bool IsWhite)
 {
+    if (!IsWhite)
+    {
+        From = 63 - From;
+        To = 63 - To;
+    }
+
     if (pieces[From] != nullptr)
     {
         if (pieces[From]->IsWhite() != IsWhite)
@@ -104,7 +110,7 @@ bool NonGraphicalBoard::Move(int From, int To, bool IsWhite)
 
 void NonGraphicalBoard::PrintStatus(bool isWhite)
 {
-    int* status = Status(isWhite);
+    float* status = Status(isWhite);
 
     for (int i = 0; i < 64; i++)
     {
@@ -113,11 +119,13 @@ void NonGraphicalBoard::PrintStatus(bool isWhite)
             std::cout << '\n';
     }
     std::cout << std::endl;
+
+    delete[] status;
 }
 
-int* NonGraphicalBoard::Status(bool isWhite)
+float* NonGraphicalBoard::Status(bool isWhite)
 {
-    int* status = new int[64];
+    float* status = new float[64];
 
     for (int i = 0; i < 64; i++)
     {
@@ -178,12 +186,12 @@ int* NonGraphicalBoard::Status(bool isWhite)
         }
         if (pieces[i] == WhiteKing)
         {
-            status[i] = 20;
+            status[i] = 10;
             continue;
         }
         if (pieces[i] == BlackKing)
         {
-            status[i] = -20;
+            status[i] = -10;
             continue;
         }
 
@@ -194,6 +202,9 @@ int* NonGraphicalBoard::Status(bool isWhite)
     if (!isWhite)
         for (int i = 0; i < 64; i++)
             status[i] *= -1;
+
+    for (int i = 0; i < 64; i++)
+        status[i] /= -10;
 
     return status;
 }

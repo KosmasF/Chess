@@ -127,21 +127,27 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ActivationMethods.cpp" />
     <ClCompile Include="Board.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="InversedPieces.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MovementLog.cpp" />
+    <ClCompile Include="NeuralNetwork.cpp" />
+    <ClCompile Include="Neuron.cpp" />
     <ClCompile Include="NonGraphicalBoard.cpp" />
     <ClCompile Include="Piece.cpp" />
     <ClCompile Include="PieceTypes.cpp" />
     <ClCompile Include="Sprites.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ActivationMethods.h" />
     <ClInclude Include="Board.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="InversedPieces.h" />
     <ClInclude Include="MovementLog.h" />
+    <ClInclude Include="NeuralNetwork.h" />
+    <ClInclude Include="Neuron.h" />
     <ClInclude Include="NonGraphicalBoard.h" />
     <ClInclude Include="Piece.h" />
     <ClInclude Include="PieceTypes.h" />
