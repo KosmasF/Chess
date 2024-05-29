@@ -1,8 +1,9 @@
 #include "Game.h"
+#include "ActivationMethods.h"
 
-Game::Game()
+Game::Game(int argc , char** argv)
 {
-    InitWindow(screenWidth, screenHeight, "Chess");
+    InitWindow(screenWidth, screenHeight+evalLineHeight, "Chess");
     SetTargetFPS(60);
 
     board = new Board(screenHeight, 0, 0, false);
@@ -43,6 +44,18 @@ Game::Game()
     allowCastling[3] = true;
 
     SetPiecesAsDefault(pieces);
+
+    printf("Connecting with server...\n");
+    bool successful = stockfish.Setup(argc,argv);
+
+    if (!successful)
+    {
+        printf("Connected Successfully with Stockfish server!\n");
+    }
+    else
+    {
+        printf("Failed connection with Stockfish!\n");
+    }
 }
 
 Game::~Game()
@@ -64,6 +77,102 @@ Game::~Game()
     delete WhiteKing;
     delete BlackKing;
     CloseWindow();
+}
+
+const char* Game::GetFen()
+{
+
+    char* value = Pieces.fen();
+    int buffer = strlen(value);
+
+    value[buffer] = ' ';
+    buffer++;
+
+    bool whiteMoves = !(movementLog->lastMoveIndex % 2);
+    if (whiteMoves)
+    {
+        value[buffer] = 'w';
+        buffer++;
+    }
+    else
+    {
+        value[buffer] = 'b';
+        buffer++;
+    }
+
+    value[buffer] = ' ';
+    buffer++;
+
+    if (allowCastling[0])
+    {
+        value[buffer] = 'K';
+        buffer++;
+    }
+    if (allowCastling[1])
+    {
+        value[buffer] = 'Q';
+        buffer++;
+    }
+    if (allowCastling[2])
+    {
+        value[buffer] = 'k';
+        buffer++;
+    }
+    if (allowCastling[3])
+    {
+        value[buffer] = 'q';
+        buffer++;
+    }
+
+    value[buffer] = ' ';
+    buffer++;
+
+
+    bool foundPawn = false;
+    for (int i = 0; i < board->numSquares; i++)
+    {
+        if (pieces[i] == board->WhiteEnPassant && !whiteMoves)
+        {
+            Position pos = WhiteDefaultPromotionPiece->Get2DCords(i, board->numSquares);
+            value[buffer] = (char)(pos.x + 97);
+            buffer++;
+            value[buffer] = (char)(pos.y + 49);
+            buffer++;
+            foundPawn = true;
+        }
+        if (pieces[i] == board->BlackEnPassant && whiteMoves)
+        {
+            Position pos = BlackDefaultPromotionPiece->Get2DCords(i, board->numSquares);
+            value[buffer] = (char)(pos.x + 97);
+            buffer++;
+            value[buffer] = (char)(pos.y + 49);
+            buffer++;
+            foundPawn = true;
+        }
+    }
+
+    if (!foundPawn)
+    {
+        value[buffer] = '-';
+        buffer++;
+    }
+
+    value[buffer] = ' ';
+    buffer++;
+
+    value[buffer] = '0';//We haven't made drawing mechanism yet!
+    buffer++;
+
+    value[buffer] = ' ';
+    buffer++;
+
+    value[buffer] = movementLog->lastMoveIndex + 48;
+    buffer++;
+
+    value[buffer] = 0;
+    buffer++;
+
+    return value;
 }
 
 void Game::Update()
@@ -128,6 +237,40 @@ void Game::Update()
 
     movementLog->Draw();
 
+    const char* fen = GetFen();
+    
+    float eval = stockfish.getEval(fen);
+    float originalEval = eval;
+
+
+    delete[] fen;
+
+    DrawRectangle(0, screenHeight, screenWidth, evalLineHeight, BLACK);
+
+    eval = FastSigmoid(eval,3);
+
+    float evalWidth = eval*(screenWidth/2);//0 - 153 - > 0 - screenWidth/2
+    DrawRectangle(0, screenHeight, screenWidth/2 + evalWidth, evalLineHeight, WHITE);
+
+
+    if (eval >= 0)
+    {
+        char buffer[5];
+
+        snprintf(buffer, sizeof(buffer), "%f", originalEval);
+
+        DrawText(buffer, 20, screenHeight, 20, BLACK);
+    }
+    else
+    {
+        char buffer[5];
+
+        snprintf(buffer, sizeof(buffer), "%f", originalEval *-1);
+
+        DrawText(buffer, screenWidth - MeasureText(buffer, 20) - 20, screenHeight, 20, WHITE);
+
+    }
+    
 
     //DrawFPS(0, 0);
     EndDrawing();

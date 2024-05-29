@@ -35,6 +35,8 @@ void MovementLog::Draw()
         int buffer = 0;
 
         int idx = i+1;
+        idx /= 2;
+        idx++;
         char num[3];
         int c = 0;
         while (idx > 0)

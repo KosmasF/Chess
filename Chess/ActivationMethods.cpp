@@ -21,9 +21,9 @@ float Sigmoid(float input)
 	return ((1 / (1 + (exp(-input)))) * 2) - 1;
 }
 
-float FastSigmoid(float input)
+float FastSigmoid(float input,int smooth)
 {
-	return  input / (1 + fabs(input));
+	return  input / (smooth + fabs(input));
 }
 
 float Linear(float input)

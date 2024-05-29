@@ -6,10 +6,7 @@ NeuralNetwork::NeuralNetwork(int* layerSize, int layerNum)
 	LayerSize = layerSize;
 	LayerNum = layerNum;
 
-	for (int layer = 1; layer < layerNum; layer++)
-	{
-		NeuronNum += layerSize[layer];
-	}
+	SetNeuronNum();
 
 	neurons = new Neuron*[NeuronNum];
 
@@ -140,7 +137,6 @@ void NeuralNetwork::Load(void* data)
 		int LayerNum;
 		int NeuronNum;
 	*/
-
 	int size = ((int*)data)[0];
 	data = (int*)data + 1;
 	size -= 4;
@@ -154,10 +150,68 @@ void NeuralNetwork::Load(void* data)
 	void* NeuronDataPos = (int*)data + 1 + LayerNum;
 	//TODO: make this
 
+	SetNeuronNum();
 
+	for(int i = 0; i < NeuronNum; i++)
+	{
+		int neuronSize = GetNeuronDataSize(NeuronDataPos);
+		neurons[i]->Load(NeuronDataPos);
+		NeuronDataPos = (char*)NeuronDataPos + neuronSize;
+	}
 }
 
 int NeuralNetwork::GetNeuronDataSize(void* data)
 {
 	return sizeof(int) + ((*(int*)data) * sizeof(float)) + sizeof(float) + sizeof(char);
+}
+
+void NeuralNetwork::Save(const char* path)
+{
+	void* data = Data();
+	int dataSize = ((int*)data)[0];
+	FILE* file = fopen(path, "wb");
+	fwrite(data, dataSize, 1, file);
+	std::cout << "Saved file as: " << path << std::endl;
+	fclose(file);
+	free(data);
+}
+
+void NeuralNetwork::LoadFromDisk(const char* path)
+{
+	FILE* file = fopen(path, "rb");
+	int* size = new int;
+	fread(size, sizeof(int), 1, file);
+	std::cout << "Loaded file: "<< path << " with size of: " << *size << " bytes" << std::endl;
+	void* data = malloc(*size);
+
+	if (data == nullptr)
+		return;
+
+	fclose(file);
+	file = fopen(path, "rb");
+	fread(data, *size, 1, file);
+	Load(data);
+	fclose(file);
+	free(data);
+	delete size;
+}
+
+void NeuralNetwork::SetNeuronNum()
+{
+	NeuronNum = 0;
+
+	for (int layer = 1; layer < LayerNum; layer++)
+	{
+		NeuronNum += LayerSize[layer];
+	}
+}
+
+void NeuralNetwork::Mutate(float mutationRate)
+{
+	srand(rand());
+
+	for (int i = 0; i < NeuronNum; i++)
+	{
+		neurons[i]->Mutate(mutationRate);
+	}
 }

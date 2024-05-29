@@ -1,10 +1,10 @@
 #include "Sprites.h"
 
-Texture2D Sprites::GetAndResize(Image loadedImage ,Rectangle crop , Board* board)
+Texture2D Sprites::GetAndResize(Image* loadedImage ,Rectangle crop , Board* board)
 {
-	ImageCrop(&loadedImage, crop);
-	ImageResize(&loadedImage, board->SquareSize, board->SquareSize);
-	return LoadTextureFromImage(loadedImage);
+	Image img = ImageFromImage(*loadedImage, crop);
+	ImageResize(&img, board->SquareSize, board->SquareSize);
+	return LoadTextureFromImage(img);
 }
 
 Sprites::Sprites(const char* spritesheetPath, Board* board)// Default board is okay
@@ -14,18 +14,18 @@ Sprites::Sprites(const char* spritesheetPath, Board* board)// Default board is o
 	float height = image.height / 2;// Vertical pieces
 
 
-	WhiteKing = GetAndResize(LoadImage(spritesheetPath), {0,0,width,height} , board);
-	WhiteQueen = GetAndResize(LoadImage(spritesheetPath), { width,0,width,height }, board);
-	WhiteBishop = GetAndResize(LoadImage(spritesheetPath), { width*2,0,width,height }, board);
-	WhiteKnight = GetAndResize(LoadImage(spritesheetPath), { width*3,0,width,height }, board);
-	WhiteRook = GetAndResize(LoadImage(spritesheetPath), { width*4,0,width,height }, board);
-	WhitePawn = GetAndResize(LoadImage(spritesheetPath), { width*5,0,width,height }, board);
+	WhiteKing = GetAndResize(&image, {0,0,width,height} , board);
+	WhiteQueen = GetAndResize(&image, { width,0,width,height }, board);
+	WhiteBishop = GetAndResize(&image, { width*2,0,width,height }, board);
+	WhiteKnight = GetAndResize(&image, { width*3,0,width,height }, board);
+	WhiteRook = GetAndResize(&image, { width*4,0,width,height }, board);
+	WhitePawn = GetAndResize(&image, { width*5,0,width,height }, board);
 
 
-	BlackKing= GetAndResize(LoadImage(spritesheetPath), { 0,height,width,height }, board);
-	BlackQueen = GetAndResize(LoadImage(spritesheetPath), { width,height,width,height }, board);
-	BlackBishop = GetAndResize(LoadImage(spritesheetPath), { width*2,height,width,height }, board);
-	BlackKnight = GetAndResize(LoadImage(spritesheetPath), { width*3,height,width,height }, board);
-	BlackRook = GetAndResize(LoadImage(spritesheetPath), { width*4,height,width,height }, board);
-	BlackPawn = GetAndResize(LoadImage(spritesheetPath), { width*5,height,width,height }, board);
+	BlackKing= GetAndResize(&image, { 0,height,width,height }, board);
+	BlackQueen = GetAndResize(&image, { width,height,width,height }, board);
+	BlackBishop = GetAndResize(&image, { width*2,height,width,height }, board);
+	BlackKnight = GetAndResize(&image, { width*3,height,width,height }, board);
+	BlackRook = GetAndResize(&image, { width*4,height,width,height }, board);
+	BlackPawn = GetAndResize(&image, { width*5,height,width,height }, board);
 }

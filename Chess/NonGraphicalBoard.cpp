@@ -89,8 +89,8 @@ bool NonGraphicalBoard::Move(int From, int To, bool IsWhite)
 {
     if (!IsWhite)
     {
-        From = 63 - From;
-        To = 63 - To;
+        From = WhiteDefaultPromotionPiece->InverseIndex(From);
+        To = WhiteDefaultPromotionPiece->InverseIndex(To);
     }
 
     if (pieces[From] != nullptr)

@@ -72,8 +72,49 @@ void* Neuron::Data()
 		*(weightsPos + i) = weights[i];
 	}
 	*biasPos = bias;
-	*ActivationMethodPos = 0;
+	
+	if (ActivationMethod == Sigmoid)
+		*ActivationMethodPos = 'S';
+	else if (ActivationMethod == NonNegativeLimitedLinear)
+		*ActivationMethodPos = 'n';
+	else
+		*ActivationMethodPos = 0;
+
 
 	//free(output);
 	return output; //It is your responsibility now! :)
+}
+
+void Neuron::Load(void* data)
+{
+	int* numWeightsPos = (int*)data;
+	numWeights = *numWeightsPos;
+
+	float* weightsPos = (float*)((int*)data + 1);
+	memcpy(weights, weightsPos, numWeights * sizeof(int));
+
+	float* biasPos = (float*)((char*)data + sizeof(int) + (numWeights * sizeof(float)));
+	bias = *biasPos;
+
+	char* ActivationMethodPos = (char*)data + sizeof(int) + (numWeights * sizeof(float)) + sizeof(float);
+	if (*ActivationMethodPos == 'S')
+		ActivationMethod = Sigmoid;
+	else if (*ActivationMethodPos == 'n')
+		ActivationMethod = NonNegativeLimitedLinear;
+	else
+		throw "Corrupted data input";
+}
+
+float Neuron::RandomFloat()
+{
+	return (float)(rand()) / (float)(RAND_MAX);
+}
+
+void Neuron::Mutate(float rate)
+{
+	for (int i = 0; i < numWeights; i++)
+	{
+		weights[i] += (RandomFloat() * rate);
+	}
+	bias += (RandomFloat() * rate);// *preferredWeightGrowth[i];
 }

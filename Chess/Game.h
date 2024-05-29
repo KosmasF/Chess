@@ -1,4 +1,5 @@
 #pragma once
+
 #include "raylib.h"
 #include "Board.h"
 #include <iostream>
@@ -7,6 +8,13 @@
 #include "InversedPieces.h"
 #include "Sprites.h"
 #include "MovementLog.h"
+#include "SocketConnection.h"
+
+//I HATE RAYLIB!!!
+//I HATE RAYLIB!!!
+//I HATE RAYLIB!!!
+//I HATE RAYLIB!!!
+//I HATE RAYLIB!!!
 
 
 class Game
@@ -41,6 +49,10 @@ private:
     Piece* pieces[64];
     PiecesArray Pieces = PiecesArray(pieces, 64);
 
+    SocketConnection stockfish;
+
+    int evalLineHeight = 20;
+
 public:
 	const int screenHeight = 536;
 	const int LogSize = 200;
@@ -48,9 +60,11 @@ public:
 
 	const char* spritesheetPath = "spritesheet.png";
 
-	Game();
+	Game(int argc, char** argv);
 
 	~Game();
+
+    const char* GetFen();
 
 	void Update();
 

@@ -38,16 +38,21 @@ class PiecesArray
 private:
 	Piece** pieces;
 	int Size;
+	const int maxFenSize = 92;
 
 public:
 
 	PiecesArray(Piece** InputPieces , int size);
+
+	~PiecesArray();
 
 	operator Piece**& ();
 
 	operator void**& ();
 
 	Piece*& operator[](unsigned int index);
+
+	char* fen();
 
 	//InversedPiecesIterator begin();
 	//InversedPiecesIterator end();

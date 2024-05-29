@@ -5,7 +5,7 @@
 class Sprites
 {
 private:
-	Texture2D GetAndResize(Image loadedImage, Rectangle crop, Board* board);
+	Texture2D GetAndResize(Image* loadedImage, Rectangle crop, Board* board);
 public:
 	Sprites(const char* spritesheetPath, Board* board);// Default board is okay
 	Texture2D WhiteKing, WhiteQueen, WhiteBishop, WhiteKnight, WhiteRook, WhitePawn;
