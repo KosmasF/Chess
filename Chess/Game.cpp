@@ -79,10 +79,10 @@ Game::~Game()
     CloseWindow();
 }
 
-const char* Game::GetFen()
+const char* Game::GetFen(PiecesArray FenPieces, bool* castling)
 {
 
-    char* value = Pieces.fen();
+    char* value = FenPieces.fen();
     int buffer = strlen(value);
 
     value[buffer] = ' ';
@@ -103,22 +103,22 @@ const char* Game::GetFen()
     value[buffer] = ' ';
     buffer++;
 
-    if (allowCastling[0])
+    if (castling[0])
     {
         value[buffer] = 'K';
         buffer++;
     }
-    if (allowCastling[1])
+    if (castling[1])
     {
         value[buffer] = 'Q';
         buffer++;
     }
-    if (allowCastling[2])
+    if (castling[2])
     {
         value[buffer] = 'k';
         buffer++;
     }
-    if (allowCastling[3])
+    if (castling[3])
     {
         value[buffer] = 'q';
         buffer++;
@@ -129,25 +129,28 @@ const char* Game::GetFen()
 
 
     bool foundPawn = false;
-    for (int i = 0; i < board->numSquares; i++)
+    for (int i = 0; i < board->totalNumSquares; i++)
     {
-        if (pieces[i] == board->WhiteEnPassant && !whiteMoves)
+        if (pieces[i] != nullptr)
         {
-            Position pos = WhiteDefaultPromotionPiece->Get2DCords(i, board->numSquares);
-            value[buffer] = (char)(pos.x + 97);
-            buffer++;
-            value[buffer] = (char)(pos.y + 49);
-            buffer++;
-            foundPawn = true;
-        }
-        if (pieces[i] == board->BlackEnPassant && whiteMoves)
-        {
-            Position pos = BlackDefaultPromotionPiece->Get2DCords(i, board->numSquares);
-            value[buffer] = (char)(pos.x + 97);
-            buffer++;
-            value[buffer] = (char)(pos.y + 49);
-            buffer++;
-            foundPawn = true;
+            if (pieces[i]->GetName() == "Invalid!" && pieces[i]->IsWhite() && !whiteMoves)
+            {
+                Position pos = WhiteDefaultPromotionPiece->Get2DCords(i, board->numSquares);
+                value[buffer] = (char)(pos.x + 97);
+                buffer++;
+                value[buffer] = (char)(pos.y + 49);
+                buffer++;
+                foundPawn = true;
+            }
+            if (pieces[i]->GetName() == "Invalid!" && !(pieces[i]->IsWhite()) && whiteMoves)
+            {
+                Position pos = BlackDefaultPromotionPiece->Get2DCords(i, board->numSquares);
+                value[buffer] = (char)(pos.x + 97);
+                buffer++;
+                value[buffer] = (char)(pos.y + 49);
+                buffer++;
+                foundPawn = true;
+            }
         }
     }
 
@@ -205,9 +208,44 @@ void Game::Update()
 
         }
         else
-        {
+        {//HERE BLACK PLAYS
+
             if ((movementLog->lastMoveIndex % 2))
-                board->CheckInput(Pieces, (void*)WhiteDefaultPromotionPiece, (void*)BlackDefaultPromotionPiece, allowCastling, movementLog);
+            {
+                if (blackIsPlayer)
+                {
+                    board->CheckInput(Pieces, (void*)WhiteDefaultPromotionPiece, (void*)BlackDefaultPromotionPiece, allowCastling, movementLog);
+                }
+                else
+                {
+                    const char* fen = GetFen(Pieces,allowCastling);
+                    float currentEval = stockfish.getEval(fen);
+
+                    int maxEvalDiff = -( - 154 - 154);
+                    int bestMoveIndex;
+
+
+                    BranchEvaluationData<defaultBranchSize> data = BranchEval(fen);
+                    delete[] fen;
+
+                    //char* movementNotation = board->MovementNotation(Pieces, bestMove[1], bestMove[0], allowCastling);
+                    //movementLog->AddMove(movementNotation);
+                    //delete[] movementNotation;
+
+                    for (int i = 0; i < defaultBranchSize; i++)
+                    {
+                        if (data.evals[i] < maxEvalDiff)
+                        {
+                            bestMoveIndex = i;
+                            maxEvalDiff = data.evals[i];
+                        }
+                        board->DrawMove(data.bestMoves[i][0], data.bestMoves[i][1]);
+                    }
+                    dataToDraw = data;
+                    
+                    board->MakeMove(data.bestMoves[bestMoveIndex][0], data.bestMoves[bestMoveIndex][1], Pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog);
+                }
+            }
 
             Position idx = { 7,0 };
             for (int i = board->totalNumSquares - 1; i > -1; i--)
@@ -226,6 +264,7 @@ void Game::Update()
 
             if (board->CollectedPiece != -1 && Pieces[board->CollectedPiece] != nullptr)
                 Pieces[board->CollectedPiece]->DrawLegal(Pieces, board->CollectedPiece, board, allowCastling, true);
+
         }
     }
 
@@ -237,7 +276,7 @@ void Game::Update()
 
     movementLog->Draw();
 
-    const char* fen = GetFen();
+    const char* fen = GetFen(Pieces,allowCastling);
     
     float eval = stockfish.getEval(fen);
     float originalEval = eval;
@@ -271,6 +310,10 @@ void Game::Update()
 
     }
     
+    for (int i = 0; i < defaultBranchSize; i++)
+    {
+        board->DrawMove(dataToDraw.bestMoves[i][0], dataToDraw.bestMoves[i][1]);
+    }
 
     //DrawFPS(0, 0);
     EndDrawing();
@@ -317,5 +360,82 @@ void Game::SetPiecesAsDefault(Piece** pieces)
     pieces[62] = WhiteKnight;
     pieces[63] = WhiteRook;
 
+    movementLog->DeleteMoves();
     movementLog->lastMoveIndex = 0;
 }
+
+BranchEvaluationData<Game::defaultBranchSize> Game::BranchEval(const char* position)
+{
+    float eval = stockfish.getEval(position);
+    float currentEval = eval;
+
+    float maxEvalDiff[defaultBranchSize];
+    for (int i = 0; i < defaultBranchSize; i++)
+    {
+       maxEvalDiff[i] = -(-154 - 154);
+    }
+
+    int bestMoves[defaultBranchSize][2] = { -1,-1 };
+
+    for (int From = 0; From < board->totalNumSquares; From++)
+    {
+        for (int To = 0; To < 64; To++)
+        {
+            if (pieces[From] != nullptr)
+            {
+                if (pieces[From]->IsLegal(pieces, From, To, board, allowCastling) && !(pieces[From]->IsWhite()))
+                {
+                    Piece** tempBoard = (Piece**)malloc(sizeof(Piece*) * board->totalNumSquares);
+                    if (tempBoard == nullptr)
+                    {
+                        free(tempBoard);
+                        return BranchEvaluationData<defaultBranchSize>();
+                    }
+                    memcpy(tempBoard, pieces, sizeof(Piece*) * board->totalNumSquares);
+                    bool* castling = (bool*)malloc(sizeof(bool) * 4);
+                    if (castling == nullptr)
+                    {
+                        free(tempBoard);
+                        free(castling);
+                        return BranchEvaluationData<defaultBranchSize>();
+                    }
+                    memcpy(castling, allowCastling, sizeof(bool) * 4);
+
+                    board->MakeMove(From, To, PiecesArray(tempBoard, board->totalNumSquares), castling, BlackDefaultPromotionPiece, BlackDefaultPromotionPiece, nullptr, true);
+
+                    const char* fen = GetFen(PiecesArray(tempBoard, board->totalNumSquares), castling);
+                    float posEval = stockfish.getEval(fen);
+                    delete[] fen;
+
+                    for (int i = 0; i < defaultBranchSize; i++)
+                    {
+                        if (posEval - currentEval < maxEvalDiff[i])// - 11 --(+)10 = -1
+                        {
+                            bestMoves[i][0] = From;
+                            bestMoves[i][1] = To;
+                            maxEvalDiff[i] = posEval - currentEval;
+                            break;
+                        }
+                    }
+                    //Revert
+
+                    free(tempBoard);
+                    free(castling);
+                }
+            }
+        }
+
+    }
+
+    BranchEvaluationData<defaultBranchSize> data = BranchEvaluationData<defaultBranchSize>();
+
+    for (int i = 0; i < defaultBranchSize; i++)
+    {
+        data.evals[i] = maxEvalDiff[i];
+        data.bestMoves[i][0] = bestMoves[i][0];
+        data.bestMoves[i][1] = bestMoves[i][1];
+    }
+
+    return data;
+}
+

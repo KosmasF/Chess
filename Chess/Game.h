@@ -16,6 +16,13 @@
 //I HATE RAYLIB!!!
 //I HATE RAYLIB!!!
 
+template<int size>
+struct BranchEvaluationData
+{
+    int bestMoves[size][2];
+    float evals[size];
+};
+
 
 class Game
 {
@@ -53,6 +60,13 @@ private:
 
     int evalLineHeight = 20;
 
+    bool blackIsPlayer = false;
+
+    static const int defaultBranchSize = 5;
+
+    BranchEvaluationData<defaultBranchSize> BranchEval(const char* position);
+
+    BranchEvaluationData<defaultBranchSize> dataToDraw = BranchEvaluationData<defaultBranchSize>();
 public:
 	const int screenHeight = 536;
 	const int LogSize = 200;
@@ -64,7 +78,7 @@ public:
 
 	~Game();
 
-    const char* GetFen();
+    const char* GetFen(PiecesArray FenPieces , bool* castling);
 
 	void Update();
 

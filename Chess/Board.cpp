@@ -22,6 +22,211 @@ Board::~Board()
 	delete BlackEnPassant;
 }
 
+void Board::DrawMove(int From, int To)
+{
+	Position startPos = ((Piece*)WhiteEnPassant)->Get2DCordsDrawable(From, this);
+	startPos.x += SquareSize / 2;
+	startPos.y += SquareSize / 2;
+	Position endPos = ((Piece*)WhiteEnPassant)->Get2DCordsDrawable(To, this);
+	endPos.x += SquareSize / 2;
+	endPos.y += SquareSize / 2;
+
+	//DrawLine(startPos.x, startPos.y, endPos.x, endPos.y, ORANGE);
+
+	float angle = atan2((startPos.y - endPos.y) , (endPos.x - startPos.x));
+
+	float size = sqrt(((startPos.x - endPos.x) * (startPos.x - endPos.x)) + ((startPos.y - endPos.y) * (startPos.y - endPos.y)));
+
+	int offset = 20;
+
+	DrawLineEx({ (float)startPos.x, (float)startPos.y }, { 
+		(float)((cos(angle) * (size - offset)) + startPos.x) ,
+		(float)(-sin(angle) * (size - offset) + startPos.y) 
+		}, 10, ORANGE);
+
+	float angleOffset = asin(offset / size);
+	angleOffset = abs(angleOffset);
+
+	int ang = angle * (180 / PI);
+
+	Vector2 UpperPoint = { 
+		(cos(angle + angleOffset) * (size - offset)) + startPos.x,
+		(- sin(angle + angleOffset) * (size - offset)) + startPos.y
+	};
+
+	Vector2 LowerPoint = {
+		cos(angle - angleOffset) * (size - offset)+startPos.x,
+		-sin(angle - angleOffset) * (size - offset)+startPos.y
+	};
+
+	DrawTriangle({ (float)endPos.x,(float)endPos.y }, UpperPoint, LowerPoint, ORANGE);
+
+	DrawTriangle({ (float)endPos.x,(float)endPos.y }, LowerPoint, UpperPoint, ORANGE);
+}
+
+bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, void* WhiteDefaultPromotionPiece, void* BlackDefaultPromotionPiece, MovementLog* movementLog, bool disableLogging)
+{
+	int idx = To;
+	int CollectedPiece = From;
+
+	if (pieces[CollectedPiece]->IsLegal(pieces, CollectedPiece, idx, this, allowCastling))
+	{
+		if (!disableLogging)
+			std::cout << "MOVEMENT LOG: ";
+		char* notation = MovementNotation(pieces, idx, CollectedPiece, allowCastling);
+		if (!(pieces[CollectedPiece]->GetName() == "K" && abs(idx - CollectedPiece) == 2))
+		{
+			if (!disableLogging)
+				std::cout << (notation);
+		}
+
+
+		if (pieces[idx] == WhiteEnPassant && pieces[CollectedPiece]->GetName() == "")
+		{
+			pieces[idx - 8] = nullptr;
+		}
+		if (pieces[idx] == BlackEnPassant && pieces[CollectedPiece]->GetName() == "")
+		{
+			pieces[idx + 8] = nullptr;
+		}
+
+		for (int i = 0; i < totalNumSquares; i++)
+		{
+			if (pieces[i] != nullptr)
+			{
+				if (pieces[i]->GetName() == "Invalid!" && !(pieces[CollectedPiece]->IsWhite() ^ pieces[i]->IsWhite()))
+				{
+					pieces[i] = nullptr;
+				}
+			}
+		}
+
+		pieces[idx] = pieces[CollectedPiece];
+		pieces[CollectedPiece] = nullptr;
+
+		//Castling
+		if (pieces[idx]->GetName() == "K")
+		{
+			if (idx - CollectedPiece == 2)
+			{
+				if (pieces[idx]->IsWhite())
+				{
+					pieces[61] = pieces[63];
+					pieces[63] = nullptr;
+				}
+				else
+				{
+					pieces[5] = pieces[7];
+					pieces[7] = nullptr;
+				}
+				if (!disableLogging)
+					std::cout << "O-O";
+				if (movementLog != nullptr)
+					movementLog->AddMove("O-O");
+
+			}
+			if (idx - CollectedPiece == -2)
+			{
+				if (pieces[idx]->IsWhite())
+				{
+					pieces[59] = pieces[56];
+					pieces[56] = nullptr;
+				}
+				else
+				{
+					pieces[3] = pieces[0];
+					pieces[0] = nullptr;
+
+				}
+				if (!disableLogging)
+					std::cout << "O-O-O";
+				if (movementLog != nullptr)
+					movementLog->AddMove("O-O-O");
+			}
+		}
+
+		//Is king attacked!
+		for (int i = 0; i < totalNumSquares; i++)
+		{
+			if (pieces[i] != nullptr)
+				if (pieces[i]->GetName() == "K")
+				{
+					if (((King*)(pieces[i]))->IsAttacked(pieces, i, this, allowCastling))
+					{
+						if (!disableLogging)
+							std::cout << "+";
+						size_t notationSize = strlen(notation);
+						notation[notationSize] = '+';
+						notation[notationSize + 1] = 0;
+					}
+				}
+		}
+		
+		if(movementLog!=nullptr)
+			movementLog->AddMove(notation);
+
+		if (!disableLogging)
+			std::cout << std::endl;
+
+		if (pieces[idx]->GetName() == "")
+		{
+			if (pieces[idx]->IsWhite() && (int)(idx / 8) == 0)
+				pieces[idx] = (Piece*)WhiteDefaultPromotionPiece;
+			if (!pieces[idx]->IsWhite() && (int)(idx / 8) == 7)
+				pieces[idx] = (Piece*)BlackDefaultPromotionPiece;
+			if (abs(CollectedPiece - idx) == 16)
+			{
+				if (pieces[idx]->IsWhite())
+					pieces[idx + 8] = (Piece*)WhiteEnPassant;
+				else
+					pieces[idx - 8] = (Piece*)BlackEnPassant;
+			}
+		}
+
+		if (!disableLogging)
+			std::cout << "Piece: " << CollectedPiece << " moved to: " << idx << std::endl;
+
+
+		//Check for allowCastling!
+		if (pieces[idx]->GetName() == "K")
+		{
+			if (pieces[idx]->IsWhite())
+			{
+				allowCastling[0] = false;
+				allowCastling[1] = false;
+			}
+			if (!(pieces[idx]->IsWhite()))
+			{
+				allowCastling[2] = false;
+				allowCastling[3] = false;
+			}
+		}
+		if (pieces[idx]->GetName() == "R")
+		{
+			if (CollectedPiece == 56)
+				allowCastling[0] = false;
+			if (CollectedPiece == 63)
+				allowCastling[1] = false;
+			if (CollectedPiece == 0)
+				allowCastling[4] = false;
+			if (CollectedPiece == 7)
+				allowCastling[3] = false;
+		}
+		if (!disableLogging)
+		{
+			std::cout << "Allow castling :  ";
+			for (int i = 0; i < 4; i++)
+				std::cout << allowCastling[i] << ", ";
+			std::cout << std::endl;
+		}
+
+		this->CollectedPiece = -1;
+
+		return true;
+	}
+	return false;
+}
+
 void Board::CheckInput(PiecesArray pieces , void* WhiteDefaultPromotionPiece, void* BlackDefaultPromotionPiece, bool* allowCastling , MovementLog* movementLog)
 {
 	if (IsMouseButtonPressed(0))
@@ -36,148 +241,9 @@ void Board::CheckInput(PiecesArray pieces , void* WhiteDefaultPromotionPiece, vo
 
 			if (CollectedPiece != -1)
 			{
-				if (pieces[CollectedPiece]->IsLegal(pieces, CollectedPiece, idx, this , allowCastling))
-				{
-					std::cout << "MOVEMENT LOG: ";
-					char* notation = MovementNotation(pieces, idx, CollectedPiece, allowCastling);
-					if (!(pieces[CollectedPiece]->GetName() == "K" && abs(idx - CollectedPiece) == 2))
-					{
-						std::cout << (notation);
-					}
-
-
-					if (pieces[idx] == WhiteEnPassant && pieces[CollectedPiece]->GetName() == "")
-					{
-						pieces[idx - 8] = nullptr;
-					}
-					if (pieces[idx] == BlackEnPassant && pieces[CollectedPiece]->GetName() == "")
-					{
-						pieces[idx + 8] = nullptr;
-					}
-
-					for (int i = 0; i < totalNumSquares; i++)
-					{
-						if (pieces[i] != nullptr)
-						{
-							if (pieces[i]->GetName() == "Invalid!" && !(pieces[CollectedPiece]->IsWhite() ^ pieces[i]->IsWhite()))
-							{
-								pieces[i] = nullptr;
-							}
-						}
-					}
-
-					pieces[idx] = pieces[CollectedPiece];
-					pieces[CollectedPiece] = nullptr;
-
-					//Castling
-					if (pieces[idx]->GetName() == "K")
-					{
-						if (idx - CollectedPiece == 2)
-						{
-							if (pieces[idx]->IsWhite())
-							{
-								pieces[61] = pieces[63];
-								pieces[63] = nullptr;
-							}
-							else
-							{
-								pieces[5] = pieces[7];
-								pieces[7] = nullptr;
-							}
-							std::cout << "O-O";
-							movementLog->AddMove("O-O");
-
-						}
-						if (idx - CollectedPiece == -2)
-						{
-							if (pieces[idx]->IsWhite())
-							{
-								pieces[59] = pieces[56];
-								pieces[56] = nullptr;
-							}
-							else
-							{
-								pieces[3] = pieces[0];
-								pieces[0] = nullptr;
-
-							}
-							std::cout << "O-O-O";
-							movementLog->AddMove("O-O-O");
-						}
-					}
-
-					//Is king attacked!
-					for (int i = 0; i < totalNumSquares; i++)
-					{
-						if (pieces[i] != nullptr)
-							if (pieces[i]->GetName() == "K")
-							{
-								if (((King*)(pieces[i]))->IsAttacked(pieces, i, this, allowCastling))
-								{
-									std::cout << "+";
-									size_t notationSize = strlen(notation);
-									notation[notationSize] = '+';
-									notation[notationSize + 1] = 0;
-								}
-							}
-					}
-
-					movementLog->AddMove(notation);
-
-					std::cout << std::endl;
-
-					if (pieces[idx]->GetName() == "")
-					{
-						if (pieces[idx]->IsWhite() && (int)(idx / 8) == 0)
-							pieces[idx] = (Piece*)WhiteDefaultPromotionPiece;
-						if (!pieces[idx]->IsWhite() && (int)(idx / 8) == 7)
-							pieces[idx] = (Piece*)BlackDefaultPromotionPiece;
-						if (abs(CollectedPiece - idx) == 16)
-						{
-							if (pieces[idx]->IsWhite())
-								pieces[idx + 8] = (Piece*)WhiteEnPassant;
-							else
-								pieces[idx - 8] = (Piece*)BlackEnPassant;
-						}
-					}
-
-					std::cout << "Piece: " << CollectedPiece << " moved to: " << idx << std::endl;
-
-
-					//Check for allowCastling!
-					if (pieces[idx]->GetName() == "K")
-					{
-						if (pieces[idx]->IsWhite())
-						{
-							allowCastling[0] = false;
-							allowCastling[1] = false;
-						}
-						if (!(pieces[idx]->IsWhite()))
-						{
-							allowCastling[2] = false;
-							allowCastling[3] = false;
-						}
-					}
-					if (pieces[idx]->GetName() == "R")
-					{
-						if (CollectedPiece == 56)
-							allowCastling[0] = false;
-						if (CollectedPiece == 63)
-							allowCastling[1] = false;
-						if (CollectedPiece == 0)
-							allowCastling[4] = false;
-						if (CollectedPiece == 7)
-							allowCastling[3] = false;
-					}
-					std::cout << "Allow castling :  ";
-					for (int i = 0; i < 4; i++)
-						std::cout << allowCastling[i] << ", ";
-					std::cout << std::endl;
-					CollectedPiece = -1;
+				if(MakeMove(CollectedPiece,idx,pieces,allowCastling,WhiteDefaultPromotionPiece,BlackDefaultPromotionPiece,movementLog))
 					return;
-				}
 			}
-
 			if (pieces[idx] != nullptr)
 			{
 				if (idx != CollectedPiece)

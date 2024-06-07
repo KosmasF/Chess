@@ -28,6 +28,8 @@ public:
 
 	~MovementLog();
 
+	void DeleteMoves();
+
 	void AddMove(const char* move);
 
 };

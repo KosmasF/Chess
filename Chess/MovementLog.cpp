@@ -79,6 +79,11 @@ void MovementLog::Draw()
 
 MovementLog::~MovementLog()
 {
+    DeleteMoves();
+}
+
+void MovementLog::DeleteMoves()
+{
     for (int i = 0; i < maxMoves; i++)
         delete moves[i];
 }

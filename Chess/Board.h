@@ -26,6 +26,10 @@ public:
 
 	~Board();
 
+	void DrawMove(int From, int To);
+
+	bool MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, void* WhiteDefaultPromotionPiece, void* BlackDefaultPromotionPiece, MovementLog* movementLog, bool disableLogging = false);
+
 	void CheckInput(PiecesArray pieces , void* WhiteDefaultPromotionPiece,void* BlackDefaultPromotionPiece, bool* allowCastling , MovementLog* movementLog);
 	void Draw();
 	char* MovementNotation(PiecesArray pieces , int Destination , int Location,bool* allowCastling);
