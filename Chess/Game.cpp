@@ -239,7 +239,7 @@ void Game::Update()
                             bestMoveIndex = i;
                             maxEvalDiff = data.evals[i];
                         }
-                        board->DrawMove(data.bestMoves[i][0], data.bestMoves[i][1]);
+                        //board->DrawMove(data.bestMoves[i][0], data.bestMoves[i][1]);
                     }
                     dataToDraw = data;
                     
@@ -379,7 +379,7 @@ BranchEvaluationData<Game::defaultBranchSize> Game::BranchEval(const char* posit
 
     for (int From = 0; From < board->totalNumSquares; From++)
     {
-        for (int To = 0; To < 64; To++)
+        for (int To = 0; To < board->totalNumSquares; To++)
         {
             if (pieces[From] != nullptr)
             {

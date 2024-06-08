@@ -115,5 +115,7 @@ bool Piece::EnPassantOrNullptr(Piece* piece, bool pawnEating)
 	{
 		return true;
 	}
+	if (pawnEating)
+		return true;
 	return false;
 }

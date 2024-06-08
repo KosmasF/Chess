@@ -31,5 +31,7 @@
 *.out
 *.app
 
-*.ipchnode_modules/ 
-node_modules/ 
+#Visual Studio Shit
+.vs/
+Chess/x64/
+x64/
