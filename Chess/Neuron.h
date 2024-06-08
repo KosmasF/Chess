@@ -5,7 +5,7 @@
 
 class Neuron
 {
-private:
+public:
 	float* weights;
 	int numWeights;
 	float bias;

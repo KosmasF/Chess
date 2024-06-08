@@ -23,7 +23,7 @@ public:
 
 	Position Get2DCordsDrawable(int idx, Board* board);
 
-	Position Get2DCords(int idx, int numSquares);
+	static Position Get2DCords(int idx, int numSquares);
 
 	virtual bool IsLegal(Piece** pieces, int Original, int ToCheck, Board* board , bool* allowCastling, bool oppositePieceIgnorance = true, bool ignoreColor = false, bool CheckKing = true);
 

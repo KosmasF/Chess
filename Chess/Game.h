@@ -78,7 +78,7 @@ public:
 
 	~Game();
 
-    const char* GetFen(PiecesArray FenPieces , bool* castling);
+    static const char* GetFen(PiecesArray FenPieces , bool* castling, int lastMoveIndex);
 
 	void Update();
 

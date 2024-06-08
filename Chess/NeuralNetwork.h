@@ -12,6 +12,14 @@ private:
 	int LayerNum;
 	int NeuronNum;
 
+	int GetNeuronDataSize(void* data);
+	int GetNumberOfWeights();
+	float GetWeightBetweenNeurons(int From, int To);
+	int LayerOfNeuron(int neuron);
+	int LayerRelativeOfNeuron(int neuron);
+	float* GetAllActivations(float* input);
+	float PartialDerivativeOfErrorFunction(int neuron, float* activations, float* predictedOutput);
+	int StartingIndexOfLayer(int layer);
 
 public:
 	NeuralNetwork(int* layerSize , int layerNum);
@@ -24,8 +32,6 @@ public:
 
 	void Load(void* data);
 
-	int GetNeuronDataSize(void* data);
-
 	void Save(const char* path);
 
 	void LoadFromDisk(const char* path);
@@ -33,6 +39,10 @@ public:
 	void SetNeuronNum();
 
 	void Mutate(float mutationRate);
+
+	float* BackPropagate(float* expectedOutput, float* input, float mutationRate);
+
+	void AddToWeights(float* data);
 
 };
 

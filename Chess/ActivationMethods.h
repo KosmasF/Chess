@@ -14,3 +14,5 @@ float Linear(float input);
 float NonNegativeLinear(float input);
 
 float NonNegativeLimitedLinear(float input);
+
+float None(float input);

@@ -42,3 +42,8 @@ float NonNegativeLimitedLinear(float input)
 {
 	return NonNegativeLinear(liL(input));
 }
+
+float None(float input)
+{
+	return input;
+}

@@ -79,7 +79,7 @@ Game::~Game()
     CloseWindow();
 }
 
-const char* Game::GetFen(PiecesArray FenPieces, bool* castling)
+const char* Game::GetFen(PiecesArray FenPieces, bool* castling, int lastMoveIndex)
 {
 
     char* value = FenPieces.fen();
@@ -88,7 +88,7 @@ const char* Game::GetFen(PiecesArray FenPieces, bool* castling)
     value[buffer] = ' ';
     buffer++;
 
-    bool whiteMoves = !(movementLog->lastMoveIndex % 2);
+    bool whiteMoves = !(lastMoveIndex % 2);
     if (whiteMoves)
     {
         value[buffer] = 'w';
@@ -129,22 +129,22 @@ const char* Game::GetFen(PiecesArray FenPieces, bool* castling)
 
 
     bool foundPawn = false;
-    for (int i = 0; i < board->totalNumSquares; i++)
+    for (int i = 0; i < 64; i++)
     {
-        if (pieces[i] != nullptr)
+        if (FenPieces[i] != nullptr)
         {
-            if (pieces[i]->GetName() == "Invalid!" && pieces[i]->IsWhite() && !whiteMoves)
+            if (FenPieces[i]->GetName() == "Invalid!" && FenPieces[i]->IsWhite() && !whiteMoves)
             {
-                Position pos = WhiteDefaultPromotionPiece->Get2DCords(i, board->numSquares);
+                Position pos = Piece::Get2DCords(i, 8);
                 value[buffer] = (char)(pos.x + 97);
                 buffer++;
                 value[buffer] = (char)(pos.y + 49);
                 buffer++;
                 foundPawn = true;
             }
-            if (pieces[i]->GetName() == "Invalid!" && !(pieces[i]->IsWhite()) && whiteMoves)
+            if (FenPieces[i]->GetName() == "Invalid!" && !(FenPieces[i]->IsWhite()) && whiteMoves)
             {
-                Position pos = BlackDefaultPromotionPiece->Get2DCords(i, board->numSquares);
+                Position pos = Piece::Get2DCords(i, 8);
                 value[buffer] = (char)(pos.x + 97);
                 buffer++;
                 value[buffer] = (char)(pos.y + 49);
@@ -169,7 +169,7 @@ const char* Game::GetFen(PiecesArray FenPieces, bool* castling)
     value[buffer] = ' ';
     buffer++;
 
-    value[buffer] = movementLog->lastMoveIndex + 48;
+    value[buffer] = lastMoveIndex + 48;
     buffer++;
 
     value[buffer] = 0;
@@ -218,7 +218,7 @@ void Game::Update()
                 }
                 else
                 {
-                    const char* fen = GetFen(Pieces,allowCastling);
+                    const char* fen = GetFen(Pieces,allowCastling,movementLog->lastMoveIndex);
                     float currentEval = stockfish.getEval(fen);
 
                     int maxEvalDiff = -( - 154 - 154);
@@ -276,7 +276,7 @@ void Game::Update()
 
     movementLog->Draw();
 
-    const char* fen = GetFen(Pieces,allowCastling);
+    const char* fen = GetFen(Pieces,allowCastling,movementLog->lastMoveIndex);
     
     float eval = stockfish.getEval(fen);
     float originalEval = eval;
@@ -403,7 +403,7 @@ BranchEvaluationData<Game::defaultBranchSize> Game::BranchEval(const char* posit
 
                     board->MakeMove(From, To, PiecesArray(tempBoard, board->totalNumSquares), castling, BlackDefaultPromotionPiece, BlackDefaultPromotionPiece, nullptr, true);
 
-                    const char* fen = GetFen(PiecesArray(tempBoard, board->totalNumSquares), castling);
+                    const char* fen = GetFen(PiecesArray(tempBoard, board->totalNumSquares), castling,movementLog->lastMoveIndex);
                     float posEval = stockfish.getEval(fen);
                     delete[] fen;
 

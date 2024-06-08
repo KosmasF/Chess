@@ -22,7 +22,7 @@ NeuralNetwork::NeuralNetwork(int* layerSize, int layerNum)
 		}
 		for (int i = 0; i < layerSize[layer]; i++)
 		{
-			neurons[i+buffer] = new Neuron(layerSize[layer - 1], layer == 1 ? Sigmoid : NonNegativeLimitedLinear);
+			neurons[i+buffer] = new Neuron(layerSize[layer - 1], layer != LayerNum - 1 ? Sigmoid : None);
 		}
 	}
 
@@ -165,6 +165,130 @@ int NeuralNetwork::GetNeuronDataSize(void* data)
 	return sizeof(int) + ((*(int*)data) * sizeof(float)) + sizeof(float) + sizeof(char);
 }
 
+int NeuralNetwork::GetNumberOfWeights()
+{
+	int result = 0;
+	for (int i = 1; i < NeuronNum; i++)
+	{
+		result += LayerSize[i];
+	}
+	return result;
+}
+
+float NeuralNetwork::GetWeightBetweenNeurons(int From, int To)
+{
+	return neurons[To]->weights[LayerRelativeOfNeuron(From)];
+}
+
+int NeuralNetwork::LayerOfNeuron(int neuron)
+{
+	int buffer = 0;
+	for (int i = 0; i < LayerNum; i++)
+	{
+		buffer += LayerSize[LayerNum];
+		if (neuron < buffer)
+			return i;
+	}
+	return -1;
+}
+
+int NeuralNetwork::LayerRelativeOfNeuron(int neuron)
+{
+	int buffer = 0;
+	for (int i = 0; i < LayerNum; i++)
+	{
+		buffer += LayerSize[LayerNum];
+		if (neuron < buffer)
+			return buffer - neuron;
+	}
+	return -1;
+}
+
+float* NeuralNetwork::GetAllActivations(float* input)
+{
+	float* result = (float*)malloc(sizeof(float) * NeuronNum);
+	if (result == nullptr) return nullptr;
+
+	int inputLength = LayerSize[0];
+	for (int i = 0; i < inputLength; i++)
+	{
+		result[i] = input[i];
+	}
+	int resultBuffer = inputLength;
+
+	for (int layer = 1; layer < LayerNum; layer++)
+	{
+		float* layerOutput = new float[LayerSize[layer]];
+
+
+		int buffer = 0;
+		int focusLayer = layer;
+		while (focusLayer > 1)
+		{
+			buffer += LayerSize[focusLayer - 1];
+			focusLayer--;
+		}
+
+		for (int i = 0; i < LayerSize[layer]; i++)
+		{
+			layerOutput[i] = neurons[i + buffer]->Generate(input);
+			result[resultBuffer] = layerOutput[i];
+			resultBuffer++;
+		}
+		delete[] input;
+		input = layerOutput;
+	}
+
+	return result;
+}
+
+float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activations, float* predictedOutput)
+{
+	if (LayerOfNeuron(neuron) == LayerNum - 1)
+	{
+		if (neurons[neuron]->ActivationMethod == None)
+		{
+			return (activations[neuron] - predictedOutput[neuron]);
+		}
+		else if (neurons[neuron]->ActivationMethod == Sigmoid)
+		{
+			return (activations[neuron] - predictedOutput[neuron]) * activations[neuron] * (1 - activations[neuron]);
+		}
+		else
+		{
+			return 0.0f;
+		}
+	}
+	else
+	{
+		if (neurons[neuron]->ActivationMethod == Sigmoid)
+		{
+			int forwardNeuronsDerivative = 0;
+			for (int i = StartingIndexOfLayer(LayerOfNeuron(neuron) + 1); i < StartingIndexOfLayer(LayerOfNeuron(neuron) + 1) + (LayerSize[LayerOfNeuron(neuron) + 1]); i++)
+			{
+				forwardNeuronsDerivative += GetWeightBetweenNeurons(neuron, i) * PartialDerivativeOfErrorFunction(i,activations,predictedOutput);
+			}
+
+			return forwardNeuronsDerivative * activations[neuron] * (1 - activations[neuron]);
+		}
+		else
+		{
+			return 0.0f;
+		}
+	}
+}
+
+int NeuralNetwork::StartingIndexOfLayer(int layer)
+{
+	int result = 0;
+	for (int i = 0; i < layer; i++)
+	{
+		result += LayerSize[i];
+	}
+	return result;
+}
+
+
 void NeuralNetwork::Save(const char* path)
 {
 	void* data = Data();
@@ -214,4 +338,29 @@ void NeuralNetwork::Mutate(float mutationRate)
 	{
 		neurons[i]->Mutate(mutationRate);
 	}
+}
+
+float* NeuralNetwork::BackPropagate(float* expectedOutput, float* input, float mutationRate)
+{
+	float* data = (float*)malloc(sizeof(float) * GetNumberOfWeights());
+	if (data == nullptr)
+		return nullptr;
+
+	float* activations = GetAllActivations(input);
+
+	int buffer = 0;
+	for (int i = 0; i < NeuronNum; i++)
+	{
+		for (int j = 0; j < LayerOfNeuron(i) + 1; j++)
+		{
+			data[buffer] = activations[i]*PartialDerivativeOfErrorFunction(j, activations, expectedOutput)*(-mutationRate);
+			buffer++;
+		}
+	}
+
+	return data;
+}
+
+void NeuralNetwork::AddToWeights(float* data)
+{
 }
