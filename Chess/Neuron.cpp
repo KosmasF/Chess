@@ -13,7 +13,8 @@ void Neuron::SetRandomData()
 		weights[i] = dis(gen);
 	}
 
-	bias = dis(gen);
+	//bias = dis(gen);
+	bias = 0;
 }
 
 Neuron::Neuron(int inputSize, float (*Activation)(float))

@@ -135,6 +135,11 @@ bool SocketConnection::Commune()
 
 SocketConnection::~SocketConnection()
 {      
+    iResult = send(ConnectSocket, "Shutdown!", (int)strlen("Shutdown!"), 0);
+    if (iResult == SOCKET_ERROR) {
+        //Error
+    }
+
     // shutdown the connection since no more data will be sent
     iResult = shutdown(ConnectSocket, SD_SEND);
     if (iResult == SOCKET_ERROR) {

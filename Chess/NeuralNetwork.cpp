@@ -22,7 +22,7 @@ NeuralNetwork::NeuralNetwork(int* layerSize, int layerNum)
 		}
 		for (int i = 0; i < layerSize[layer]; i++)
 		{
-			neurons[i+buffer] = new Neuron(layerSize[layer - 1], layer != LayerNum - 1 ? Sigmoid : None);
+			neurons[i+buffer] = new Neuron(layerSize[layer - 1], layer != LayerNum-1 ? Sigmoid : None);
 		}
 	}
 
@@ -168,9 +168,9 @@ int NeuralNetwork::GetNeuronDataSize(void* data)
 int NeuralNetwork::GetNumberOfWeights()
 {
 	int result = 0;
-	for (int i = 1; i < NeuronNum; i++)
+	for (int layer = 1; layer < LayerNum; layer++)
 	{
-		result += LayerSize[i];
+		result += LayerSize[layer]*LayerSize[layer-1];
 	}
 	return result;
 }
@@ -183,9 +183,9 @@ float NeuralNetwork::GetWeightBetweenNeurons(int From, int To)
 int NeuralNetwork::LayerOfNeuron(int neuron)
 {
 	int buffer = 0;
-	for (int i = 0; i < LayerNum; i++)
+	for (int i = 1; i < LayerNum; i++)
 	{
-		buffer += LayerSize[LayerNum];
+		buffer += LayerSize[i];
 		if (neuron < buffer)
 			return i;
 	}
@@ -195,7 +195,7 @@ int NeuralNetwork::LayerOfNeuron(int neuron)
 int NeuralNetwork::LayerRelativeOfNeuron(int neuron)
 {
 	int buffer = 0;
-	for (int i = 0; i < LayerNum; i++)
+	for (int i = 1; i < LayerNum; i++)
 	{
 		buffer += LayerSize[LayerNum];
 		if (neuron < buffer)
@@ -206,7 +206,7 @@ int NeuralNetwork::LayerRelativeOfNeuron(int neuron)
 
 float* NeuralNetwork::GetAllActivations(float* input)
 {
-	float* result = (float*)malloc(sizeof(float) * NeuronNum);
+	float* result = (float*)malloc(sizeof(float) * (NeuronNum+LayerSize[0]));
 	if (result == nullptr) return nullptr;
 
 	int inputLength = LayerSize[0];
@@ -248,11 +248,11 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 	{
 		if (neurons[neuron]->ActivationMethod == None)
 		{
-			return (activations[neuron] - predictedOutput[neuron]);
+			return (activations[neuron+LayerSize[0]] - predictedOutput[neuron-StartingIndexOfLayer(LayerNum-1)]);
 		}
 		else if (neurons[neuron]->ActivationMethod == Sigmoid)
 		{
-			return (activations[neuron] - predictedOutput[neuron]) * activations[neuron] * (1 - activations[neuron]);
+			return (activations[neuron + LayerSize[0]] - predictedOutput[neuron - StartingIndexOfLayer(LayerNum - 1)]) * activations[neuron + LayerSize[0]] * (1 - activations[neuron + LayerSize[0]]);
 		}
 		else
 		{
@@ -261,6 +261,7 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 	}
 	else
 	{
+		return 0.0f;//TEMP
 		if (neurons[neuron]->ActivationMethod == Sigmoid)
 		{
 			int forwardNeuronsDerivative = 0;
@@ -281,7 +282,7 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 int NeuralNetwork::StartingIndexOfLayer(int layer)
 {
 	int result = 0;
-	for (int i = 0; i < layer; i++)
+	for (int i = 1; i < layer; i++)
 	{
 		result += LayerSize[i];
 	}
@@ -349,18 +350,49 @@ float* NeuralNetwork::BackPropagate(float* expectedOutput, float* input, float m
 	float* activations = GetAllActivations(input);
 
 	int buffer = 0;
-	for (int i = 0; i < NeuronNum; i++)
+	for (int layer = 1; layer < LayerNum; layer++)
 	{
-		for (int j = 0; j < LayerOfNeuron(i) + 1; j++)
+		for (int j = 0; j < LayerSize[layer]; j++)
 		{
-			data[buffer] = activations[i]*PartialDerivativeOfErrorFunction(j, activations, expectedOutput)*(-mutationRate);
-			buffer++;
+			for (int i = 0; i < LayerSize[layer - 1]; i++)
+			{
+				int n1 = i + StartingIndexOfLayer(layer-1);
+				int n2 = j + StartingIndexOfLayer(layer);
+				data[buffer] = activations[n1] *PartialDerivativeOfErrorFunction(n2, activations, expectedOutput)* (-mutationRate);
+				buffer++;
+			}
 		}
 	}
 
+	free(activations);
 	return data;
 }
 
 void NeuralNetwork::AddToWeights(float* data)
 {
+	int buffer = 0;
+	for (int layer = 1; layer < LayerNum; layer++)
+	{
+		for (int neuron = 0; neuron < LayerSize[layer]; neuron++)
+		{
+			for (int i = 0; i < LayerSize[layer - 1]; i++)
+			{
+				neurons[StartingIndexOfLayer(layer)+neuron]->weights[i] += data[buffer];
+				buffer++;
+			}
+		}
+	}
+}
+
+float NeuralNetwork::GetLoss(float* output, float* predictedOutput)
+{
+	float loss = 0;
+	float total = 0;
+	for (int i = 0; i < LayerSize[LayerNum - 1]; i++)
+	{
+		float diff = (output[i]) - (predictedOutput[i]);
+		loss += diff*diff;
+		total++;
+	}
+	return loss / total;
 }

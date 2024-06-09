@@ -44,5 +44,6 @@ public:
 
 	void AddToWeights(float* data);
 
+	float GetLoss(float* output, float* predictedOutput);
 };
 

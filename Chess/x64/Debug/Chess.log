@@ -1,9 +1,4 @@
-﻿  Game.cpp
-C:\Users\Others\source\repos\Chess\Chess\Game.cpp(86,16): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\Others\source\repos\Chess\Chess\Game.cpp(240,55): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\Others\source\repos\Chess\Chess\Game.cpp(292,50): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-  main.cpp
+﻿  NeuralNetwork.cpp
 C:\Users\Others\source\repos\Chess\Chess\Neuron.h(4,10): warning C4067: unexpected tokens following preprocessor directive - expected a newline
-C:\Users\Others\source\repos\Chess\Chess\main.cpp(138,13): warning C4102: 'EndLoop': unreferenced label
-  Generating Code...
+C:\Users\Others\source\repos\Chess\Chess\NeuralNetwork.cpp(270,68): warning C4244: '+=': conversion from 'float' to 'int', possible loss of data
   Chess.vcxproj -> C:\Users\Others\source\repos\Chess\x64\Debug\Chess.exe

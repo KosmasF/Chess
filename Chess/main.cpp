@@ -8,7 +8,7 @@
 #pragma warning (disable : 4996)
 #include <stdio.h>
 
-//#define INTERNAL_SERVER
+#define INTERNAL_SERVER
 
 const bool graphical = 0;
 
@@ -196,6 +196,9 @@ int main(int argc, char** argv)
                 const char* fen = Game::GetFen(board.Pieces, board.allowCastling,0);
                 float eval = stockfish.getEval(fen);
                 delete[] fen;
+
+                float loss = nn.GetLoss(output,&eval);
+                printf("Iteration %d , loss: %f \n", iterations, loss);
 
                 float* generationStepVector = nn.BackPropagate(&eval,board.Status(true),mutationRate);
                 nn.AddToWeights(generationStepVector);
