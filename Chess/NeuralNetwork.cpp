@@ -197,9 +197,9 @@ int NeuralNetwork::LayerRelativeOfNeuron(int neuron)
 	int buffer = 0;
 	for (int i = 1; i < LayerNum; i++)
 	{
-		buffer += LayerSize[LayerNum];
+		buffer += LayerSize[i];
 		if (neuron < buffer)
-			return buffer - neuron;
+			return neuron - StartingIndexOfLayer(i);
 	}
 	return -1;
 }
@@ -261,16 +261,16 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 	}
 	else
 	{
-		return 0.0f;//TEMP
+		//return 0.0f;//TEMP
 		if (neurons[neuron]->ActivationMethod == Sigmoid)
 		{
-			int forwardNeuronsDerivative = 0;
+			float forwardNeuronsDerivative = 0;
 			for (int i = StartingIndexOfLayer(LayerOfNeuron(neuron) + 1); i < StartingIndexOfLayer(LayerOfNeuron(neuron) + 1) + (LayerSize[LayerOfNeuron(neuron) + 1]); i++)
 			{
-				forwardNeuronsDerivative += GetWeightBetweenNeurons(neuron, i) * PartialDerivativeOfErrorFunction(i,activations,predictedOutput);
+				forwardNeuronsDerivative += GetWeightBetweenNeurons(neuron, i) * PartialDerivativeOfErrorFunction(i, activations, predictedOutput);
 			}
 
-			return forwardNeuronsDerivative * activations[neuron] * (1 - activations[neuron]);
+			return forwardNeuronsDerivative * activations[neuron+LayerSize[0]] * (1 - activations[neuron+LayerSize[0]]);
 		}
 		else
 		{
