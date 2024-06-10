@@ -396,3 +396,21 @@ float NeuralNetwork::GetLoss(float* output, float* predictedOutput)
 	}
 	return loss / total;
 }
+
+float* NeuralNetwork::AverageWeightVector(float** vectors, int num)
+{
+	float* result = new float[GetNumberOfWeights()];
+
+	for (int i = 0; i < GetNumberOfWeights(); i++)
+	{
+		float average = 0;
+		for (int n = 0; n < num; n++)
+		{
+			average += vectors[n][i];
+		}
+		average /= num;
+		result[i] = average;
+	}
+
+	return result;
+}

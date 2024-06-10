@@ -173,7 +173,7 @@ int main(int argc, char** argv)
 
             printf("Setup\n");
 
-            int batchSize = 32;
+            int batchSize = 4;
             int batches = 100;
 
             int networkSizes[4] = { 64,100,25,1 };
@@ -191,18 +191,31 @@ int main(int argc, char** argv)
             int iterations = 0;
             while (iterations < batches)
             {
-                float* output = nn.Generate(board.Status(true));
+                float* output = nullptr;
+                float eval = 0;
+                float** batchGenerationStepVectors = new float*[batchSize];
 
-                const char* fen = Game::GetFen(board.Pieces, board.allowCastling,0);
-                float eval = stockfish.getEval(fen);
-                delete[] fen;
+                for (int batch = 0; batch < batchSize; batch++)
+                {
+                    output = nn.Generate(board.Status(true));
 
-                float loss = nn.GetLoss(output,&eval);
+                    const char* fen = Game::GetFen(board.Pieces, board.allowCastling, 0);
+                    eval = stockfish.getEval(fen);
+                    delete[] fen;
+
+                    float* generationStepVector = nn.BackPropagate(&eval, board.Status(true), mutationRate);
+                    batchGenerationStepVectors[batch] = generationStepVector;
+                }
+
+                float* batchStepVector = nn.AverageWeightVector(batchGenerationStepVectors,batchSize);
+                nn.AddToWeights(batchStepVector);                
+                for (int i = 0; i < batchSize; i++)
+                    free(batchGenerationStepVectors[i]);
+                delete[] batchStepVector;
+                delete[] batchGenerationStepVectors;
+
+                float loss = nn.GetLoss(output, &eval);
                 printf("Iteration %d , loss: %f \n", iterations, loss);
-
-                float* generationStepVector = nn.BackPropagate(&eval,board.Status(true),mutationRate);
-                nn.AddToWeights(generationStepVector);
-                free(generationStepVector);
 
                 iterations++;
             }

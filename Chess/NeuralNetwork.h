@@ -45,5 +45,7 @@ public:
 	void AddToWeights(float* data);
 
 	float GetLoss(float* output, float* predictedOutput);
+
+	float* AverageWeightVector(float** vectors, int num);
 };
 
