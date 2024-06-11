@@ -1,4 +1,7 @@
-﻿  main.cpp
+﻿  NeuralNetwork.cpp
+C:\Users\Others\source\repos\Chess\Chess\Neuron.h(4,10): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+  main.cpp
 C:\Users\Others\source\repos\Chess\Chess\Neuron.h(4,10): warning C4067: unexpected tokens following preprocessor directive - expected a newline
 C:\Users\Others\source\repos\Chess\Chess\main.cpp(138,13): warning C4102: 'EndLoop': unreferenced label
+  Generating Code...
   Chess.vcxproj -> C:\Users\Others\source\repos\Chess\x64\Debug\Chess.exe

@@ -252,7 +252,7 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 		}
 		else if (neurons[neuron]->ActivationMethod == Sigmoid)
 		{
-			return (activations[neuron + LayerSize[0]] - predictedOutput[neuron - StartingIndexOfLayer(LayerNum - 1)]) * activations[neuron + LayerSize[0]] * (1 - activations[neuron + LayerSize[0]]);
+			return (activations[neuron + LayerSize[0]] - predictedOutput[neuron - StartingIndexOfLayer(LayerNum - 1)]) * 2 * activations[neuron + LayerSize[0]] * (1 - activations[neuron + LayerSize[0]]);
 		}
 		else
 		{
@@ -270,7 +270,7 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 				forwardNeuronsDerivative += GetWeightBetweenNeurons(neuron, i) * PartialDerivativeOfErrorFunction(i, activations, predictedOutput);
 			}
 
-			return forwardNeuronsDerivative * activations[neuron+LayerSize[0]] * (1 - activations[neuron+LayerSize[0]]);
+			return forwardNeuronsDerivative * 2 * activations[neuron+LayerSize[0]] * (1 - activations[neuron+LayerSize[0]]);
 		}
 		else
 		{

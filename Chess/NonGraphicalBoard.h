@@ -38,5 +38,7 @@ public:
     bool Move(int From, int To , bool IsWhite);
 
     void PrintStatus(bool isWhite);
+
+    void Randomize(int seed);
 };
 

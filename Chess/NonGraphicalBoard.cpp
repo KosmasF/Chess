@@ -123,6 +123,53 @@ void NonGraphicalBoard::PrintStatus(bool isWhite)
     delete[] status;
 }
 
+void NonGraphicalBoard::Randomize(int seed)
+{
+    srand(seed);
+
+    Piece* AllPieces[] = {
+        WhitePawn,
+        BlackPawn,
+        WhiteBishop,
+        BlackBishop,
+        WhiteKnight,
+        BlackKnight,
+        WhiteRook,
+        BlackRook,
+        WhiteQueen,
+        BlackQueen
+        //WhiteKing
+        //BlackKing
+    };
+    for (int i = 0; i < 64; i++)
+    {
+        bool empty = (rand() % 5);
+        if (!empty)
+        {
+            Piece* piece = AllPieces[rand() % (sizeof(AllPieces)/sizeof(Piece*))];
+            pieces[i] = piece;
+        }
+        else
+        {
+            pieces[i] = nullptr;
+        }
+    }
+
+KingSet:
+
+    int WkingPos = rand() % 64;
+    int BkingPos = rand() % 64;
+    if (WkingPos != BkingPos)
+    {
+        pieces[WkingPos] = WhiteKing;
+        pieces[BkingPos] = BlackKing;
+    }
+    else
+        goto KingSet;
+
+    return;
+}
+
 float* NonGraphicalBoard::Status(bool isWhite)
 {
     float* status = new float[64];

@@ -170,6 +170,7 @@ int main(int argc, char** argv)
         }
         else
         {
+            srand(time(NULL));
 
             printf("Setup\n");
 
@@ -193,7 +194,7 @@ int main(int argc, char** argv)
             {
                 float* output = nullptr;
                 float eval = 0;
-                float** batchGenerationStepVectors = new float*[batchSize];
+                float** batchGenerationGradientDescent = new float*[batchSize];
 
                 for (int batch = 0; batch < batchSize; batch++)
                 {
@@ -204,15 +205,17 @@ int main(int argc, char** argv)
                     delete[] fen;
 
                     float* generationStepVector = nn.BackPropagate(&eval, board.Status(true), mutationRate);
-                    batchGenerationStepVectors[batch] = generationStepVector;
+                    batchGenerationGradientDescent[batch] = generationStepVector;
                 }
 
-                float* batchStepVector = nn.AverageWeightVector(batchGenerationStepVectors,batchSize);
-                nn.AddToWeights(batchStepVector);                
+                float* batchGradientDescent = nn.AverageWeightVector(batchGenerationGradientDescent,batchSize);
+                nn.AddToWeights(batchGradientDescent);
                 for (int i = 0; i < batchSize; i++)
-                    free(batchGenerationStepVectors[i]);
-                delete[] batchStepVector;
-                delete[] batchGenerationStepVectors;
+                    free(batchGenerationGradientDescent[i]);
+                delete[] batchGradientDescent;
+                delete[] batchGenerationGradientDescent;
+
+                board.Randomize(rand());
 
                 float loss = nn.GetLoss(output, &eval);
                 printf("Iteration %d , loss: %f \n", iterations, loss);
@@ -220,7 +223,9 @@ int main(int argc, char** argv)
                 iterations++;
             }
 
-
+            printf("Closing...\n");
+            const char* path = "networks/testEvaluator.nn";
+            nn.Save(path);
         }
     }
 
