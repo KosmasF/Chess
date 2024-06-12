@@ -3,7 +3,7 @@
 
 Game::Game(int argc , char** argv)
 {
-    InitWindow(screenWidth, screenHeight+evalLineHeight, "Chess");
+    InitWindow(screenWidth, screenHeight +  (evalLineHeight*2), "Chess");
     SetTargetFPS(60);
 
     board = new Board(screenHeight, 0, 0, false);
@@ -56,6 +56,8 @@ Game::Game(int argc , char** argv)
     {
         printf("Failed connection with Stockfish!\n");
     }
+
+ 
 }
 
 Game::~Game()
@@ -274,46 +276,30 @@ void Game::Update()
         SetPiecesAsDefault(pieces);
     }
 
+    if (IsKeyPressed(KEY_G))
+    {
+       Randomize(time(NULL));
+    }
+
     movementLog->Draw();
 
     const char* fen = GetFen(Pieces,allowCastling,movementLog->lastMoveIndex);
     
     float eval = stockfish.getEval(fen);
-    float originalEval = eval;
-
 
     delete[] fen;
 
-    DrawRectangle(0, screenHeight, screenWidth, evalLineHeight, BLACK);
+    //Neural Network
+    float* status = NonGraphicalBoard::Status(true, pieces, WhitePawn, BlackPawn, WhiteBishop, BlackBishop, WhiteKnight, BlackKnight, WhiteRook, BlackRook, WhiteQueen, BlackQueen, WhiteKing, BlackKing);
+    float* nnEvalPointer = evaluator.Generate(status);
+    float nnEval = *nnEvalPointer;
+    delete[] nnEvalPointer;
+    //delete[] status; // THIS Fails, it is deleted in NeuralNetwork::Generate()
 
-    eval = FastSigmoid(eval,3);
+    //std::cout << eval << " | " << nnEval << std::endl;
 
-    float evalWidth = eval*(screenWidth/2);//0 - 153 - > 0 - screenWidth/2
-    DrawRectangle(0, screenHeight, screenWidth/2 + evalWidth, evalLineHeight, WHITE);
-
-
-    if (eval >= 0)
-    {
-        char buffer[5];
-
-        snprintf(buffer, sizeof(buffer), "%f", originalEval);
-
-        DrawText(buffer, 20, screenHeight, 20, BLACK);
-    }
-    else
-    {
-        char buffer[5];
-
-        snprintf(buffer, sizeof(buffer), "%f", originalEval *-1);
-
-        DrawText(buffer, screenWidth - MeasureText(buffer, 20) - 20, screenHeight, 20, WHITE);
-
-    }
-    
-    for (int i = 0; i < defaultBranchSize; i++)
-    {
-        board->DrawMove(dataToDraw.bestMoves[i][0], dataToDraw.bestMoves[i][1]);
-    }
+    DrawBar(eval,0);
+    DrawBar(nnEval, evalLineHeight);
 
     //DrawFPS(0, 0);
     EndDrawing();
@@ -437,5 +423,41 @@ BranchEvaluationData<Game::defaultBranchSize> Game::BranchEval(const char* posit
     }
 
     return data;
+}
+
+void Game::DrawBar(float num, int offset)
+{
+    float originalEval = num;
+
+    DrawRectangle(0, screenHeight+offset, screenWidth, evalLineHeight, BLACK);
+
+    num = FastSigmoid(num, 3);
+
+    float evalWidth = num * (screenWidth / 2);//0 - 153 - > 0 - screenWidth/2
+    DrawRectangle(0, screenHeight + offset, screenWidth / 2 + evalWidth, evalLineHeight, WHITE);
+
+
+    if (num >= 0)
+    {
+        char buffer[5];
+
+        snprintf(buffer, sizeof(buffer), "%f", originalEval);
+
+        DrawText(buffer, 20, screenHeight + offset, 20, BLACK);
+    }
+    else
+    {
+        char buffer[5];
+
+        snprintf(buffer, sizeof(buffer), "%f", originalEval * -1);
+
+        DrawText(buffer, screenWidth - MeasureText(buffer, 20) - 20, screenHeight + offset, 20, WHITE);
+
+    }
+
+    for (int i = 0; i < defaultBranchSize; i++)
+    {
+        board->DrawMove(dataToDraw.bestMoves[i][0], dataToDraw.bestMoves[i][1]);
+    }
 }
 

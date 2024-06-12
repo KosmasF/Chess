@@ -163,6 +163,7 @@
     <ClInclude Include="ActivationMethods.h" />
     <ClInclude Include="Board.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="Header.h" />
     <ClInclude Include="InversedPieces.h" />
     <ClInclude Include="MovementLog.h" />
     <ClInclude Include="NeuralNetwork.h" />

@@ -1,9 +1,10 @@
 #include "NeuralNetwork.h"
 #include <iostream>
 
-NeuralNetwork::NeuralNetwork(int* layerSize, int layerNum)
+NeuralNetwork::NeuralNetwork(int* layerSize, int layerNum, float (*activationMethods[])(float))
 {
-	LayerSize = layerSize;
+	LayerSize = (int*)malloc(layerNum*sizeof(int));
+	memcpy(LayerSize, layerSize, layerNum * sizeof(int));
 	LayerNum = layerNum;
 
 	SetNeuronNum();
@@ -22,11 +23,55 @@ NeuralNetwork::NeuralNetwork(int* layerSize, int layerNum)
 		}
 		for (int i = 0; i < layerSize[layer]; i++)
 		{
-			neurons[i+buffer] = new Neuron(layerSize[layer - 1], layer != LayerNum-1 ? Sigmoid : None);
+			neurons[i+buffer] = new Neuron(layerSize[layer - 1], activationMethods[layer-1]);
 		}
 	}
 
 	//Finished
+}
+
+NeuralNetwork::NeuralNetwork(const char* path)
+{
+	LayerNum = 0;
+	NeuronNum = 0;
+
+	neurons = nullptr;
+	LayerSize = nullptr;
+	void* data = FromDiskData(path);
+	void* LoadData = data;
+
+	int size = ((int*)data)[0];
+	data = (int*)data + 1;
+	size -= 4;
+
+	int* LayerNumPos = (int*)data;
+	LayerNum = *LayerNumPos;
+	LayerSize = (int*)malloc(*LayerNumPos*sizeof(int));
+
+	int* LayerSizePos = (int*)data + 1;
+	memcpy(LayerSize, LayerSizePos, sizeof(int) * LayerNum);
+
+	NeuronNum = RetNeuronNum();
+	neurons = new Neuron * [NeuronNum];
+
+	for (int layer = 1; layer < LayerNum; layer++)
+	{
+		int buffer = 0;
+		int focusLayer = layer;
+
+		while (focusLayer > 1)
+		{
+			buffer += LayerSize[focusLayer - 1];
+			focusLayer--;
+		}
+		for (int i = 0; i < LayerSize[layer]; i++)
+		{
+			neurons[i + buffer] = new Neuron(LayerSize[layer - 1], layer != LayerNum - 1 ? None : None);
+		}
+	}
+
+	Load(LoadData);
+	free(LoadData);
 }
 
 NeuralNetwork::~NeuralNetwork()
@@ -36,6 +81,8 @@ NeuralNetwork::~NeuralNetwork()
 		delete neurons[i];
 	}
 	delete[] neurons;
+
+	free(LayerSize);
 }
 
 float* NeuralNetwork::Generate(float* input)
@@ -272,6 +319,16 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 
 			return forwardNeuronsDerivative * 2 * activations[neuron+LayerSize[0]] * (1 - activations[neuron+LayerSize[0]]);
 		}
+		else if (neurons[neuron]->ActivationMethod == None)
+		{
+			float forwardNeuronsDerivative = 0;
+			for (int i = StartingIndexOfLayer(LayerOfNeuron(neuron) + 1); i < StartingIndexOfLayer(LayerOfNeuron(neuron) + 1) + (LayerSize[LayerOfNeuron(neuron) + 1]); i++)
+			{
+				forwardNeuronsDerivative += GetWeightBetweenNeurons(neuron, i) * PartialDerivativeOfErrorFunction(i, activations, predictedOutput);
+			}
+
+			return forwardNeuronsDerivative;
+		}
 		else
 		{
 			return 0.0f;
@@ -286,6 +343,18 @@ int NeuralNetwork::StartingIndexOfLayer(int layer)
 	{
 		result += LayerSize[i];
 	}
+	return result;
+}
+
+int NeuralNetwork::RetNeuronNum()
+{
+	int result = 0;
+
+	for (int layer = 1; layer < LayerNum; layer++)
+	{
+		result += LayerSize[layer];
+	}
+
 	return result;
 }
 
@@ -321,13 +390,32 @@ void NeuralNetwork::LoadFromDisk(const char* path)
 	delete size;
 }
 
+void* NeuralNetwork::FromDiskData(const char* path)
+{
+	FILE* file = fopen(path, "rb");
+	int* size = new int;
+	fread(size, sizeof(int), 1, file);
+	std::cout << "Loaded file: " << path << " with size of: " << *size << " bytes" << std::endl;
+	void* data = malloc(*size);
+
+	if (data == nullptr)
+		return nullptr;
+
+	fclose(file);
+	file = fopen(path, "rb");
+	fread(data, *size, 1, file);
+	fclose(file);
+	delete size;
+	return data;
+}
+
 void NeuralNetwork::SetNeuronNum()
 {
-	NeuronNum = 0;
+	this->NeuronNum = 0;
 
 	for (int layer = 1; layer < LayerNum; layer++)
 	{
-		NeuronNum += LayerSize[layer];
+		this->NeuronNum += LayerSize[layer];
 	}
 }
 
@@ -348,6 +436,7 @@ float* NeuralNetwork::BackPropagate(float* expectedOutput, float* input, float m
 		return nullptr;
 
 	float* activations = GetAllActivations(input);
+
 
 	int buffer = 0;
 	for (int layer = 1; layer < LayerNum; layer++)

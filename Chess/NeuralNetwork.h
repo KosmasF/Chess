@@ -21,8 +21,12 @@ private:
 	float PartialDerivativeOfErrorFunction(int neuron, float* activations, float* predictedOutput);
 	int StartingIndexOfLayer(int layer);
 
+	int RetNeuronNum();
+
 public:
-	NeuralNetwork(int* layerSize , int layerNum);
+	NeuralNetwork(int* layerSize , int layerNum, float (*activationMethods[])(float));
+
+	NeuralNetwork(const char* path);
 
 	~NeuralNetwork();
 
@@ -35,6 +39,8 @@ public:
 	void Save(const char* path);
 
 	void LoadFromDisk(const char* path);
+
+	void* FromDiskData(const char* path);
 
 	void SetNeuronNum();
 

@@ -43,6 +43,92 @@ NonGraphicalBoard::~NonGraphicalBoard()
     delete BlackKing;
 }
 
+float* NonGraphicalBoard::Status(bool isWhite)
+{
+    float* status = new float[64];
+
+    for (int i = 0; i < 64; i++)
+    {
+        if (pieces[i] == nullptr)
+        {
+            status[i] = 0;
+            continue;
+        }
+        if (pieces[i] == WhitePawn)
+        {
+            status[i] = 1;
+            continue;
+        }
+        if (pieces[i] == BlackPawn)
+        {
+            status[i] = -1;
+            continue;
+        }
+        if (pieces[i] == WhiteKnight)
+        {
+            status[i] = 2;
+            continue;
+        }
+        if (pieces[i] == BlackKnight)
+        {
+            status[i] = -2;
+            continue;
+        }
+        if (pieces[i] == WhiteBishop)
+        {
+            status[i] = 3;
+            continue;
+        }
+        if (pieces[i] == BlackBishop)
+        {
+            status[i] = -3;
+            continue;
+        }
+        if (pieces[i] == WhiteRook)
+        {
+            status[i] = 5;
+            continue;
+        }
+        if (pieces[i] == BlackRook)
+        {
+            status[i] = -5;
+            continue;
+        }
+        if (pieces[i] == WhiteQueen)
+        {
+            status[i] = 9;
+            continue;
+        }
+        if (pieces[i] == BlackQueen)
+        {
+            status[i] = -9;
+            continue;
+        }
+        if (pieces[i] == WhiteKing)
+        {
+            status[i] = 10;
+            continue;
+        }
+        if (pieces[i] == BlackKing)
+        {
+            status[i] = -10;
+            continue;
+        }
+
+        status[i] = 0;
+
+    }
+
+    if (!isWhite)
+        for (int i = 0; i < 64; i++)
+            status[i] *= -1;
+
+    for (int i = 0; i < 64; i++)
+        status[i] /= -10;
+
+    return status;
+}
+
 void NonGraphicalBoard::SetPiecesAsDefault(Piece** pieces)
 {
     for (int i = 0; i < 64; i++)
@@ -123,10 +209,13 @@ void NonGraphicalBoard::PrintStatus(bool isWhite)
     delete[] status;
 }
 
-void NonGraphicalBoard::Randomize(int seed)
+void NonGraphicalBoard::Randomize(int seed, bool allowBlackToMove)
 {
     srand(seed);
-
+    goto Start;
+SetSeed:
+    srand(rand());
+Start:
     Piece* AllPieces[] = {
         WhitePawn,
         BlackPawn,
@@ -141,12 +230,15 @@ void NonGraphicalBoard::Randomize(int seed)
         //WhiteKing
         //BlackKing
     };
+
+    whitePlays = true;
+
     for (int i = 0; i < 64; i++)
     {
         bool empty = (rand() % 5);
         if (!empty)
         {
-            Piece* piece = AllPieces[rand() % (sizeof(AllPieces)/sizeof(Piece*))];
+            Piece* piece = AllPieces[rand() % (sizeof(AllPieces) / sizeof(Piece*))];
             pieces[i] = piece;
         }
         else
@@ -157,20 +249,63 @@ void NonGraphicalBoard::Randomize(int seed)
 
 KingSet:
 
-    int WkingPos = rand() % 64;
-    int BkingPos = rand() % 64;
-    if (WkingPos != BkingPos)
+    //printf("Calculating..\n");
+
+    int WhiteKingPos = rand() % 64;
+    int BlackKingPos = rand() % 64;
+    if (WhiteKingPos != BlackKingPos)
     {
-        pieces[WkingPos] = WhiteKing;
-        pieces[BkingPos] = BlackKing;
+        pieces[WhiteKingPos] = WhiteKing;
+        pieces[BlackKingPos] = BlackKing;
     }
     else
         goto KingSet;
 
+
+    if (!(BlackKing->IsAttacked(pieces, BlackKingPos, nullptr, allowCastling)))
+    {
+        goto End;
+    }
+    else if (WhiteKing->IsAttacked(pieces, WhiteKingPos, nullptr, allowCastling))
+    {
+        goto SetSeed;
+    }
+    else
+    {
+        if (allowBlackToMove)
+            whitePlays = false;
+        else
+            goto SetSeed;
+    }
+
+End:
+
+    allowCastling[0] = 0;
+    allowCastling[1] = 0;
+    allowCastling[2] = 0;
+    allowCastling[3] = 0;
+
+    //const char* fen = GetFen(Pieces, allowCastling, movementLog->lastMoveIndex);
+    //printf("Eval %f\n", stockfish.getEval(fen));
+
+    //printf("END\n");
     return;
 }
 
-float* NonGraphicalBoard::Status(bool isWhite)
+float* NonGraphicalBoard::Status(bool isWhite , Piece** pieces, 
+Pawn* WhitePawn,
+Pawn* BlackPawn,
+Bishop* WhiteBishop,
+Bishop* BlackBishop,
+Knight* WhiteKnight,
+Knight* BlackKnight,
+Rook* WhiteRook,
+Rook* BlackRook,
+Queen* WhiteQueen,
+Queen* BlackQueen,
+King* WhiteKing,
+King* BlackKing
+)
 {
     float* status = new float[64];
 

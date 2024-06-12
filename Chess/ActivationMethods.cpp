@@ -26,11 +26,6 @@ float FastSigmoid(float input,int smooth)
 	return  input / (smooth + fabs(input));
 }
 
-float Linear(float input)
-{
-	return input;
-}
-
 float NonNegativeLinear(float input)
 {
 	if (input < 0)

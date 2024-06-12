@@ -9,10 +9,10 @@ float Sigmoid(float input);
 
 float FastSigmoid(float input,int smooth = 1);
 
-float Linear(float input);
-
 float NonNegativeLinear(float input);
 
 float NonNegativeLimitedLinear(float input);
 
 float None(float input);
+
+float Smoothened(float input);

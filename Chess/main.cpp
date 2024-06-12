@@ -57,6 +57,7 @@ int main(int argc, char** argv)
             const int population = 1000;
 
             int networkSizes[4] = { 64,100,25,4 };
+            float (*activationMethods[])(float) = { None,None,None };
 
             //SETUP
             printf("Setup\n");
@@ -67,8 +68,8 @@ int main(int argc, char** argv)
             for (int i = 0; i < population; i++)
             {
                 boards[i] = new NonGraphicalBoard();
-                nnsWhite[i] = new NeuralNetwork(networkSizes, 4);
-                nnsBlack[i] = new NeuralNetwork(networkSizes, 4);
+                nnsWhite[i] = new NeuralNetwork(networkSizes, 4, activationMethods);
+                nnsBlack[i] = new NeuralNetwork(networkSizes, 4, activationMethods);
             }
 
 
@@ -170,22 +171,28 @@ int main(int argc, char** argv)
         }
         else
         {
-            srand(time(NULL));
+            time_t startTime = time(NULL);
+            srand(startTime);
 
             printf("Setup\n");
 
-            int batchSize = 4;
-            int batches = 100;
+            int batchSize = 10;
+            int batches = 1000;
 
-            int networkSizes[4] = { 64,100,25,1 };
+            int networkSizes[] = { 64,256,1 };
+            float (*activationMethods[])(float) = {None,None,None,None};
 
-            NeuralNetwork nn = NeuralNetwork(networkSizes, 4);
+            NeuralNetwork nn = NeuralNetwork(networkSizes, sizeof(networkSizes)/sizeof(int), activationMethods);
             NonGraphicalBoard board;
+
+
+            //const char* path = "networks/testEvaluatorNonRandomWeights.nn";
+            //nn.LoadFromDisk(path);
 
             SocketConnection stockfish;
             stockfish.Setup(argc,argv);
 
-            float mutationRate = 0.1f;
+            float mutationRate = 0.0005f;
 
             printf("Training...\n");
 
@@ -198,10 +205,14 @@ int main(int argc, char** argv)
 
                 for (int batch = 0; batch < batchSize; batch++)
                 {
-                    output = nn.Generate(board.Status(true));
+                    board.Randomize(rand(), false);
+
+                    output = nn.Generate(board.Status(board.whitePlays));
 
                     const char* fen = Game::GetFen(board.Pieces, board.allowCastling, 0);
                     eval = stockfish.getEval(fen);
+                    if (!board.whitePlays)
+                        eval *= -1;
                     delete[] fen;
 
                     float* generationStepVector = nn.BackPropagate(&eval, board.Status(true), mutationRate);
@@ -215,17 +226,22 @@ int main(int argc, char** argv)
                 delete[] batchGradientDescent;
                 delete[] batchGenerationGradientDescent;
 
-                board.Randomize(rand());
 
                 float loss = nn.GetLoss(output, &eval);
                 printf("Iteration %d , loss: %f \n", iterations, loss);
+
+                delete[] output;
 
                 iterations++;
             }
 
             printf("Closing...\n");
-            const char* path = "networks/testEvaluator.nn";
+            //char path[256];
+            //std::cin >> path;
+            const char* path = "networks/test.nn";
             nn.Save(path);
+
+            printf("Training started in %i and ended, duration: %f\n",(int)startTime, (float)(time(NULL) - startTime));
         }
     }
 

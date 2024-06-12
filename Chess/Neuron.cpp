@@ -10,7 +10,7 @@ void Neuron::SetRandomData()
 
 	for (int i = 0; i < numWeights; i++ )
 	{
-		weights[i] = dis(gen);
+		weights[i] = 1;//dis(gen);
 	}
 
 	//bias = dis(gen);
@@ -103,7 +103,7 @@ void Neuron::Load(void* data)
 	else if (*ActivationMethodPos == 'n')
 		ActivationMethod = NonNegativeLimitedLinear;
 	else
-		throw "Corrupted data input";
+		ActivationMethod = None;
 }
 
 float Neuron::RandomFloat()
