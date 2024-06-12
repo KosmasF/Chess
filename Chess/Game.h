@@ -70,7 +70,7 @@ private:
 
     BranchEvaluationData<defaultBranchSize> dataToDraw = BranchEvaluationData<defaultBranchSize>();
 
-    const char* path = "networks/testEvaluatorNonRandomWeights.nn";
+    const char* path = "networks/testedNonRandom3LayersBIG.nn";
     NeuralNetwork evaluator = NeuralNetwork(path);
 
     void DrawBar(float num, int offset);
