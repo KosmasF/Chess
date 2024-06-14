@@ -390,12 +390,12 @@ bool King::IsLegal(Piece** pieces, int Original, int ToCheck, Board* board, bool
 	else
 	{
 		if(ToCheck == Original-2)
-			if(allowCastling[3])
+			if(allowCastling[2])
 				if (pieces[1] == nullptr && pieces[2] == nullptr && pieces[3] == nullptr)
 					if (!IsAttacked(pieces, 2, board, allowCastling) && !IsAttacked(pieces, 3, board, allowCastling))
 						return true;
 		if (ToCheck == Original + 2)
-			if (allowCastling[4])
+			if (allowCastling[3])
 				if (pieces[5] == nullptr && pieces[6] == nullptr)
 					if (!IsAttacked(pieces, 5, board, allowCastling) && !IsAttacked(pieces, 6, board, allowCastling))
 						return true;

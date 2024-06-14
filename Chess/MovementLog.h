@@ -14,7 +14,7 @@ private:
 	int LogCenterPos;
 	int fistNumToDraw = 0;
 
-	static constexpr int maxMoves = 100;
+	static constexpr int maxMoves = 200;
 
 	const char* moves[maxMoves];
 

@@ -11,6 +11,7 @@
 #include "SocketConnection.h"
 #include "NeuralNetwork.h"
 #include "NonGraphicalBoard.h"
+#include "fstream"
 
 //I HATE RAYLIB!!!
 //I HATE RAYLIB!!!
@@ -74,6 +75,8 @@ private:
     NeuralNetwork evaluator = NeuralNetwork(path);
 
     void DrawBar(float num, int offset);
+
+    std::fstream gameFile;
 public:
 	const int screenHeight = 536;
 	const int LogSize = 200;

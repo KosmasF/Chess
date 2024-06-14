@@ -104,6 +104,7 @@ bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, 
 		pieces[idx] = pieces[CollectedPiece];
 		pieces[CollectedPiece] = nullptr;
 
+		bool castle = false;
 		//Castling
 		if (pieces[idx]->GetName() == "K")
 		{
@@ -123,6 +124,7 @@ bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, 
 					std::cout << "O-O";
 				if (movementLog != nullptr)
 					movementLog->AddMove("O-O");
+				castle = true;
 
 			}
 			if (idx - CollectedPiece == -2)
@@ -142,6 +144,7 @@ bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, 
 					std::cout << "O-O-O";
 				if (movementLog != nullptr)
 					movementLog->AddMove("O-O-O");
+				castle = true;
 			}
 		}
 
@@ -162,7 +165,7 @@ bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, 
 				}
 		}
 		
-		if(movementLog!=nullptr)
+		if(movementLog!=nullptr && !castle)
 			movementLog->AddMove(notation);
 
 		if (!disableLogging)
@@ -229,7 +232,7 @@ bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, 
 
 Position Board::TranslateMove(const char* move, Piece** pieces, bool whitePlays)
 {
-	if (move == "O-O-O")
+	if (!strcmp(move, "O-O-O"))
 	{
 		for (int i = 0; i < 64; i++)
 		{
@@ -237,21 +240,14 @@ Position Board::TranslateMove(const char* move, Piece** pieces, bool whitePlays)
 			{
 				if (pieces[i]->GetName() == "K" && pieces[i]->IsWhite() == whitePlays)
 				{
-					if (pieces[i]->IsWhite())
-					{
-						return { i , i - 2 };
-					}
-					else
-					{
-						return { i , i + 2 };
-					}
+					return { i , i - 2 };
 				}
 			}
 		}
 		return { -1,-1 };
 	}
 
-	if (move == "O-O")
+	if (!strcmp(move, "O-O"))
 	{
 		for (int i = 0; i < 64; i++)
 		{
@@ -259,33 +255,55 @@ Position Board::TranslateMove(const char* move, Piece** pieces, bool whitePlays)
 			{
 				if (pieces[i]->GetName() == "K" && pieces[i]->IsWhite() == whitePlays)
 				{
-					if (pieces[i]->IsWhite())
-					{
-						return { i , i + 2 };
-					}
-					else
-					{
-						return { i , i - 2 };
-					}
+					return { i , i + 2 };
 				}
 			}
 		}
 		return { -1,-1 };
 	}
 
-	char piece = move[0];
-	
 	char columnSpecifier = 0;
 	char rowSpecifier = 0;
+	int buffer = 0;
+	char piece;
 
-	int buffer = 1;
+	if (!(move[0] > 96 && move[0] < 123))//a-z
+	{
+		piece = move[0];
+		buffer++;
+	}
+	else
+	{
+		piece = 0;
+		if (move[3] == ' ' || move[3] == '+' || move[3] == '#' || move[3] == '\0' || move[3] == '=')
+		{
+			goto LocationPieceSearch;
+		}
+		else if (move[2] == 'x')
+		{
+			columnSpecifier = move[0];
+			rowSpecifier = move[1];
+			buffer += 3;
+			goto LocationPieceSearch;
+		}
+		else if (move[1] == 'x')
+		{
+			columnSpecifier = move[0];
+			buffer += 2;
+			goto LocationPieceSearch;
+		}
+		else
+		{
+			return { -1,-1 };
+		}
+	}
 
 	if (move[1] > 47 && move[1] < 58)//0-9
 	{
 		rowSpecifier = move[1];
 		buffer++;
 	}
-	else if (move[1] > 96 && move[1] < 123)//a-z
+	else if (move[1] > 96 && move[1] < 123 && move[1] != 'x')//a-z
 	{
 		if (move[2] > 47 && move[2] < 58)//0-9
 		{
@@ -307,6 +325,10 @@ Position Board::TranslateMove(const char* move, Piece** pieces, bool whitePlays)
 	{
 		buffer++;
 	}
+
+
+
+LocationPieceSearch:
 
 	int Destination = TranslateCords(&(move[buffer]));
 

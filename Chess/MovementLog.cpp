@@ -95,7 +95,8 @@ void MovementLog::AddMove(const char* move)
 {
     moves[lastMoveIndex] = move;
     if (lastMoveIndex > 18*2)
-        fistNumToDraw+=2;
+        if(WhitePlays())
+            fistNumToDraw+=2;
     lastMoveIndex++;
 }
 

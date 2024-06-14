@@ -1,6 +1,5 @@
 #include "Game.h"
 #include "ActivationMethods.h"
-#include "fstream"
 #include "String"
 
 Game::Game(int argc , char** argv)
@@ -59,17 +58,15 @@ Game::Game(int argc , char** argv)
         printf("Failed connection with Stockfish!\n");
     }
 
-    std::fstream new_file;
-
-    new_file.open("games/output.pgn", std::ios::in);
+    gameFile.open("games/output.pgn", std::ios::in);
 
     int lines = 0;
     int rating[] = { -1,-1 };
     bool ready = false;
 
-    if (new_file.is_open()) {
+    if (gameFile.is_open()) {
         std::string sa;
-        while (getline(new_file, sa, ' ')) 
+        while (getline(gameFile, sa, ' '))
         {
             std::cout << sa << "\n";
             if (sa[0] == '$')
@@ -77,26 +74,23 @@ Game::Game(int argc , char** argv)
                 if (0 < lines)
                     break;
                 lines++;
-                if (rating[0] == -1)
-                {
-                    sa.erase(0, 1);
-                    rating[0] = std::stoi(sa);
-                }
-                else if (rating[1] == -1)
-                {
-                    rating[1] = std::stoi(sa);
-                }
-                else
-                    ready = true;
+                sa.erase(0, 1);
+                rating[0] = std::stoi(sa);
+            }
+            else if (rating[1] == -1)
+            {
+                rating[1] = std::stoi(sa);
+                ready = true;
             }
             if(ready)
             {
-                Position id = Board::TranslateMove(sa.c_str(), pieces, movementLog->WhitePlays());
-                board->MakeMove(id.x, id.y, Pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog);
+                //Position id = Board::TranslateMove(sa.c_str(), pieces, movementLog->WhitePlays());
+                //board->MakeMove(id.x, id.y, Pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog);
+                break;
             }
         }
 
-        new_file.close();
+        //new_file.close();
     }
 
  
@@ -121,6 +115,7 @@ Game::~Game()
     delete WhiteKing;
     delete BlackKing;
     CloseWindow();
+    gameFile.close();
 }
 
 const char* Game::GetFen(PiecesArray FenPieces, bool* castling, int lastMoveIndex)
@@ -329,6 +324,26 @@ void Game::Update()
         std::cin >> move;
         Position id = Board::TranslateMove(move, pieces, movementLog->WhitePlays());
         board->MakeMove(id.x, id.y, Pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog);
+    }
+    if (IsKeyPressed(KEY_M))
+    {
+        if (gameFile.is_open())
+        {
+            std::string sa;
+            getline(gameFile, sa, ' ');
+
+            std::cout << sa << "\n";
+            if (sa[0] == '$')
+            {
+                gameFile.close();
+            }
+            else
+            {
+                Position id = Board::TranslateMove(sa.c_str(), pieces, movementLog->WhitePlays());
+                board->MakeMove(id.x, id.y, Pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog);
+            }
+        }
+
     }
 
     movementLog->Draw();
