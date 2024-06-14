@@ -1,5 +1,7 @@
 #include "Game.h"
 #include "ActivationMethods.h"
+#include "fstream"
+#include "String"
 
 Game::Game(int argc , char** argv)
 {
@@ -55,6 +57,46 @@ Game::Game(int argc , char** argv)
     else
     {
         printf("Failed connection with Stockfish!\n");
+    }
+
+    std::fstream new_file;
+
+    new_file.open("games/output.pgn", std::ios::in);
+
+    int lines = 0;
+    int rating[] = { -1,-1 };
+    bool ready = false;
+
+    if (new_file.is_open()) {
+        std::string sa;
+        while (getline(new_file, sa, ' ')) 
+        {
+            std::cout << sa << "\n";
+            if (sa[0] == '$')
+            {
+                if (0 < lines)
+                    break;
+                lines++;
+                if (rating[0] == -1)
+                {
+                    sa.erase(0, 1);
+                    rating[0] = std::stoi(sa);
+                }
+                else if (rating[1] == -1)
+                {
+                    rating[1] = std::stoi(sa);
+                }
+                else
+                    ready = true;
+            }
+            if(ready)
+            {
+                Position id = Board::TranslateMove(sa.c_str(), pieces, movementLog->WhitePlays());
+                board->MakeMove(id.x, id.y, Pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog);
+            }
+        }
+
+        new_file.close();
     }
 
  
@@ -278,7 +320,15 @@ void Game::Update()
 
     if (IsKeyPressed(KEY_G))
     {
+       SetPiecesAsDefault(pieces);
        Randomize(time(NULL));
+    }
+    if (IsKeyPressed(KEY_I))
+    {
+        char move[10];
+        std::cin >> move;
+        Position id = Board::TranslateMove(move, pieces, movementLog->WhitePlays());
+        board->MakeMove(id.x, id.y, Pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog);
     }
 
     movementLog->Draw();
@@ -348,6 +398,84 @@ void Game::SetPiecesAsDefault(Piece** pieces)
 
     movementLog->DeleteMoves();
     movementLog->lastMoveIndex = 0;
+}
+
+void Game::Randomize(int seed)
+{
+        srand(seed);
+        goto Start;
+    SetSeed:
+        srand(rand());
+    Start:
+        Piece* AllPieces[] = {
+            WhitePawn,
+            BlackPawn,
+            WhiteBishop,
+            BlackBishop,
+            WhiteKnight,
+            BlackKnight,
+            WhiteRook,
+            BlackRook,
+            WhiteQueen,
+            BlackQueen
+            //WhiteKing
+            //BlackKing
+        };
+        for (int i = 0; i < 64; i++)
+        {
+            bool empty = (rand() % 5);
+            if (!empty)
+            {
+                Piece* piece = AllPieces[rand() % (sizeof(AllPieces) / sizeof(Piece*))];
+                pieces[i] = piece;
+            }
+            else
+            {
+                pieces[i] = nullptr;
+            }
+        }
+
+    KingSet:
+
+        printf("Calculating..\n");
+
+        int WhiteKingPos = rand() % 64;
+        int BlackKingPos = rand() % 64;
+        if (WhiteKingPos != BlackKingPos)
+        {
+            pieces[WhiteKingPos] = WhiteKing;
+            pieces[BlackKingPos] = BlackKing;
+        }
+        else
+            goto KingSet;
+
+
+        if (!(BlackKing->IsAttacked(pieces, BlackKingPos, nullptr, allowCastling)))
+        {
+            goto End;
+        }
+        else if (WhiteKing->IsAttacked(pieces, WhiteKingPos, nullptr, allowCastling))
+        {
+            goto SetSeed;
+        }
+        else
+        {
+            movementLog->lastMoveIndex = 1;
+        }
+
+    End:
+
+        allowCastling[0] = 0;
+        allowCastling[1] = 0;
+        allowCastling[2] = 0;
+        allowCastling[3] = 0;
+
+        const char* fen = GetFen(Pieces, allowCastling, movementLog->lastMoveIndex);
+        printf("Eval %f\n", stockfish.getEval(fen));
+
+        printf("END\n");
+        return;
+    
 }
 
 BranchEvaluationData<Game::defaultBranchSize> Game::BranchEval(const char* position)

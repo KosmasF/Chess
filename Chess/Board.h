@@ -4,6 +4,8 @@
 #include "InversedPieces.h"
 #include "MovementLog.h"
 
+struct Position;
+
 class Board
 {
 public:
@@ -29,6 +31,10 @@ public:
 	void DrawMove(int From, int To);
 
 	bool MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, void* WhiteDefaultPromotionPiece, void* BlackDefaultPromotionPiece, MovementLog* movementLog, bool disableLogging = false);
+
+	static Position TranslateMove(const char* move, Piece** pieces, bool whitePlays);
+
+	static int TranslateCords(const char* pos);
 
 	void CheckInput(PiecesArray pieces , void* WhiteDefaultPromotionPiece,void* BlackDefaultPromotionPiece, bool* allowCastling , MovementLog* movementLog);
 	void Draw();

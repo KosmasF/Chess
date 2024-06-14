@@ -32,5 +32,7 @@ public:
 
 	void AddMove(const char* move);
 
+	bool WhitePlays();
+
 };
 

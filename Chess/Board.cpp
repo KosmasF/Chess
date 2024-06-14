@@ -227,6 +227,128 @@ bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, 
 	return false;
 }
 
+Position Board::TranslateMove(const char* move, Piece** pieces, bool whitePlays)
+{
+	if (move == "O-O-O")
+	{
+		for (int i = 0; i < 64; i++)
+		{
+			if (pieces[i] != nullptr)
+			{
+				if (pieces[i]->GetName() == "K" && pieces[i]->IsWhite() == whitePlays)
+				{
+					if (pieces[i]->IsWhite())
+					{
+						return { i , i - 2 };
+					}
+					else
+					{
+						return { i , i + 2 };
+					}
+				}
+			}
+		}
+		return { -1,-1 };
+	}
+
+	if (move == "O-O")
+	{
+		for (int i = 0; i < 64; i++)
+		{
+			if (pieces[i] != nullptr)
+			{
+				if (pieces[i]->GetName() == "K" && pieces[i]->IsWhite() == whitePlays)
+				{
+					if (pieces[i]->IsWhite())
+					{
+						return { i , i + 2 };
+					}
+					else
+					{
+						return { i , i - 2 };
+					}
+				}
+			}
+		}
+		return { -1,-1 };
+	}
+
+	char piece = move[0];
+	
+	char columnSpecifier = 0;
+	char rowSpecifier = 0;
+
+	int buffer = 1;
+
+	if (move[1] > 47 && move[1] < 58)//0-9
+	{
+		rowSpecifier = move[1];
+		buffer++;
+	}
+	else if (move[1] > 96 && move[1] < 123)//a-z
+	{
+		if (move[2] > 47 && move[2] < 58)//0-9
+		{
+			if (!(move[3] != ' ' || move[3] != '+' || move[3] != '#' || move[3] != '\0'))
+			{
+				columnSpecifier = move[1];
+				rowSpecifier = move[2];
+				buffer += 2;
+			}
+		}
+		else
+		{
+			columnSpecifier = move[1];
+			buffer++;
+		}
+	}
+
+	if (move[buffer] == 'x')
+	{
+		buffer++;
+	}
+
+	int Destination = TranslateCords(&(move[buffer]));
+
+	bool castling[] = {true,true,true,true};
+
+	for (int i = 0; i < 64; i++)
+	{
+		if (pieces[i] != nullptr)
+		{
+			if (pieces[i]->GetName()[0] == piece)
+			{
+				if (pieces[i]->IsLegal(pieces, i, Destination, nullptr, castling))
+				{
+					if (columnSpecifier != 0)
+						if (Piece::Get2DCords(i, 8).x != columnSpecifier - 97)
+							continue;
+					if (rowSpecifier != 0)
+						if (Piece::Get2DCords(i, 8).y != 7 - (rowSpecifier - '1'))
+							continue;
+					if (pieces[i]->IsWhite() != whitePlays)
+						continue;
+
+
+					return { i,Destination };
+				}
+			}
+		}
+	}
+
+
+	return { -1,-1 };
+}
+
+int Board::TranslateCords(const char* pos)
+{
+	int x = pos[0] - 97;
+	int y = pos[1] - '1';
+	y = 7 - y;
+
+	return (y * 8) + x;
+}
+
 void Board::CheckInput(PiecesArray pieces , void* WhiteDefaultPromotionPiece, void* BlackDefaultPromotionPiece, bool* allowCastling , MovementLog* movementLog)
 {
 	if (IsMouseButtonPressed(0))
@@ -327,7 +449,7 @@ char* Board::MovementNotation(PiecesArray pieces, int Destination, int Location 
 
 					notation[buffer] = (char)(pos.x + 97);
 					buffer++;
-					notation[buffer] = (char)(pos.y + 49);
+					notation[buffer] = (char)((7-pos.y) + 49);
 					buffer++;
 				}
 			}
@@ -342,7 +464,7 @@ char* Board::MovementNotation(PiecesArray pieces, int Destination, int Location 
 
 			notation[buffer] = (char)(pos.x + 97);
 			buffer++;
-			notation[buffer] = (char)(pos.y + 49);
+			notation[buffer] = (char)((7-pos.y) + 49);
 			buffer++;
 		}
 		notation[buffer] = 'x';
@@ -353,7 +475,7 @@ char* Board::MovementNotation(PiecesArray pieces, int Destination, int Location 
 
 	notation[buffer] = (char)(pos.x + 97);
 	buffer++;	
-	notation[buffer] = (char)(pos.y + 49);
+	notation[buffer] = (char)((7-pos.y) + 49);
 	buffer++;
 
 	notation[buffer] = 0;

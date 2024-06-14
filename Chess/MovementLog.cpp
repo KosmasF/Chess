@@ -85,7 +85,10 @@ MovementLog::~MovementLog()
 void MovementLog::DeleteMoves()
 {
     for (int i = 0; i < maxMoves; i++)
+    {
         delete moves[i];
+        moves[i] = nullptr;
+    }
 }
 
 void MovementLog::AddMove(const char* move)
@@ -94,4 +97,9 @@ void MovementLog::AddMove(const char* move)
     if (lastMoveIndex > 18*2)
         fistNumToDraw+=2;
     lastMoveIndex++;
+}
+
+bool MovementLog::WhitePlays()
+{
+    return lastMoveIndex%2 == 0;
 }
