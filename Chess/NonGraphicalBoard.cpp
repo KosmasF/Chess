@@ -169,6 +169,13 @@ void NonGraphicalBoard::SetPiecesAsDefault(Piece** pieces)
     pieces[61] = WhiteBishop;
     pieces[62] = WhiteKnight;
     pieces[63] = WhiteRook;
+
+    whitePlays = true;
+
+    allowCastling[0] = true;
+    allowCastling[1] = true;
+    allowCastling[2] = true;
+    allowCastling[3] = true;
 }
 
 bool NonGraphicalBoard::Move(int From, int To, bool IsWhite)

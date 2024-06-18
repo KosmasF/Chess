@@ -2,6 +2,9 @@
 #include "Piece.h"
 #include "PieceTypes.h"
 
+Piece* Board::WhiteEnPassant = new EnPassantPawn(WHITE);
+Piece* Board::BlackEnPassant = new EnPassantPawn(BLACK);
+
 Board::Board(int size, int xOFFSET, int yOFFSET, bool inversed)
 {
 	width = size;
@@ -11,9 +14,6 @@ Board::Board(int size, int xOFFSET, int yOFFSET, bool inversed)
 	SquareSize = width / numSquares;
 
 	Inversed = inversed;
-
-	WhiteEnPassant = new EnPassantPawn(WHITE);
-	BlackEnPassant = new EnPassantPawn(BLACK);
 }
 
 Board::~Board()
@@ -64,12 +64,12 @@ void Board::DrawMove(int From, int To)
 	DrawTriangle({ (float)endPos.x,(float)endPos.y }, LowerPoint, UpperPoint, ORANGE);
 }
 
-bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, void* WhiteDefaultPromotionPiece, void* BlackDefaultPromotionPiece, MovementLog* movementLog, bool disableLogging)
+bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, void* WhiteDefaultPromotionPiece, void* BlackDefaultPromotionPiece, MovementLog* movementLog, bool disableLogging, int& GlobalCollectedPiece, Piece* WhiteEnPassant, Piece* BlackEnPassant)
 {
 	int idx = To;
 	int CollectedPiece = From;
 
-	if (pieces[CollectedPiece]->IsLegal(pieces, CollectedPiece, idx, this, allowCastling))
+	if (pieces[CollectedPiece]->IsLegal(pieces, CollectedPiece, idx, nullptr, allowCastling))
 	{
 		if (!disableLogging)
 			std::cout << "MOVEMENT LOG: ";
@@ -81,13 +81,16 @@ bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, 
 		}
 
 
-		if (pieces[idx] == WhiteEnPassant && pieces[CollectedPiece]->GetName() == "")
+		if (pieces[idx] != nullptr)
 		{
-			pieces[idx - 8] = nullptr;
-		}
-		if (pieces[idx] == BlackEnPassant && pieces[CollectedPiece]->GetName() == "")
-		{
-			pieces[idx + 8] = nullptr;
+			if (pieces[idx]->GetName() == "Invalid!" && pieces[idx]->IsWhite() && pieces[CollectedPiece]->GetName() == "")
+			{
+				pieces[idx - 8] = nullptr;
+			}
+			if (pieces[idx]->GetName() == "Invalid!" && !(pieces[idx]->IsWhite()) && pieces[CollectedPiece]->GetName() == "")
+			{
+				pieces[idx + 8] = nullptr;
+			}
 		}
 
 		for (int i = 0; i < totalNumSquares; i++)
@@ -152,7 +155,7 @@ bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, 
 					std::cout << "O-O-O";
 				if (movementLog != nullptr)
 				{
-					char* notation = (char*)malloc(4);
+					char* notation = (char*)malloc(6);
 					notation[0] = 'O';
 					notation[1] = '-';
 					notation[2] = 'O';
@@ -171,7 +174,7 @@ bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, 
 			if (pieces[i] != nullptr)
 				if (pieces[i]->GetName() == "K")
 				{
-					if (((King*)(pieces[i]))->IsAttacked(pieces, i, this, allowCastling))
+					if (((King*)(pieces[i]))->IsAttacked(pieces, i, nullptr, allowCastling))
 					{
 						if (!disableLogging)
 							std::cout << "+";
@@ -182,8 +185,10 @@ bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, 
 				}
 		}
 		
-		if(movementLog!=nullptr && !castle)
+		if (movementLog != nullptr && !castle)
 			movementLog->AddMove(notation);
+		else if (movementLog == nullptr)
+			delete[] notation;
 
 		if (!disableLogging)
 			std::cout << std::endl;
@@ -197,9 +202,9 @@ bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, 
 			if (abs(CollectedPiece - idx) == 16)
 			{
 				if (pieces[idx]->IsWhite())
-					pieces[idx + 8] = (Piece*)WhiteEnPassant;
+					pieces[idx + 8] = WhiteEnPassant;
 				else
-					pieces[idx - 8] = (Piece*)BlackEnPassant;
+					pieces[idx - 8] = BlackEnPassant;
 			}
 		}
 
@@ -240,7 +245,8 @@ bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, 
 			std::cout << std::endl;
 		}
 
-		this->CollectedPiece = -1;
+
+		GlobalCollectedPiece = -1;
 
 		return true;
 	}
@@ -402,7 +408,7 @@ void Board::CheckInput(PiecesArray pieces , void* WhiteDefaultPromotionPiece, vo
 
 			if (CollectedPiece != -1)
 			{
-				if(MakeMove(CollectedPiece,idx,pieces,allowCastling,WhiteDefaultPromotionPiece,BlackDefaultPromotionPiece,movementLog))
+				if (MakeMove(CollectedPiece, idx, pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog, false, CollectedPiece, WhiteEnPassant, BlackEnPassant))
 					return;
 			}
 			if (pieces[idx] != nullptr)
@@ -482,7 +488,7 @@ char* Board::MovementNotation(PiecesArray pieces, int Destination, int Location 
 			if (pieces[i]->GetName() == pieces[Location]->GetName())
 			{
 				if (!(pieces[i]->IsWhite() ^ pieces[Location]->IsWhite()))
-				if (pieces[i]->IsLegal(pieces, i, Destination, this, allowCastling))
+				if (pieces[i]->IsLegal(pieces, i, Destination, nullptr, allowCastling))
 				{
 					Position pos = piece.Get2DCords(Location, numSquares);
 

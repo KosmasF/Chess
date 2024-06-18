@@ -286,6 +286,8 @@ float* NeuralNetwork::GetAllActivations(float* input)
 		input = layerOutput;
 	}
 
+	delete[] input;// MEM0RY LEAK BABYYYYYYY!!!!!!!!!!!!!
+
 	return result;
 }
 
@@ -453,7 +455,7 @@ float* NeuralNetwork::BackPropagate(float* expectedOutput, float* input, float m
 		}
 	}
 
-	free(activations);
+	free(activations); //MEM0RY LEAK!!!// _>
 	return data;
 }
 

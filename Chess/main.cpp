@@ -4,13 +4,14 @@
 #include "NonGraphicalBoard.h"
 #include "NeuralNetwork.h"
 #include <thread>
+#include <intrin.h>
 
 #pragma warning (disable : 4996)
 #include <stdio.h>
 
 #define INTERNAL_SERVER
 
-const bool graphical = 1;
+const bool graphical = 0;
 
 int outputToMove(float x , float y)
 {
@@ -54,7 +55,7 @@ int main(int argc, char** argv)
             //bool running = true;
 
             //VARIABLES
-            const int population = 1000;
+            const int population = 1;
 
             int networkSizes[4] = { 64,100,25,4 };
             float (*activationMethods[])(float) = { None,None,None };
@@ -171,18 +172,58 @@ int main(int argc, char** argv)
         }
         else
         {
+            //SET FILE READER
+            std::fstream gameFile;
+
+            gameFile.open("games/output.pgn", std::ios::in);
+
+            int lines = 0;
+            int rating[] = { -1,-1 };
+            bool ready = false;
+
+            if (gameFile.is_open()) {
+                std::string sa;
+                while (getline(gameFile, sa, ' '))
+                {
+                    //std::cout << sa << "\n";
+                    if (sa[0] == '$')
+                    {
+                        if (0 < lines)
+                            break;
+                        lines++;
+                        sa.erase(0, 1);
+                        rating[0] = std::stoi(sa);
+                    }
+                    else if (rating[1] == -1)
+                    {
+                        rating[1] = std::stoi(sa);
+                        ready = true;
+                    }
+                    if (ready)
+                    {
+                        //Position id = Board::TranslateMove(sa.c_str(), pieces, movementLog->WhitePlays());
+                        //board->MakeMove(id.x, id.y, Pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog);
+                        break;
+                    }
+                }
+
+                //new_file.close();
+            }
+
+            //END SET UP
+
             time_t startTime = time(NULL);
             srand(startTime);
 
             printf("Setup\n");
 
-            int batchSize = 10;
+            int batchSize = 16;
             int batches = 1000;
 
-            int networkSizes[] = { 64,256,1 };
-            float (*activationMethods[])(float) = {None,None,None,None};
+            //int networkSizes[] = { 64,256,1 };
+            //float (*activationMethods[])(float) = {None,None,None,None};
 
-            NeuralNetwork nn = NeuralNetwork(networkSizes, sizeof(networkSizes)/sizeof(int), activationMethods);
+            NeuralNetwork nn = NeuralNetwork("networks/testedNonRandom3LayersBIG.nn");
             NonGraphicalBoard board;
 
 
@@ -192,7 +233,9 @@ int main(int argc, char** argv)
             SocketConnection stockfish;
             stockfish.Setup(argc,argv);
 
-            float mutationRate = 0.0005f;
+            int fails = 0;
+
+            float mutationRate = 0.001f;
 
             printf("Training...\n");
 
@@ -205,9 +248,43 @@ int main(int argc, char** argv)
 
                 for (int batch = 0; batch < batchSize; batch++)
                 {
-                    board.Randomize(rand(), false);
+                    //--------RANDOMIZATION---------
+                    //board.Randomize(rand(), false);
+                    //--------FILE DATABASE--------
+                    if (gameFile.is_open())
+                    {
+                        std::string sa;
+                        getline(gameFile, sa, ' ');
 
-                    output = nn.Generate(board.Status(board.whitePlays));
+                        //std::cout << sa << "\n";
+                        if (sa[0] == '$')
+                        {
+                            //gameFile.close();
+                            getline(gameFile, sa, ' ');
+                            //SetPiecesAsDefault(pieces);
+                            board.SetPiecesAsDefault(board.pieces);
+                        }
+                        else
+                        {
+                            Position id = Board::TranslateMove(sa.c_str(), board.pieces, board.whitePlays);
+                            if (!(id.x == -1 && id.y == -1))
+                            {
+                                int tmp = 0;
+                                bool success = Board::MakeMove(id.x, id.y, board.Pieces, board.allowCastling, board.WhiteDefaultPromotionPiece, board.BlackDefaultPromotionPiece, nullptr, true, tmp, Board::WhiteEnPassant, Board::BlackEnPassant);
+                                if (!success)
+                                {
+                                    fails++;
+                                    //__debugbreak();
+                                    //Board::MakeMove(id.x, id.y, board.Pieces, board.allowCastling, board.WhiteDefaultPromotionPiece, board.BlackDefaultPromotionPiece, nullptr, true, tmp, Board::WhiteEnPassant, Board::BlackEnPassant);
+                                    //board.PrintStatus(true);
+                                }
+                                board.whitePlays = !board.whitePlays;
+                            }
+                        }
+                    }
+
+                    //output = nn.Generate(board.Status(board.whitePlays));
+                    //delete[] output;
 
                     const char* fen = Game::GetFen(board.Pieces, board.allowCastling, 0);
                     eval = stockfish.getEval(fen);
@@ -219,13 +296,14 @@ int main(int argc, char** argv)
                     batchGenerationGradientDescent[batch] = generationStepVector;
                 }
 
+                output = nn.Generate(board.Status(board.whitePlays));
+
                 float* batchGradientDescent = nn.AverageWeightVector(batchGenerationGradientDescent,batchSize);
                 nn.AddToWeights(batchGradientDescent);
                 for (int i = 0; i < batchSize; i++)
                     free(batchGenerationGradientDescent[i]);
                 delete[] batchGradientDescent;
                 delete[] batchGenerationGradientDescent;
-
 
                 float loss = nn.GetLoss(output, &eval);
                 printf("Iteration %d , loss: %f \n", iterations, loss);
@@ -238,10 +316,11 @@ int main(int argc, char** argv)
             printf("Closing...\n");
             //char path[256];
             //std::cin >> path;
-            const char* path = "networks/test.nn";
+            const char* path = "networks/nnRe-evalInMasterGamesErrorCorrection.nn";
             nn.Save(path);
 
             printf("Training started in %i and ended, duration: %f\n",(int)startTime, (float)(time(NULL) - startTime));
+            printf("Database fails: %i\n", fails);
         }
     }
 

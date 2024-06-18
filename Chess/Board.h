@@ -19,8 +19,8 @@ public:
 
 	int CollectedPiece = -1;
 
-	void* WhiteEnPassant;
-	void* BlackEnPassant;
+	static Piece* WhiteEnPassant;
+	static Piece* BlackEnPassant;
 
 	bool Inversed;
 
@@ -30,7 +30,7 @@ public:
 
 	void DrawMove(int From, int To);
 
-	bool MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, void* WhiteDefaultPromotionPiece, void* BlackDefaultPromotionPiece, MovementLog* movementLog, bool disableLogging = false);
+	static bool MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, void* WhiteDefaultPromotionPiece, void* BlackDefaultPromotionPiece, MovementLog* movementLog, bool disableLogging, int& CollectedPiece, Piece* WhiteEnPassant, Piece* BlackEnPassant);
 
 	static Position TranslateMove(const char* move, Piece** pieces, bool whitePlays);
 
@@ -38,6 +38,6 @@ public:
 
 	void CheckInput(PiecesArray pieces , void* WhiteDefaultPromotionPiece,void* BlackDefaultPromotionPiece, bool* allowCastling , MovementLog* movementLog);
 	void Draw();
-	char* MovementNotation(PiecesArray pieces , int Destination , int Location,bool* allowCastling);
+	static char* MovementNotation(PiecesArray pieces , int Destination , int Location,bool* allowCastling);
 	Vector2 Get2DCords(Vector2 pos);
 };

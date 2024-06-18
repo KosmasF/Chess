@@ -12,6 +12,7 @@
 #include "NeuralNetwork.h"
 #include "NonGraphicalBoard.h"
 #include "fstream"
+#include "String"
 
 //I HATE RAYLIB!!!
 //I HATE RAYLIB!!!
@@ -72,7 +73,9 @@ private:
     BranchEvaluationData<defaultBranchSize> dataToDraw = BranchEvaluationData<defaultBranchSize>();
 
     const char* path = "networks/testedNonRandom3LayersBIG.nn";
-    NeuralNetwork evaluator = NeuralNetwork(path);
+    NeuralNetwork evaluator = NeuralNetwork(path);   
+    const char* pathNEW = "networks/nnRe-evalInMasterGames.nn";
+    NeuralNetwork evaluatorNEW = NeuralNetwork(pathNEW);
 
     void DrawBar(float num, int offset);
 

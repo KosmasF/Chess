@@ -1,10 +1,9 @@
 #include "Game.h"
 #include "ActivationMethods.h"
-#include "String"
 
 Game::Game(int argc , char** argv)
 {
-    InitWindow(screenWidth, screenHeight +  (evalLineHeight*2), "Chess");
+    InitWindow(screenWidth, screenHeight +  (evalLineHeight*3), "Chess");
     SetTargetFPS(60);
 
     board = new Board(screenHeight, 0, 0, false);
@@ -282,7 +281,7 @@ void Game::Update()
                     }
                     dataToDraw = data;
                     
-                    board->MakeMove(data.bestMoves[bestMoveIndex][0], data.bestMoves[bestMoveIndex][1], Pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog);
+                    board->MakeMove(data.bestMoves[bestMoveIndex][0], data.bestMoves[bestMoveIndex][1], Pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog, false, board->CollectedPiece, Board::WhiteEnPassant, Board::BlackEnPassant);
                 }
             }
 
@@ -323,7 +322,7 @@ void Game::Update()
         char move[10];
         std::cin >> move;
         Position id = Board::TranslateMove(move, pieces, movementLog->WhitePlays());
-        board->MakeMove(id.x, id.y, Pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog);
+        board->MakeMove(id.x, id.y, Pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog, false, board->CollectedPiece, Board::WhiteEnPassant, Board::BlackEnPassant);
     }
     if (IsKeyPressed(KEY_M))
     {
@@ -344,7 +343,7 @@ void Game::Update()
                 Position id = Board::TranslateMove(sa.c_str(), pieces, movementLog->WhitePlays());
                 if (!(id.x == -1 && id.y == -1))
                 {
-                    board->MakeMove(id.x, id.y, Pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog);
+                    board->MakeMove(id.x, id.y, Pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog, false, board->CollectedPiece, Board::WhiteEnPassant, Board::BlackEnPassant);
                 }
             }
         }
@@ -364,12 +363,19 @@ void Game::Update()
     float* nnEvalPointer = evaluator.Generate(status);
     float nnEval = *nnEvalPointer;
     delete[] nnEvalPointer;
+
+    float* statusNEW = NonGraphicalBoard::Status(true, pieces, WhitePawn, BlackPawn, WhiteBishop, BlackBishop, WhiteKnight, BlackKnight, WhiteRook, BlackRook, WhiteQueen, BlackQueen, WhiteKing, BlackKing);
+    float* nnEvalPointerNEW = evaluatorNEW.Generate(statusNEW);
+    float nnEvalNEW = *nnEvalPointerNEW;
+    delete[] nnEvalPointerNEW;
+
     //delete[] status; // THIS Fails, it is deleted in NeuralNetwork::Generate()
 
     //std::cout << eval << " | " << nnEval << std::endl;
 
     DrawBar(eval,0);
     DrawBar(nnEval, evalLineHeight);
+    DrawBar(nnEvalNEW, evalLineHeight*2);
 
     //DrawFPS(0, 0);
     EndDrawing();
@@ -535,7 +541,7 @@ BranchEvaluationData<Game::defaultBranchSize> Game::BranchEval(const char* posit
                     }
                     memcpy(castling, allowCastling, sizeof(bool) * 4);
 
-                    board->MakeMove(From, To, PiecesArray(tempBoard, board->totalNumSquares), castling, BlackDefaultPromotionPiece, BlackDefaultPromotionPiece, nullptr, true);
+                    board->MakeMove(From, To, PiecesArray(tempBoard, board->totalNumSquares), castling, BlackDefaultPromotionPiece, BlackDefaultPromotionPiece, nullptr, true, board->CollectedPiece, Board::WhiteEnPassant, Board::BlackEnPassant);
 
                     const char* fen = GetFen(PiecesArray(tempBoard, board->totalNumSquares), castling,movementLog->lastMoveIndex);
                     float posEval = stockfish.getEval(fen);
