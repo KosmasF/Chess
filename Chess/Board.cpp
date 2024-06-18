@@ -123,7 +123,15 @@ bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, 
 				if (!disableLogging)
 					std::cout << "O-O";
 				if (movementLog != nullptr)
-					movementLog->AddMove("O-O");
+				{
+					char* notation = (char*)malloc(4);
+					notation[0] = 'O';
+					notation[1] = '-';
+					notation[2] = 'O';
+					notation[3] = 0;
+
+					movementLog->AddMove(notation);
+				}
 				castle = true;
 
 			}
@@ -143,7 +151,16 @@ bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, 
 				if (!disableLogging)
 					std::cout << "O-O-O";
 				if (movementLog != nullptr)
-					movementLog->AddMove("O-O-O");
+				{
+					char* notation = (char*)malloc(4);
+					notation[0] = 'O';
+					notation[1] = '-';
+					notation[2] = 'O';
+					notation[3] = '-';
+					notation[4] = 'O';
+					notation[5] = 0;
+					movementLog->AddMove(notation);
+				}
 				castle = true;
 			}
 		}

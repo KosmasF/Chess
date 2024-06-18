@@ -21,6 +21,11 @@ MovementLog::MovementLog(int logSize , int screenHeight)
     ScreenHeight = screenHeight;
 
     LogCenterPos = screenHeight + (logSize / 2);
+
+    for (int i = 0; i < maxMoves; i++)
+    {
+        moves[i] = nullptr;
+    }
 }
 
 void MovementLog::Draw()

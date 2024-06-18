@@ -335,12 +335,17 @@ void Game::Update()
             std::cout << sa << "\n";
             if (sa[0] == '$')
             {
-                gameFile.close();
+                //gameFile.close();
+                getline(gameFile, sa, ' ');
+                SetPiecesAsDefault(pieces);
             }
             else
             {
                 Position id = Board::TranslateMove(sa.c_str(), pieces, movementLog->WhitePlays());
-                board->MakeMove(id.x, id.y, Pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog);
+                if (!(id.x == -1 && id.y == -1))
+                {
+                    board->MakeMove(id.x, id.y, Pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog);
+                }
             }
         }
 
