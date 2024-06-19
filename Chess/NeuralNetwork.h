@@ -18,7 +18,9 @@ private:
 	int LayerOfNeuron(int neuron);
 	int LayerRelativeOfNeuron(int neuron);
 	float* GetAllActivations(float* input);
-	float PartialDerivativeOfErrorFunction(int neuron, float* activations, float* predictedOutput);
+	float PartialDerivativeOfErrorFunction(int neuron, float* activations, float* predictedOutput);// Recursive
+	float PartialDerivativeOfErrorFunction(int neuron, float* activations, float* predictedOutput, float* forwardNeuronsDerivatives);// Non-recursive
+	float* PreCalcNeuronDerivatives();
 	int StartingIndexOfLayer(int layer);
 
 	int RetNeuronNum();

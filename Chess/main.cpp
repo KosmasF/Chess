@@ -11,7 +11,7 @@
 
 #define INTERNAL_SERVER
 
-const bool graphical = 1;
+const bool graphical = 0;
 
 int outputToMove(float x , float y)
 {
@@ -49,9 +49,8 @@ int main(int argc, char** argv)
     }
     else
     {
-        bool reinforced = false;
-        if (reinforced)
-        {
+//#define reinforced
+#ifdef reinforced
             //bool running = true;
 
             //VARIABLES
@@ -169,9 +168,9 @@ int main(int argc, char** argv)
             }
 
 
-        }
-        else
-        {
+#else
+    //#define ReadFile
+    #ifdef ReadFile
             //SET FILE READER
             std::fstream gameFile;
 
@@ -209,6 +208,7 @@ int main(int argc, char** argv)
 
                 //new_file.close();
             }
+    #endif
 
             //END SET UP
 
@@ -248,9 +248,13 @@ int main(int argc, char** argv)
 
                 for (int batch = 0; batch < batchSize; batch++)
                 {
+
+            #ifndef ReadFile
                     //--------RANDOMIZATION---------
-                    //board.Randomize(rand(), false);
+                    board.Randomize(rand(), false);
+            #else
                     //--------FILE DATABASE--------
+
                     if (gameFile.is_open())
                     {
                         std::string sa;
@@ -282,6 +286,7 @@ int main(int argc, char** argv)
                             }
                         }
                     }
+                #endif
 
                     //output = nn.Generate(board.Status(board.whitePlays));
                     //delete[] output;
@@ -323,7 +328,7 @@ int main(int argc, char** argv)
             printf("Training started in %i and ended, duration: %f\n",(int)startTime, (float)(time(NULL) - startTime));
             printf("Database fails: %i\n", fails);
         }
-    }
+#endif
 
 
 

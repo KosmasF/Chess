@@ -338,10 +338,75 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 	}
 }
 
+float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activations, float* predictedOutput, float* forwardNeuronsDerivatives)
+{
+	if (LayerOfNeuron(neuron) == LayerNum - 1)
+	{
+		if (neurons[neuron]->ActivationMethod == None)
+		{
+			forwardNeuronsDerivatives[neuron - LayerSize[0]] = (activations[neuron + LayerSize[0]] - predictedOutput[neuron - StartingIndexOfLayer(LayerNum - 1)]);
+			return forwardNeuronsDerivatives[neuron - LayerSize[0]];
+		}
+		else if (neurons[neuron]->ActivationMethod == Sigmoid)
+		{
+			forwardNeuronsDerivatives[neuron - LayerSize[0]] = (activations[neuron + LayerSize[0]] - predictedOutput[neuron - StartingIndexOfLayer(LayerNum - 1)]) * 2 * activations[neuron + LayerSize[0]] * (1 - activations[neuron + LayerSize[0]]);
+			return forwardNeuronsDerivatives[neuron - LayerSize[0]];
+		}
+		else
+		{
+			forwardNeuronsDerivatives[neuron - LayerSize[0]] = 0;
+			return forwardNeuronsDerivatives[neuron - LayerSize[0]];
+		}
+	}
+	else
+	{
+		//return 0.0f;//TEMP
+		if (neurons[neuron]->ActivationMethod == Sigmoid)
+		{
+			float forwardNeuronsDerivative = 0;
+			for (int i = StartingIndexOfLayer(LayerOfNeuron(neuron) + 1); i < StartingIndexOfLayer(LayerOfNeuron(neuron) + 1) + (LayerSize[LayerOfNeuron(neuron) + 1]); i++)
+			{
+				forwardNeuronsDerivative += GetWeightBetweenNeurons(neuron, i) * forwardNeuronsDerivatives[i - LayerSize[0]];
+			}
+
+			return forwardNeuronsDerivative * 2 * activations[neuron + LayerSize[0]] * (1 - activations[neuron + LayerSize[0]]);
+		}
+		else if (neurons[neuron]->ActivationMethod == None)
+		{
+			float forwardNeuronsDerivative = 0;
+			for (int i = StartingIndexOfLayer(LayerOfNeuron(neuron) + 1); i < StartingIndexOfLayer(LayerOfNeuron(neuron) + 1) + (LayerSize[LayerOfNeuron(neuron) + 1]); i++)
+			{
+				forwardNeuronsDerivative += GetWeightBetweenNeurons(neuron, i) * forwardNeuronsDerivatives[i - LayerSize[0]];
+			}
+
+			return forwardNeuronsDerivative;
+		}
+		else
+		{
+			return 0.0f;
+		}
+	}
+}
+
+float* NeuralNetwork::PreCalcNeuronDerivatives()
+{
+	int NonInputNeuronNum = NeuronNum - LayerSize[0];
+
+	float* result = (float*)malloc(sizeof(float) * (NonInputNeuronNum));
+
+	for (int i = NonInputNeuronNum; i > 0; i--)
+	{
+		result[i];
+	}
+
+
+	return result;
+}
+
 int NeuralNetwork::StartingIndexOfLayer(int layer)
 {
 	int result = 0;
-	for (int i = 1; i < layer; i++)
+	for (int i = 0; i < layer; i++)
 	{
 		result += LayerSize[i];
 	}
@@ -438,24 +503,26 @@ float* NeuralNetwork::BackPropagate(float* expectedOutput, float* input, float m
 		return nullptr;
 
 	float* activations = GetAllActivations(input);
+	float* forwardNeuronsDerivatives = (float*)malloc((NeuronNum - LayerSize[0]) * sizeof(float));
 
 
 	int buffer = 0;
-	for (int layer = 1; layer < LayerNum; layer++)
+	for (int layer = LayerNum - 1; layer > 1; layer--)
 	{
-		for (int j = 0; j < LayerSize[layer]; j++)
+		for (int j = 0; j < LayerSize[layer - 1]; j++)
 		{
-			for (int i = 0; i < LayerSize[layer - 1]; i++)
+			for (int i = 0; i < LayerSize[layer]; i++)
 			{
-				int n1 = i + StartingIndexOfLayer(layer-1);
-				int n2 = j + StartingIndexOfLayer(layer);
-				data[buffer] = activations[n1] *PartialDerivativeOfErrorFunction(n2, activations, expectedOutput)* (-mutationRate);
+				int I = i + StartingIndexOfLayer(layer);
+				int J = j + StartingIndexOfLayer(layer-1);
+				data[buffer] = activations[I] *PartialDerivativeOfErrorFunction(J, activations, expectedOutput, forwardNeuronsDerivatives)* (-mutationRate);
 				buffer++;
 			}
 		}
 	}
 
 	free(activations); //MEM0RY LEAK!!!// _>
+	free(forwardNeuronsDerivatives);
 	return data;
 }
 
