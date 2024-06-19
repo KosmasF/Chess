@@ -99,6 +99,8 @@ Game::~Game()
 {
     delete board;
     delete BLACK_board;
+    delete Board::WhiteEnPassant;//Static variable
+    delete Board::BlackEnPassant;//Static variable
     delete movementLog;
     delete sprites;
     delete WhitePawn;

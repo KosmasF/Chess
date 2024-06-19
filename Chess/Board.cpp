@@ -18,8 +18,7 @@ Board::Board(int size, int xOFFSET, int yOFFSET, bool inversed)
 
 Board::~Board()
 {
-	delete WhiteEnPassant;
-	delete BlackEnPassant;
+	//Static variables shall be destroyed once and thus, elsewhere.
 }
 
 void Board::DrawMove(int From, int To)

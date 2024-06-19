@@ -1,12 +1,16 @@
-﻿  Game.cpp
+﻿  Board.cpp
+C:\Users\Others\source\repos\Chess\Chess\Board.cpp(35,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\Others\source\repos\Chess\Chess\Board.cpp(37,13): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\Others\source\repos\Chess\Chess\Board.cpp(49,10): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\Others\source\repos\Chess\Chess\Board.cpp(405,12): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\Others\source\repos\Chess\Chess\Board.cpp(474,17): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Others\source\repos\Chess\Chess\Board.cpp(532,8): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\Others\source\repos\Chess\Chess\Board.cpp(533,8): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+  Game.cpp
 C:\Users\Others\source\repos\Chess\Chess\Neuron.h(4,10): warning C4067: unexpected tokens following preprocessor directive - expected a newline
-C:\Users\Others\source\repos\Chess\Chess\Game.cpp(124,16): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\Others\source\repos\Chess\Chess\Game.cpp(278,55): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\Others\source\repos\Chess\Chess\Game.cpp(318,22): warning C4244: 'argument': conversion from 'time_t' to 'int', possible loss of data
-C:\Users\Others\source\repos\Chess\Chess\Game.cpp(597,61): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-  main.cpp
-C:\Users\Others\source\repos\Chess\Chess\Neuron.h(4,10): warning C4067: unexpected tokens following preprocessor directive - expected a newline
-C:\Users\Others\source\repos\Chess\Chess\main.cpp(216,19): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-C:\Users\Others\source\repos\Chess\Chess\main.cpp(140,13): warning C4102: 'EndLoop': unreferenced label
+C:\Users\Others\source\repos\Chess\Chess\Game.cpp(126,16): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Others\source\repos\Chess\Chess\Game.cpp(280,55): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\Others\source\repos\Chess\Chess\Game.cpp(320,22): warning C4244: 'argument': conversion from 'time_t' to 'int', possible loss of data
+C:\Users\Others\source\repos\Chess\Chess\Game.cpp(599,61): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
   Generating Code...
   Chess.vcxproj -> C:\Users\Others\source\repos\Chess\x64\Debug\Chess.exe
