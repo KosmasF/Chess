@@ -11,7 +11,7 @@
 
 #define INTERNAL_SERVER
 
-const bool graphical = 0;
+const bool graphical = 1;
 
 int outputToMove(float x , float y)
 {
@@ -307,6 +307,7 @@ int main(int argc, char** argv)
 
                 float loss = nn.GetLoss(output, &eval);
                 printf("Iteration %d , loss: %f \n", iterations, loss);
+                //if (iterations == 383)  __debugbreak();
 
                 delete[] output;
 
@@ -316,8 +317,8 @@ int main(int argc, char** argv)
             printf("Closing...\n");
             //char path[256];
             //std::cin >> path;
-            const char* path = "networks/nnRe-evalInMasterGamesErrorCorrection.nn";
-            nn.Save(path);
+            //const char* path = "networks/nnRe-evalInMasterGamesErrorCorrection.nn";
+            //nn.Save(path);
 
             printf("Training started in %i and ended, duration: %f\n",(int)startTime, (float)(time(NULL) - startTime));
             printf("Database fails: %i\n", fails);

@@ -3,7 +3,7 @@
 
 Game::Game(int argc , char** argv)
 {
-    InitWindow(screenWidth, screenHeight +  (evalLineHeight*3), "Chess");
+    InitWindow(screenWidth, screenHeight +  (evalLineHeight * 4), "Chess");
     SetTargetFPS(60);
 
     board = new Board(screenHeight, 0, 0, false);
@@ -369,13 +369,19 @@ void Game::Update()
     float nnEvalNEW = *nnEvalPointerNEW;
     delete[] nnEvalPointerNEW;
 
+    float* status2 = NonGraphicalBoard::Status(true, pieces, WhitePawn, BlackPawn, WhiteBishop, BlackBishop, WhiteKnight, BlackKnight, WhiteRook, BlackRook, WhiteQueen, BlackQueen, WhiteKing, BlackKing);
+    float* nnEvalPointer2 = evaluator2.Generate(status2);
+    float nnEval2 = *nnEvalPointer2;
+    delete[] nnEvalPointer2;
+
     //delete[] status; // THIS Fails, it is deleted in NeuralNetwork::Generate()
 
     //std::cout << eval << " | " << nnEval << std::endl;
 
     DrawBar(eval,0);
     DrawBar(nnEval, evalLineHeight);
-    DrawBar(nnEvalNEW, evalLineHeight*2);
+    DrawBar(nnEvalNEW, evalLineHeight * 2);
+    DrawBar(nnEval2, evalLineHeight * 3);
 
     //DrawFPS(0, 0);
     EndDrawing();

@@ -76,6 +76,8 @@ private:
     NeuralNetwork evaluator = NeuralNetwork(path);   
     const char* pathNEW = "networks/nnRe-evalInMasterGames.nn";
     NeuralNetwork evaluatorNEW = NeuralNetwork(pathNEW);
+    const char* path2 = "networks/nnRe-evalInMasterGamesErrorCorrection.nn";
+    NeuralNetwork evaluator2 = NeuralNetwork(path2);
 
     void DrawBar(float num, int offset);
 

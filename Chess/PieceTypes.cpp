@@ -343,37 +343,41 @@ bool King::IsLegal(Piece** pieces, int Original, int ToCheck, Board* board, bool
 	{
 		if (ToCheck == Original + 1 && Get2DCords(Original,board->numSquares).x < Get2DCords(ToCheck, board->numSquares).x)
 		{
-			return !IsAttacked(pieces, ToCheck, board, allowCastling);
+			goto CheckForCheck;
 		}
 		if (ToCheck == Original - 7 && Get2DCords(Original, board->numSquares).x < Get2DCords(ToCheck, board->numSquares).x)
 		{
-			return !IsAttacked(pieces, ToCheck, board, allowCastling);
+			goto CheckForCheck;
 		}
 		if (ToCheck == Original - 8)
 		{
-			return !IsAttacked(pieces, ToCheck, board, allowCastling);
+			goto CheckForCheck;
 		}
 		if (ToCheck == Original - 9 && Get2DCords(Original, board->numSquares).x > Get2DCords(ToCheck, board->numSquares).x)
 		{
-			return !IsAttacked(pieces, ToCheck, board, allowCastling);
+			goto CheckForCheck;
 		}
 		if (ToCheck == Original - 1 && Get2DCords(Original, board->numSquares).x > Get2DCords(ToCheck, board->numSquares).x)
 		{
-			return !IsAttacked(pieces, ToCheck, board, allowCastling);
+			goto CheckForCheck;
 		}
 		if (ToCheck == Original + 7 && Get2DCords(Original, board->numSquares).x > Get2DCords(ToCheck, board->numSquares).x)
 		{
-			return !IsAttacked(pieces, ToCheck, board, allowCastling);
+			goto CheckForCheck;
 		}
 		if (ToCheck == Original + 8)
 		{
-			return !IsAttacked(pieces, ToCheck, board, allowCastling);
+			goto CheckForCheck;
 		}
 		if (ToCheck == Original + 9 && Get2DCords(Original, board->numSquares).x < Get2DCords(ToCheck, board->numSquares).x)
 		{
-			return !IsAttacked(pieces, ToCheck, board, allowCastling);
+			goto CheckForCheck;
 		}
 	}
+
+
+
+	//Castling
 	if (IsWhite())
 	{
 		if (ToCheck == Original-2)
@@ -401,7 +405,13 @@ bool King::IsLegal(Piece** pieces, int Original, int ToCheck, Board* board, bool
 						return true;
 	}
 
-	return false;
+	return false;//END OF FUNCTION
+
+CheckForCheck:
+	if (CheckKing)
+		return !IsAttacked(pieces, ToCheck, board, allowCastling);
+	else
+		return true;
 }
 
 bool King::IsAttacked(Piece** pieces, int ToCheck, Board* board ,bool* allowCastling)
@@ -414,9 +424,9 @@ bool King::IsAttacked(Piece** pieces, int ToCheck, Board* board ,bool* allowCast
 				{ 
 					if (pieces[i]->IsLegal(pieces, i, ToCheck, board ,allowCastling, false))
 						return true;
-				}else
-				if (pieces[i]->IsLegal(pieces, i, ToCheck, board ,allowCastling, true , true , false))
-					return true;
+				}
+				else if (pieces[i]->IsLegal(pieces, i, ToCheck, board, allowCastling, true, true, false))
+						return true;
 	}
 	return false;
 }
