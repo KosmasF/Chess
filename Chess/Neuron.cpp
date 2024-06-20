@@ -28,7 +28,7 @@ Neuron::Neuron(int inputSize, float (*Activation)(float), bool normalize)
 	{
 		for (int i = 0; i < inputSize; i++)
 		{
-			weights[i] = 1 / inputSize;
+			weights[i] = 1.f / inputSize;//+ 0.1f;
 		}
 	}
 	else

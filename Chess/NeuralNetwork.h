@@ -17,6 +17,7 @@ private:
 	float GetWeightBetweenNeurons(int From, int To);
 	int LayerOfNeuron(int neuron);
 	int LayerRelativeOfNeuron(int neuron);
+	int LayerRelativeOfNeuronIncludingInputLayer(int neuron);
 	int LayerOfNeuronIncludingInputLayer(int neuron);
 	float* GetAllActivations(float* input);
 	float PartialDerivativeOfErrorFunction(int neuron, float* activations, float* predictedOutput);// Recursive

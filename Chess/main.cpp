@@ -28,6 +28,65 @@ void LaunchStockfish()
     }
 }
 
+
+#define ReadFile
+
+void calcBatch(NonGraphicalBoard* board, SocketConnection* stockfish, NeuralNetwork* nn, float mutationRate, float** batchGenerationGradientDescent, int batch
+#ifdef ReadFile
+    , std::fstream* gameFile , int* fails
+
+#endif
+)
+{
+#ifndef ReadFile
+    //--------RANDOMIZATION---------
+    board->Randomize(rand(), false);
+#else
+    //--------FILE DATABASE--------
+
+    if (gameFile->is_open())
+    {
+        std::string sa;
+        getline(*gameFile, sa, ' ');
+
+        //std::cout << sa << "\n";
+        if (sa[0] == '$')
+        {
+            //gameFile.close();
+            getline(*gameFile, sa, ' ');
+            //SetPiecesAsDefault(pieces);
+            board->SetPiecesAsDefault(board->pieces);
+        }
+        else
+        {
+            Position id = Board::TranslateMove(sa.c_str(), board->pieces, board->whitePlays);
+            if (!(id.x == -1 && id.y == -1))
+            {
+                int tmp = 0;
+                bool success = Board::MakeMove(id.x, id.y, board->Pieces, board->allowCastling, board->WhiteDefaultPromotionPiece, board->BlackDefaultPromotionPiece, nullptr, true, tmp, Board::WhiteEnPassant, Board::BlackEnPassant);
+                if (!success)
+                {
+                    *fails++;
+                    //__debugbreak();
+                    //Board::MakeMove(id.x, id.y, board.Pieces, board.allowCastling, board.WhiteDefaultPromotionPiece, board.BlackDefaultPromotionPiece, nullptr, true, tmp, Board::WhiteEnPassant, Board::BlackEnPassant);
+                    //board.PrintStatus(true);
+                }
+                board->whitePlays = !board->whitePlays;
+            }
+        }
+    }
+#endif
+
+    const char* fen = Game::GetFen(board->Pieces, board->allowCastling, 0);
+    float eval = stockfish->getEval(fen);
+    if (!(board->whitePlays))
+        eval *= -1;
+    delete[] fen;
+
+    float* generationStepVector = nn->BackPropagate(&eval, board->Status(true), mutationRate);
+    batchGenerationGradientDescent[batch] = generationStepVector;
+}
+
 int main(int argc, char** argv)
 {
 #ifdef INTERNAL_SERVER
@@ -214,15 +273,18 @@ int main(int argc, char** argv)
 
             //END SET UP
 
+            SocketConnection stockfish;
+            stockfish.Setup(argc, argv);
+
             time_t startTime = time(NULL);
             srand(startTime);
 
             printf("Setup\n");
 
-            int batchSize = 1;
-            int batches = 10000;
+            const int batchSize = 100;
+            const int batches = 20;
 
-            int networkSizes[] = { 64,256, 1 };
+            int networkSizes[] = { 64,256,1 };
             float (*activationMethods[])(float) = {None,None,None};
 
             //NeuralNetwork nn = NeuralNetwork("networks/testedNonRandom3LayersBIG.nn");
@@ -233,10 +295,9 @@ int main(int argc, char** argv)
             //const char* path = "networks/testEvaluatorNonRandomWeights.nn";
             //nn.LoadFromDisk(path);
 
-            SocketConnection stockfish;
-            stockfish.Setup(argc,argv);
+            const float mutationRate = 0.0005f;
 
-            float mutationRate = 0.001f;
+            std::thread batchThreads[batchSize];
 
             printf("Training...\n");
 
@@ -250,56 +311,27 @@ int main(int argc, char** argv)
                 for (int batch = 0; batch < batchSize; batch++)
                 {
 
-            #ifndef ReadFile
-                    //--------RANDOMIZATION---------
-                    //board.Randomize(rand(), false);
-            #else
-                    //--------FILE DATABASE--------
-
-                    if (gameFile.is_open())
-                    {
-                        std::string sa;
-                        getline(gameFile, sa, ' ');
-
-                        //std::cout << sa << "\n";
-                        if (sa[0] == '$')
-                        {
-                            //gameFile.close();
-                            getline(gameFile, sa, ' ');
-                            //SetPiecesAsDefault(pieces);
-                            board.SetPiecesAsDefault(board.pieces);
-                        }
-                        else
-                        {
-                            Position id = Board::TranslateMove(sa.c_str(), board.pieces, board.whitePlays);
-                            if (!(id.x == -1 && id.y == -1))
-                            {
-                                int tmp = 0;
-                                bool success = Board::MakeMove(id.x, id.y, board.Pieces, board.allowCastling, board.WhiteDefaultPromotionPiece, board.BlackDefaultPromotionPiece, nullptr, true, tmp, Board::WhiteEnPassant, Board::BlackEnPassant);
-                                if (!success)
-                                {
-                                    fails++;
-                                    //__debugbreak();
-                                    //Board::MakeMove(id.x, id.y, board.Pieces, board.allowCastling, board.WhiteDefaultPromotionPiece, board.BlackDefaultPromotionPiece, nullptr, true, tmp, Board::WhiteEnPassant, Board::BlackEnPassant);
-                                    //board.PrintStatus(true);
-                                }
-                                board.whitePlays = !board.whitePlays;
-                            }
-                        }
-                    }
-                #endif
-
                     //output = nn.Generate(board.Status(board.whitePlays));
                     //delete[] output;
 
-                    const char* fen = Game::GetFen(board.Pieces, board.allowCastling, 0);
-                    eval = stockfish.getEval(fen);
-                    if (!board.whitePlays)
-                        eval *= -1;
-                    delete[] fen;
+                #ifndef ReadFile
 
-                    float* generationStepVector = nn.BackPropagate(&eval, board.Status(true), mutationRate);
-                    batchGenerationGradientDescent[batch] = generationStepVector;
+                    batchThreads[batch] = std::thread(calcBatch, &board, &stockfish, &nn, mutationRate, batchGenerationGradientDescent, batch);
+                    batchThreads[batch].join();
+                #else
+                    batchThreads[batch] = std::thread(calcBatch, &board, &stockfish, &nn, mutationRate, batchGenerationGradientDescent, batch, &gameFile, &fails);
+                    batchThreads[batch].join();
+
+                #endif
+
+
+                    //calcBatch(&board, &stockfish, &nn, mutationRate, batchGenerationGradientDescent, batch);
+                }
+
+                for (int batch = 0; batch < batchSize; batch++)
+                {
+                    //batchThreads[batch].join();
+                    //Server can't handle instant attempts
                 }
 
                 output = nn.Generate(board.Status(board.whitePlays));
@@ -312,6 +344,12 @@ int main(int argc, char** argv)
                 delete[] batchGenerationGradientDescent;
 
                 float loss = nn.GetLoss(output, &eval);
+
+                if (loss == INFINITY)
+                {
+                    goto Shutdown;
+                }
+
                 printf("Iteration %d , loss: %f \n", iterations, loss);
                 //if (iterations == 383)  __debugbreak();
 
@@ -336,7 +374,7 @@ int main(int argc, char** argv)
 
 
 
-
+    Shutdown:
 
     #ifdef INTERNAL_SERVER
         stockfishThread.join();

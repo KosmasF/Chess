@@ -1,5 +1,6 @@
 #include "NeuralNetwork.h"
 #include <iostream>
+#include <intrin.h>
 
 NeuralNetwork::NeuralNetwork(int* layerSize, int layerNum, float (*activationMethods[])(float), bool normalizeOutput)
 {
@@ -251,6 +252,18 @@ int NeuralNetwork::LayerRelativeOfNeuron(int neuron)
 	return -1;
 }
 
+int NeuralNetwork::LayerRelativeOfNeuronIncludingInputLayer(int neuron)
+{
+	int buffer = 0;
+	for (int i = 0; i < LayerNum; i++)
+	{
+		buffer += LayerSize[i];
+		if (neuron < buffer)
+			return neuron - StartingIndexOfLayerIncludingInputLayer(i);
+	}
+	return -1;
+}
+
 int NeuralNetwork::LayerOfNeuronIncludingInputLayer(int neuron)
 {
 	int buffer = 0;
@@ -406,7 +419,7 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 
 				forwardNeuronsDerivatives[neuron] = forwardNeuronsDerivative;
 			}
-			return forwardNeuronsDerivatives[neuron] == 0;
+			return forwardNeuronsDerivatives[neuron];
 		}
 		else
 		{
@@ -455,19 +468,21 @@ int NeuralNetwork::StartingIndexOfLayerIncludingInputLayer(int layer)
 int NeuralNetwork::GetIndexOfWeight(int source, int destination)
 {
 	//The data includes input layer
+	if (destination < source)
+		__debugbreak();
 
 	int result = 0;
 
-	int layer = LayerOfNeuronIncludingInputLayer(destination);
-
-	for (int i = 0; i < layer; i++)
+	int layer = LayerOfNeuronIncludingInputLayer(source);
+	while (layer > 0)
 	{
-		for (int n = 0; n < LayerSize[i]; n++)
-		{
-			result += LayerSize[i];
-		}
+		result += LayerSize[layer] * LayerSize[layer - 1];
+		layer--;
 	}
-	result += source;
+
+	result += LayerRelativeOfNeuronIncludingInputLayer(source) * LayerSize[LayerOfNeuronIncludingInputLayer(destination)];
+
+	result += LayerRelativeOfNeuronIncludingInputLayer(destination);
 
 	return result;
 }
@@ -562,6 +577,9 @@ float* NeuralNetwork::BackPropagate(float* expectedOutput, float* input, float m
 	if (data == nullptr)
 		return nullptr;
 
+	//float zeroValuesCounter = 0;
+	//float zeroedActivations = 0;
+
 	float* activations = GetAllActivations(input);
 	float* forwardNeuronsDerivatives = (float*)malloc((NeuronNum) * sizeof(float));
 	memset(forwardNeuronsDerivatives, 0, (NeuronNum) * sizeof(float));
@@ -578,9 +596,22 @@ float* NeuralNetwork::BackPropagate(float* expectedOutput, float* input, float m
 				int J = j + StartingIndexOfLayerIncludingInputLayer(layer-1);// J is the source
 				// Considering PartialDerivativeOfErrorFunction() input layer is inexistent
 				data[GetIndexOfWeight(J , I)] = activations[J] * PartialDerivativeOfErrorFunction(I - LayerSize[0], activations, expectedOutput, forwardNeuronsDerivatives) * (-mutationRate);
+				/*if (data[GetIndexOfWeight(J, I)] == 0)
+				{
+					//__debugbreak();
+					zeroValuesCounter++;
+					if (activations[J] == 0)
+					{
+						zeroedActivations++;
+					}
+					activations[J] * PartialDerivativeOfErrorFunction(I - LayerSize[0], activations, expectedOutput, forwardNeuronsDerivatives)* (-mutationRate);
+				}*/
 			}
 		}
 	}
+
+	//float percentage = (zeroValuesCounter / GetNumberOfWeights()) * 100;
+	//printf("Zeroes: %i and with total percentage: %f %c , Activation's fault: %f %c \n", (int)zeroValuesCounter , percentage, '%', zeroedActivations / zeroValuesCounter * 100 , '%');
 
 	free(activations); //MEM0RY LEAK!!!// _>
 	free(forwardNeuronsDerivatives);
@@ -589,15 +620,21 @@ float* NeuralNetwork::BackPropagate(float* expectedOutput, float* input, float m
 
 void NeuralNetwork::AddToWeights(float* data)
 {
-	int buffer = 0;
+	//int buffer = 0;
 	for (int layer = 1; layer < LayerNum; layer++)
 	{
 		for (int neuron = 0; neuron < LayerSize[layer]; neuron++)
 		{
 			for (int i = 0; i < LayerSize[layer - 1]; i++)
 			{
-				neurons[StartingIndexOfLayer(layer)+neuron]->weights[i] += data[buffer];
-				buffer++;
+				int index = GetIndexOfWeight(StartingIndexOfLayerIncludingInputLayer(layer - 1) + i, StartingIndexOfLayerIncludingInputLayer(layer) + neuron);
+				neurons[StartingIndexOfLayer(layer)+neuron]->weights[i] += data[index];
+				//if (g != buffer)
+				//{
+					//__debugbreak();
+				//}
+				//g = GetIndexOfWeight(StartingIndexOfLayerIncludingInputLayer(layer - 1) + i, StartingIndexOfLayerIncludingInputLayer(layer) + neuron);
+				//buffer++;
 			}
 		}
 	}

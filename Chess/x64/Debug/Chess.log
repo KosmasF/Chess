@@ -1,3 +1,4 @@
-﻿  NeuralNetwork.cpp
+﻿  main.cpp
 C:\Users\Others\source\repos\Chess\Chess\Neuron.h(4,10): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+C:\Users\Others\source\repos\Chess\Chess\main.cpp(280,19): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
   Chess.vcxproj -> C:\Users\Others\source\repos\Chess\x64\Debug\Chess.exe
