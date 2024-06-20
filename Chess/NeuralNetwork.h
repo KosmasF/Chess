@@ -22,6 +22,7 @@ private:
 	float PartialDerivativeOfErrorFunction(int neuron, float* activations, float* predictedOutput, float* forwardNeuronsDerivatives);// Non-recursive
 	float* PreCalcNeuronDerivatives();
 	int StartingIndexOfLayer(int layer);
+	int StartingIndexOfLayerIncludingInputLayer(int layer);
 
 	int RetNeuronNum();
 

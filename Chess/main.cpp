@@ -208,6 +208,8 @@ int main(int argc, char** argv)
 
                 //new_file.close();
             }
+
+            int fails = 0;
     #endif
 
             //END SET UP
@@ -232,8 +234,6 @@ int main(int argc, char** argv)
 
             SocketConnection stockfish;
             stockfish.Setup(argc,argv);
-
-            int fails = 0;
 
             float mutationRate = 0.001f;
 
@@ -326,7 +326,9 @@ int main(int argc, char** argv)
             //nn.Save(path);
 
             printf("Training started in %i and ended, duration: %f\n",(int)startTime, (float)(time(NULL) - startTime));
-            printf("Database fails: %i\n", fails);
+            #ifdef ReadFile
+                printf("Database fails: %i\n", fails);
+            #endif
         }
 #endif
 
@@ -335,9 +337,9 @@ int main(int argc, char** argv)
 
 
 
-#ifdef INTERNAL_SERVER
-    stockfishThread.join();
-#endif
+    #ifdef INTERNAL_SERVER
+        stockfishThread.join();
+    #endif
 
     return 0;
 }
