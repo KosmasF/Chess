@@ -17,14 +17,22 @@ void Neuron::SetRandomData()
 	bias = 0;
 }
 
-Neuron::Neuron(int inputSize, float (*Activation)(float))
+Neuron::Neuron(int inputSize, float (*Activation)(float), bool normalize)
 {
 	weights = new float[inputSize];
 	numWeights = inputSize;
 	ActivationMethod = Activation;
 	bias = 0;
 
-	SetRandomData();
+	if (normalize)
+	{
+		for (int i = 0; i < inputSize; i++)
+		{
+			weights[i] = 1 / inputSize;
+		}
+	}
+	else
+		SetRandomData();
 }
 
 float Neuron::Generate(float* input)

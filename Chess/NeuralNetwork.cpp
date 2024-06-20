@@ -1,7 +1,7 @@
 #include "NeuralNetwork.h"
 #include <iostream>
 
-NeuralNetwork::NeuralNetwork(int* layerSize, int layerNum, float (*activationMethods[])(float))
+NeuralNetwork::NeuralNetwork(int* layerSize, int layerNum, float (*activationMethods[])(float), bool normalizeOutput)
 {
 	LayerSize = (int*)malloc(layerNum*sizeof(int));
 	memcpy(LayerSize, layerSize, layerNum * sizeof(int));
@@ -23,7 +23,7 @@ NeuralNetwork::NeuralNetwork(int* layerSize, int layerNum, float (*activationMet
 		}
 		for (int i = 0; i < layerSize[layer]; i++)
 		{
-			neurons[i+buffer] = new Neuron(layerSize[layer - 1], activationMethods[layer-1]);
+			neurons[i+buffer] = new Neuron(layerSize[layer - 1], activationMethods[layer - 1], normalizeOutput);
 		}
 	}
 
@@ -251,6 +251,18 @@ int NeuralNetwork::LayerRelativeOfNeuron(int neuron)
 	return -1;
 }
 
+int NeuralNetwork::LayerOfNeuronIncludingInputLayer(int neuron)
+{
+	int buffer = 0;
+	for (int i = 0; i < LayerNum; i++)
+	{
+		buffer += LayerSize[i];
+		if (neuron < buffer)
+			return i;
+	}
+	return -1;
+}
+
 float* NeuralNetwork::GetAllActivations(float* input)
 {
 	float* result = (float*)malloc(sizeof(float) * (NeuronNum+LayerSize[0]));
@@ -440,6 +452,27 @@ int NeuralNetwork::StartingIndexOfLayerIncludingInputLayer(int layer)
 	return result;
 }
 
+int NeuralNetwork::GetIndexOfWeight(int source, int destination)
+{
+	//The data includes input layer
+
+	int result = 0;
+
+	int layer = LayerOfNeuronIncludingInputLayer(destination);
+
+	for (int i = 0; i < layer; i++)
+	{
+		for (int n = 0; n < LayerSize[i]; n++)
+		{
+			result += LayerSize[i];
+		}
+	}
+	result += source;
+
+	return result;
+}
+
+
 int NeuralNetwork::RetNeuronNum()
 {
 	int result = 0;
@@ -534,13 +567,8 @@ float* NeuralNetwork::BackPropagate(float* expectedOutput, float* input, float m
 	memset(forwardNeuronsDerivatives, 0, (NeuronNum) * sizeof(float));
 
 
-	int buffer = 0;
 	for (int layer = LayerNum - 1; layer > 0; layer--)
 	{
-		if (layer == 1)
-		{
-			int g = 0;
-		}
 		for (int j = 0; j < LayerSize[layer - 1]; j++)
 		{
 			for (int i = 0; i < LayerSize[layer]; i++)
@@ -549,8 +577,7 @@ float* NeuralNetwork::BackPropagate(float* expectedOutput, float* input, float m
 				int I = i + StartingIndexOfLayerIncludingInputLayer(layer);// I is destination
 				int J = j + StartingIndexOfLayerIncludingInputLayer(layer-1);// J is the source
 				// Considering PartialDerivativeOfErrorFunction() input layer is inexistent
-				data[buffer] = activations[J] * PartialDerivativeOfErrorFunction(I - LayerSize[0], activations, expectedOutput, forwardNeuronsDerivatives) * (-mutationRate);
-				buffer++;
+				data[GetIndexOfWeight(J , I)] = activations[J] * PartialDerivativeOfErrorFunction(I - LayerSize[0], activations, expectedOutput, forwardNeuronsDerivatives) * (-mutationRate);
 			}
 		}
 	}

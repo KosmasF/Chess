@@ -219,13 +219,14 @@ int main(int argc, char** argv)
 
             printf("Setup\n");
 
-            int batchSize = 16;
-            int batches = 1000;
+            int batchSize = 1;
+            int batches = 10000;
 
-            //int networkSizes[] = { 64,256,1 };
-            //float (*activationMethods[])(float) = {None,None,None,None};
+            int networkSizes[] = { 64,256, 1 };
+            float (*activationMethods[])(float) = {None,None,None};
 
-            NeuralNetwork nn = NeuralNetwork("networks/testedNonRandom3LayersBIG.nn");
+            //NeuralNetwork nn = NeuralNetwork("networks/testedNonRandom3LayersBIG.nn");
+            NeuralNetwork nn = NeuralNetwork(networkSizes, sizeof(networkSizes) / sizeof(int) , activationMethods, true);
             NonGraphicalBoard board;
 
 
@@ -251,7 +252,7 @@ int main(int argc, char** argv)
 
             #ifndef ReadFile
                     //--------RANDOMIZATION---------
-                    board.Randomize(rand(), false);
+                    //board.Randomize(rand(), false);
             #else
                     //--------FILE DATABASE--------
 

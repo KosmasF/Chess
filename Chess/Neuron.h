@@ -19,7 +19,7 @@ public:
 
 
 public:
-	Neuron(int inputSize , float (*Activation)(float));
+	Neuron(int inputSize , float (*Activation)(float), bool normalize = false);
 
 	float Generate(float* input);
 

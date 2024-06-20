@@ -17,17 +17,19 @@ private:
 	float GetWeightBetweenNeurons(int From, int To);
 	int LayerOfNeuron(int neuron);
 	int LayerRelativeOfNeuron(int neuron);
+	int LayerOfNeuronIncludingInputLayer(int neuron);
 	float* GetAllActivations(float* input);
 	float PartialDerivativeOfErrorFunction(int neuron, float* activations, float* predictedOutput);// Recursive
 	float PartialDerivativeOfErrorFunction(int neuron, float* activations, float* predictedOutput, float* forwardNeuronsDerivatives);// Non-recursive
 	float* PreCalcNeuronDerivatives();
 	int StartingIndexOfLayer(int layer);
 	int StartingIndexOfLayerIncludingInputLayer(int layer);
+	int GetIndexOfWeight(int source, int destination);
 
 	int RetNeuronNum();
 
 public:
-	NeuralNetwork(int* layerSize , int layerNum, float (*activationMethods[])(float));
+	NeuralNetwork(int* layerSize, int layerNum, float (*activationMethods[])(float), bool normalizeOutput);
 
 	NeuralNetwork(const char* path);
 
