@@ -8,10 +8,9 @@
 
 #pragma warning (disable : 4996)
 #include <stdio.h>
+//#define INTERNAL_SERVER
 
-#define INTERNAL_SERVER
-
-const bool graphical = 1;
+const bool graphical = 0;
 
 int outputToMove(float x , float y)
 {
@@ -28,6 +27,8 @@ void LaunchStockfish()
     }
 }
 
+
+std::string sa;
 
 #define ReadFile
 
@@ -46,7 +47,6 @@ void calcBatch(NonGraphicalBoard* board, SocketConnection* stockfish, NeuralNetw
 
     if (gameFile->is_open())
     {
-        std::string sa;
         getline(*gameFile, sa, ' ');
 
         //std::cout << sa << "\n";
@@ -77,13 +77,17 @@ void calcBatch(NonGraphicalBoard* board, SocketConnection* stockfish, NeuralNetw
     }
 #endif
 
-    const char* fen = Game::GetFen(board->Pieces, board->allowCastling, 0);
-    float eval = stockfish->getEval(fen);
-    if (!(board->whitePlays))
-        eval *= -1;
-    delete[] fen;
+    //const char* fen = Game::GetFen(board->Pieces, board->allowCastling, 0);
+    //float eval = stockfish->getEval(fen);
+    //if (!(board->whitePlays))
+        //eval *= -1;
+    //delete[] fen;
 
-    float* generationStepVector = nn->BackPropagate(&eval, board->Status(true), mutationRate);
+    Position output = Board::TranslateMove(sa.c_str(), board->pieces, board->whitePlays);
+    float* input = new float[2];
+    input[0] = output.x;
+    input[1] = output.y;
+    float* generationStepVector = nn->BackPropagate(input, board->Status(true), mutationRate);
     batchGenerationGradientDescent[batch] = generationStepVector;
 }
 
@@ -273,19 +277,19 @@ int main(int argc, char** argv)
 
             //END SET UP
 
-            SocketConnection stockfish;
-            stockfish.Setup(argc, argv);
+            //SocketConnection stockfish;
+            //stockfish.Setup(argc, argv);
 
             time_t startTime = time(NULL);
             srand(startTime);
 
             printf("Setup\n");
 
-            const int batchSize = 100;
-            const int batches = 20;
+            const int batchSize = 1;
+            const int batches = 100;
 
-            int networkSizes[] = { 64,256,1 };
-            float (*activationMethods[])(float) = {None,None,None};
+            int networkSizes[] = { 64,256,128 ,2 };
+            float (*activationMethods[])(float) = {None,None,None,None};
 
             //NeuralNetwork nn = NeuralNetwork("networks/testedNonRandom3LayersBIG.nn");
             NeuralNetwork nn = NeuralNetwork(networkSizes, sizeof(networkSizes) / sizeof(int) , activationMethods, true);
@@ -319,8 +323,8 @@ int main(int argc, char** argv)
                     batchThreads[batch] = std::thread(calcBatch, &board, &stockfish, &nn, mutationRate, batchGenerationGradientDescent, batch);
                     batchThreads[batch].join();
                 #else
-                    batchThreads[batch] = std::thread(calcBatch, &board, &stockfish, &nn, mutationRate, batchGenerationGradientDescent, batch, &gameFile, &fails);
-                    batchThreads[batch].join();
+                    calcBatch(& board, nullptr, & nn, mutationRate, batchGenerationGradientDescent, batch, & gameFile, & fails);
+                    //batchThreads[batch].join();
 
                 #endif
 
@@ -333,8 +337,12 @@ int main(int argc, char** argv)
                     //batchThreads[batch].join();
                     //Server can't handle instant attempts
                 }
-
-                output = nn.Generate(board.Status(board.whitePlays));
+                Position DToutput = Board::TranslateMove(sa.c_str(), board.pieces, !board.whitePlays);
+                float* input = new float[2];
+                input[0] = DToutput.x;
+                input[1] = DToutput.y;
+                //output = nn.Generate(board.Status(board.whitePlays));
+                output = nn.Generate(input);
 
                 float* batchGradientDescent = nn.AverageWeightVector(batchGenerationGradientDescent,batchSize);
                 nn.AddToWeights(batchGradientDescent);
@@ -361,8 +369,8 @@ int main(int argc, char** argv)
             printf("Closing...\n");
             //char path[256];
             //std::cin >> path;
-            //const char* path = "networks/nnRe-evalInMasterGamesErrorCorrection.nn";
-            //nn.Save(path);
+            const char* path = "networks/predictorTest.nn";
+            nn.Save(path);
 
             printf("Training started in %i and ended, duration: %f\n",(int)startTime, (float)(time(NULL) - startTime));
             #ifdef ReadFile

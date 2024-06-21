@@ -1,11 +1,8 @@
-﻿  Game.cpp
+﻿  main.cpp
 C:\Users\Others\source\repos\Chess\Chess\Neuron.h(4,10): warning C4067: unexpected tokens following preprocessor directive - expected a newline
-C:\Users\Others\source\repos\Chess\Chess\Game.cpp(93,16): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\Others\source\repos\Chess\Chess\Game.cpp(247,55): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\Others\source\repos\Chess\Chess\Game.cpp(287,22): warning C4244: 'argument': conversion from 'time_t' to 'int', possible loss of data
-C:\Users\Others\source\repos\Chess\Chess\Game.cpp(571,61): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-  main.cpp
-C:\Users\Others\source\repos\Chess\Chess\Neuron.h(4,10): warning C4067: unexpected tokens following preprocessor directive - expected a newline
-C:\Users\Others\source\repos\Chess\Chess\main.cpp(280,19): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-  Generating Code...
+C:\Users\Others\source\repos\Chess\Chess\main.cpp(88,22): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+C:\Users\Others\source\repos\Chess\Chess\main.cpp(89,22): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+C:\Users\Others\source\repos\Chess\Chess\main.cpp(284,19): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Users\Others\source\repos\Chess\Chess\main.cpp(342,36): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+C:\Users\Others\source\repos\Chess\Chess\main.cpp(343,36): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
   Chess.vcxproj -> C:\Users\Others\source\repos\Chess\x64\Debug\Chess.exe
