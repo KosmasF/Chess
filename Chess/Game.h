@@ -25,6 +25,14 @@ struct BranchEvaluationData
 {
     int bestMoves[size][2];
     float evals[size];
+    BranchEvaluationData()
+    {
+        for (int i = 0; i < size; i++)
+        {
+            bestMoves[i][0] = bestMoves[i][1] = -1;
+            evals[i] = 0;
+        }
+    }
 };
 
 
@@ -81,7 +89,9 @@ private:
 
     void DrawBar(float num, int offset);
 
-    std::fstream gameFile;
+    std::fstream* gameFile;
+    const char* gameFilePath = "games/output.pgn";
+    std::fstream* OpenGameFile(const char* path, int gameIndex);
 public:
 	const int screenHeight = 536;
 	const int LogSize = 200;

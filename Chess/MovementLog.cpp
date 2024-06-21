@@ -94,6 +94,7 @@ void MovementLog::DeleteMoves()
         delete moves[i];
         moves[i] = nullptr;
     }
+    fistNumToDraw = 0;
 }
 
 void MovementLog::AddMove(const char* move)

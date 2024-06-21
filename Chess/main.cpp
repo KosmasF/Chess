@@ -11,7 +11,7 @@
 
 #define INTERNAL_SERVER
 
-const bool graphical = 0;
+const bool graphical = 1;
 
 int outputToMove(float x , float y)
 {

@@ -297,7 +297,7 @@ Position Board::TranslateMove(const char* move, Piece** pieces, bool whitePlays)
 	else
 	{
 		piece = 0;
-		if (move[3] == ' ' || move[3] == '+' || move[3] == '#' || move[3] == '\0' || move[3] == '=')
+		if (move[2] == ' ' || move[2] == '+' || move[2] == '#' || move[2] == '\0' || move[2] == '=')
 		{
 			goto LocationPieceSearch;
 		}

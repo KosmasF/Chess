@@ -57,42 +57,8 @@ Game::Game(int argc , char** argv)
         printf("Failed connection with Stockfish!\n");
     }
 
-    gameFile.open("games/output.pgn", std::ios::in);
+    gameFile = OpenGameFile(gameFilePath, 1);
 
-    int lines = 0;
-    int rating[] = { -1,-1 };
-    bool ready = false;
-
-    if (gameFile.is_open()) {
-        std::string sa;
-        while (getline(gameFile, sa, ' '))
-        {
-            std::cout << sa << "\n";
-            if (sa[0] == '$')
-            {
-                if (0 < lines)
-                    break;
-                lines++;
-                sa.erase(0, 1);
-                rating[0] = std::stoi(sa);
-            }
-            else if (rating[1] == -1)
-            {
-                rating[1] = std::stoi(sa);
-                ready = true;
-            }
-            if(ready)
-            {
-                //Position id = Board::TranslateMove(sa.c_str(), pieces, movementLog->WhitePlays());
-                //board->MakeMove(id.x, id.y, Pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog);
-                break;
-            }
-        }
-
-        //new_file.close();
-    }
-
- 
 }
 
 Game::~Game()
@@ -116,7 +82,8 @@ Game::~Game()
     delete WhiteKing;
     delete BlackKing;
     CloseWindow();
-    gameFile.close();
+    gameFile->close();
+    delete gameFile;
 }
 
 const char* Game::GetFen(PiecesArray FenPieces, bool* castling, int lastMoveIndex)
@@ -328,16 +295,16 @@ void Game::Update()
     }
     if (IsKeyPressed(KEY_M))
     {
-        if (gameFile.is_open())
+        if (gameFile->is_open())
         {
             std::string sa;
-            getline(gameFile, sa, ' ');
+            getline(*gameFile, sa, ' ');
 
             std::cout << sa << "\n";
             if (sa[0] == '$')
             {
                 //gameFile.close();
-                getline(gameFile, sa, ' ');
+                getline(*gameFile, sa, ' ');
                 SetPiecesAsDefault(pieces);
             }
             else
@@ -432,6 +399,11 @@ void Game::SetPiecesAsDefault(Piece** pieces)
 
     movementLog->DeleteMoves();
     movementLog->lastMoveIndex = 0;
+
+    allowCastling[0] = 1;
+    allowCastling[1] = 1;
+    allowCastling[2] = 1;
+    allowCastling[3] = 1;
 }
 
 void Game::Randomize(int seed)
@@ -621,5 +593,54 @@ void Game::DrawBar(float num, int offset)
     {
         board->DrawMove(dataToDraw.bestMoves[i][0], dataToDraw.bestMoves[i][1]);
     }
+}
+
+std::fstream* Game::OpenGameFile(const char* path, int gameIndex)
+{
+    std::fstream* file = new std::fstream();
+    file->open(path, std::ios::in);
+
+    int rating[] = { -1,-1 };
+    bool ready = false;
+
+    if (file->is_open()) {
+        std::string sa;
+        while (getline(*file, sa, ' '))
+        {
+            std::cout << sa << "\n";
+            if (sa[0] == '$')
+            {
+                lineStart:
+                sa.erase(0, 1);
+                rating[0] = std::stoi(sa);
+            }
+            else if (rating[1] == -1)
+            {
+                rating[1] = std::stoi(sa);
+                ready = true;
+            }
+            if (ready)
+            {
+                if (gameIndex > 0)
+                {
+                    rating[0] = -1 , rating[1] = -1;
+                    gameIndex--;
+                    ready = false;
+                    do
+                    {
+                        getline(*file, sa, ' ');      
+                    } while (sa[0] != '$');
+                    goto lineStart;
+                }
+                //Position id = Board::TranslateMove(sa.c_str(), pieces, movementLog->WhitePlays());
+                //board->MakeMove(id.x, id.y, Pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog);
+                else
+                    break;
+            }
+        }
+
+        //new_file.close();
+    }
+    return file;
 }
 
