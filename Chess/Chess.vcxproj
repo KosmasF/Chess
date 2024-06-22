@@ -148,6 +148,7 @@
     <ClCompile Include="ActivationMethods.cpp" />
     <ClCompile Include="Board.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="Graph.cpp" />
     <ClCompile Include="InversedPieces.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MovementLog.cpp" />
@@ -163,6 +164,7 @@
     <ClInclude Include="ActivationMethods.h" />
     <ClInclude Include="Board.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="Graph.h" />
     <ClInclude Include="Header.h" />
     <ClInclude Include="InversedPieces.h" />
     <ClInclude Include="MovementLog.h" />

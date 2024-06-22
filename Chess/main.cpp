@@ -5,6 +5,7 @@
 #include "NeuralNetwork.h"
 #include <thread>
 #include <intrin.h>
+#include "Graph.h"
 
 #pragma warning (disable : 4996)
 #include <stdio.h>
@@ -65,12 +66,16 @@ void calcBatch(NonGraphicalBoard* board, SocketConnection* stockfish, NeuralNetw
                 bool success = Board::MakeMove(id.x, id.y, board->Pieces, board->allowCastling, board->WhiteDefaultPromotionPiece, board->BlackDefaultPromotionPiece, nullptr, true, tmp, Board::WhiteEnPassant, Board::BlackEnPassant);
                 if (!success)
                 {
-                    *fails++;
+                    (*fails)++;
                     //__debugbreak();
                     //Board::MakeMove(id.x, id.y, board.Pieces, board.allowCastling, board.WhiteDefaultPromotionPiece, board.BlackDefaultPromotionPiece, nullptr, true, tmp, Board::WhiteEnPassant, Board::BlackEnPassant);
                     //board.PrintStatus(true);
                 }
                 board->whitePlays = !board->whitePlays;
+            }
+            else
+            {
+                (*fails)++;
             }
         }
     }
@@ -279,6 +284,8 @@ int main(int argc, char** argv)
             //SocketConnection stockfish;
             //stockfish.Setup(argc, argv);
 
+            Graph graph = Graph(100);
+
             time_t startTime = time(NULL);
             srand(startTime);
 
@@ -287,8 +294,8 @@ int main(int argc, char** argv)
             const int batchSize = 4;
             const int batches = 3000;
 
-            int networkSizes[] = { 64,256,128 ,2 };
-            float (*activationMethods[])(float) = {None,None,None,None};
+            int networkSizes[] = { 64,512,512,256 ,2 };
+            float (*activationMethods[])(float) = {None,None,None,None,None};
 
             //NeuralNetwork nn = NeuralNetwork("networks/testedNonRandom3LayersBIG.nn");
             NeuralNetwork nn = NeuralNetwork(networkSizes, sizeof(networkSizes) / sizeof(int) , activationMethods, true);
@@ -298,7 +305,7 @@ int main(int argc, char** argv)
             //const char* path = "networks/testEvaluatorNonRandomWeights.nn";
             //nn.LoadFromDisk(path);
 
-            const float mutationRate = 0.0005f;
+            const float mutationRate = 0.001f;
 
             std::thread batchThreads[batchSize];
 
@@ -348,10 +355,63 @@ int main(int argc, char** argv)
 
                 //float loss = nn.GetLoss(output, &eval);
 
-                //if (loss == INFINITY)
+                //if (loss == ((float)(1e+300 * 1e+300)))
                 //{
                    // goto Shutdown;
                 //}
+
+                if (gameFile.is_open())
+                {
+                    std::string sa;
+                    getline(gameFile, sa, ' ');
+
+                    //std::cout << sa << "\n";
+                    if (sa[0] == '$')
+                    {
+                        //gameFile.close();
+                        getline(gameFile, sa, ' ');
+                        //SetPiecesAsDefault(pieces);
+                        board.SetPiecesAsDefault(board.pieces);
+                    }
+                    else
+                    {
+                        Position id = Board::TranslateMove(sa.c_str(), board.pieces, board.whitePlays);
+                        if (!(id.x == -1 && id.y == -1))
+                        {
+                            int tmp = 0;
+                            bool success = Board::MakeMove(id.x, id.y, board.Pieces, board.allowCastling, board.WhiteDefaultPromotionPiece, board.BlackDefaultPromotionPiece, nullptr, true, tmp, Board::WhiteEnPassant, Board::BlackEnPassant);
+                            if (!success)
+                            {
+                                fails++;
+                                //__debugbreak();
+                                //Board::MakeMove(id.x, id.y, board.Pieces, board.allowCastling, board.WhiteDefaultPromotionPiece, board.BlackDefaultPromotionPiece, nullptr, true, tmp, Board::WhiteEnPassant, Board::BlackEnPassant);
+                                //board.PrintStatus(true);
+                            }
+                            board.whitePlays = !board.whitePlays;
+                        }
+                        else
+                        {
+                            fails++;
+                        }
+
+                        float* output = nn.Generate(board.Status(board.whitePlays));
+                        float* input = new float[2];
+                        input[0] = id.x;
+                        input[1] = id.y;
+                        float loss = nn.GetLoss(output, input); 
+                        if (loss < 1)
+                        {
+                            //__debugbreak();
+                        }
+                        delete[] output;
+                        delete[] input;
+                        printf("Iteration %d , loss: %f ,fails: %i\n", iterations, loss, fails);
+
+                        graph.Add(loss);
+                        graph.Draw();
+
+                    }
+                }
 
                 //printf("Iteration %d , loss: %f \n", iterations, loss);
                 //if (iterations == 383)  __debugbreak();
@@ -359,7 +419,7 @@ int main(int argc, char** argv)
                 delete[] output;
 
                 iterations++;
-                printf("Iteration %d\n", iterations);
+                //printf("Iteration %d\n", iterations);
             }
 
             printf("Closing...\n");
