@@ -28,8 +28,6 @@ void LaunchStockfish()
 }
 
 
-std::string sa;
-
 #define ReadFile
 
 void calcBatch(NonGraphicalBoard* board, SocketConnection* stockfish, NeuralNetwork* nn, float mutationRate, float** batchGenerationGradientDescent, int batch
@@ -44,6 +42,7 @@ void calcBatch(NonGraphicalBoard* board, SocketConnection* stockfish, NeuralNetw
     board->Randomize(rand(), false);
 #else
     //--------FILE DATABASE--------
+    std::string sa;
 
     if (gameFile->is_open())
     {
@@ -285,8 +284,8 @@ int main(int argc, char** argv)
 
             printf("Setup\n");
 
-            const int batchSize = 1;
-            const int batches = 100;
+            const int batchSize = 4;
+            const int batches = 3000;
 
             int networkSizes[] = { 64,256,128 ,2 };
             float (*activationMethods[])(float) = {None,None,None,None};
@@ -323,8 +322,8 @@ int main(int argc, char** argv)
                     batchThreads[batch] = std::thread(calcBatch, &board, &stockfish, &nn, mutationRate, batchGenerationGradientDescent, batch);
                     batchThreads[batch].join();
                 #else
-                    calcBatch(& board, nullptr, & nn, mutationRate, batchGenerationGradientDescent, batch, & gameFile, & fails);
-                    //batchThreads[batch].join();
+                    batchThreads[batch] = std::thread(calcBatch,& board, nullptr, & nn, mutationRate, batchGenerationGradientDescent, batch, & gameFile, & fails);
+                    batchThreads[batch].join();
 
                 #endif
 
@@ -337,12 +336,8 @@ int main(int argc, char** argv)
                     //batchThreads[batch].join();
                     //Server can't handle instant attempts
                 }
-                Position DToutput = Board::TranslateMove(sa.c_str(), board.pieces, !board.whitePlays);
-                float* input = new float[2];
-                input[0] = DToutput.x;
-                input[1] = DToutput.y;
                 //output = nn.Generate(board.Status(board.whitePlays));
-                output = nn.Generate(input);
+                //output = nn.Generate(input);
 
                 float* batchGradientDescent = nn.AverageWeightVector(batchGenerationGradientDescent,batchSize);
                 nn.AddToWeights(batchGradientDescent);
@@ -351,26 +346,27 @@ int main(int argc, char** argv)
                 delete[] batchGradientDescent;
                 delete[] batchGenerationGradientDescent;
 
-                float loss = nn.GetLoss(output, &eval);
+                //float loss = nn.GetLoss(output, &eval);
 
-                if (loss == INFINITY)
-                {
-                    goto Shutdown;
-                }
+                //if (loss == INFINITY)
+                //{
+                   // goto Shutdown;
+                //}
 
-                printf("Iteration %d , loss: %f \n", iterations, loss);
+                //printf("Iteration %d , loss: %f \n", iterations, loss);
                 //if (iterations == 383)  __debugbreak();
 
                 delete[] output;
 
                 iterations++;
+                printf("Iteration %d\n", iterations);
             }
 
             printf("Closing...\n");
             //char path[256];
             //std::cin >> path;
-            const char* path = "networks/predictorTest.nn";
-            nn.Save(path);
+            //const char* path = "networks/predictorTest.nn";
+            //nn.Save(path);
 
             printf("Training started in %i and ended, duration: %f\n",(int)startTime, (float)(time(NULL) - startTime));
             #ifdef ReadFile
