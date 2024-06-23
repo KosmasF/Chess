@@ -284,17 +284,17 @@ int main(int argc, char** argv)
             //SocketConnection stockfish;
             //stockfish.Setup(argc, argv);
 
-            Graph graph = Graph(100);
+            Graph graph = Graph(1000);
 
             time_t startTime = time(NULL);
             srand(startTime);
 
             printf("Setup\n");
 
-            const int batchSize = 4;
-            const int batches = 3000;
+            const int batchSize = 10;
+            const int batches = 1000;
 
-            int networkSizes[] = { 64,512,512,256 ,2 };
+            int networkSizes[] = { 64,512,512,512,256 ,2 };
             float (*activationMethods[])(float) = {None,None,None,None,None};
 
             //NeuralNetwork nn = NeuralNetwork("networks/testedNonRandom3LayersBIG.nn");
@@ -305,7 +305,7 @@ int main(int argc, char** argv)
             //const char* path = "networks/testEvaluatorNonRandomWeights.nn";
             //nn.LoadFromDisk(path);
 
-            const float mutationRate = 0.001f;
+            const float mutationRate = 0.1f;
 
             std::thread batchThreads[batchSize];
 
@@ -355,10 +355,10 @@ int main(int argc, char** argv)
 
                 //float loss = nn.GetLoss(output, &eval);
 
-                //if (loss == ((float)(1e+300 * 1e+300)))
-                //{
-                   // goto Shutdown;
-                //}
+                if (WindowShouldClose())//(loss == ((float)(1e+300 * 1e+300)))
+                {
+                   goto Shutdown;
+                }
 
                 if (gameFile.is_open())
                 {
@@ -446,3 +446,6 @@ int main(int argc, char** argv)
 
     return 0;
 }
+
+
+//1972 moves in chess !!!!!! :) :) :) :)

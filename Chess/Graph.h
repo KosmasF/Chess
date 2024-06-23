@@ -21,9 +21,8 @@ private:
 	float maxValue();
 	float minValue();
 
-	float map(float value, float leftMin, float leftMax, float rightMin, float rightMax)
-	{
-		return rightMin + (value - leftMin) * (rightMax - rightMin) / (leftMax - leftMin);
-	}
+	float average(int start, int end);
+
+	float map(float value, float min, float max, float mapMin, float mapMax);
 };
 
