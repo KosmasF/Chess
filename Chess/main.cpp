@@ -31,7 +31,7 @@ void LaunchStockfish()
 
 #define ReadFile
 
-void calcBatch(NonGraphicalBoard* board, SocketConnection* stockfish, NeuralNetwork* nn, float mutationRate, float** batchGenerationGradientDescent, int batch
+float calcBatch(NonGraphicalBoard* board, SocketConnection* stockfish, NeuralNetwork* nn, float mutationRate, float** batchGenerationGradientDescent, int batch
 #ifdef ReadFile
     , std::fstream* gameFile , int* fails
 
@@ -44,6 +44,7 @@ void calcBatch(NonGraphicalBoard* board, SocketConnection* stockfish, NeuralNetw
 #else
     //--------FILE DATABASE--------
     std::string sa;
+    Position id;
 
     if (gameFile->is_open())
     {
@@ -56,10 +57,11 @@ void calcBatch(NonGraphicalBoard* board, SocketConnection* stockfish, NeuralNetw
             getline(*gameFile, sa, ' ');
             //SetPiecesAsDefault(pieces);
             board->SetPiecesAsDefault(board->pieces);
+            goto abort;
         }
         else
         {
-            Position id = Board::TranslateMove(sa.c_str(), board->pieces, board->whitePlays);
+            id = Board::TranslateMove(sa.c_str(), board->pieces, board->whitePlays);
             if (!(id.x == -1 && id.y == -1))
             {
                 int tmp = 0;
@@ -87,12 +89,30 @@ void calcBatch(NonGraphicalBoard* board, SocketConnection* stockfish, NeuralNetw
         //eval *= -1;
     //delete[] fen;
 
-    Position output = Board::TranslateMove(sa.c_str(), board->pieces, board->whitePlays);
-    float* input = new float[2];
-    input[0] = output.x;
-    input[1] = output.y;
-    float* generationStepVector = nn->BackPropagate(input, board->Status(true), mutationRate);
-    batchGenerationGradientDescent[batch] = generationStepVector;
+    
+    Position output = id;
+
+    if (!(output.x == -1 && output.y == -1))
+    {
+        float* expected = new float[64 * 64];
+        memset(expected, 0, 64 * 64 * sizeof(float));
+        expected[output.y * 64 + output.x] = 1;
+        
+        float* generationStepVector = nn->BackPropagate(expected, board->Status(!(board->whitePlays)), mutationRate);
+        batchGenerationGradientDescent[batch] = generationStepVector;
+        float* NNoutput = nn->Generate(board->Status(!(board->whitePlays)));
+        float loss = nn->GetLoss(NNoutput, expected);
+
+        return loss;
+
+    }
+    else
+    {
+        abort:
+        batchGenerationGradientDescent[batch] = nn->EmptyGradient();
+    }
+
+    return 1;
 }
 
 int main(int argc, char** argv)
@@ -294,8 +314,8 @@ int main(int argc, char** argv)
             const int batchSize = 10;
             const int batches = 1000;
 
-            int networkSizes[] = { 64,512,512,512,256 ,2 };
-            float (*activationMethods[])(float) = {None,None,None,None,None};
+            int networkSizes[] = { 64, 512, 64 * 64};
+            float (*activationMethods[])(float) = {None,Sigmoid};
 
             //NeuralNetwork nn = NeuralNetwork("networks/testedNonRandom3LayersBIG.nn");
             NeuralNetwork nn = NeuralNetwork(networkSizes, sizeof(networkSizes) / sizeof(int) , activationMethods, true);
@@ -305,12 +325,13 @@ int main(int argc, char** argv)
             //const char* path = "networks/testEvaluatorNonRandomWeights.nn";
             //nn.LoadFromDisk(path);
 
-            const float mutationRate = 0.1f;
+            const float mutationRate = 1.f;
 
             std::thread batchThreads[batchSize];
 
             printf("Training...\n");
 
+            float loss = 0;
             int iterations = 0;
             while (iterations < batches)
             {
@@ -329,8 +350,9 @@ int main(int argc, char** argv)
                     batchThreads[batch] = std::thread(calcBatch, &board, &stockfish, &nn, mutationRate, batchGenerationGradientDescent, batch);
                     batchThreads[batch].join();
                 #else
-                    batchThreads[batch] = std::thread(calcBatch,& board, nullptr, & nn, mutationRate, batchGenerationGradientDescent, batch, & gameFile, & fails);
-                    batchThreads[batch].join();
+                    loss = calcBatch(& board, nullptr, & nn, mutationRate, batchGenerationGradientDescent, batch, & gameFile, & fails);
+
+                    //batchThreads[batch].join();
 
                 #endif
 
@@ -359,6 +381,7 @@ int main(int argc, char** argv)
                 {
                    goto Shutdown;
                 }
+                /*
 
                 if (gameFile.is_open())
                 {
@@ -411,9 +434,11 @@ int main(int argc, char** argv)
                         graph.Draw();
 
                     }
-                }
+                }*/
 
-                //printf("Iteration %d , loss: %f \n", iterations, loss);
+                graph.Add(loss);
+                graph.Draw();
+                printf("Iteration %d , loss: %f \n", iterations, loss);
                 //if (iterations == 383)  __debugbreak();
 
                 delete[] output;
@@ -421,6 +446,7 @@ int main(int argc, char** argv)
                 iterations++;
                 //printf("Iteration %d\n", iterations);
             }
+            
 
             printf("Closing...\n");
             //char path[256];
@@ -449,3 +475,4 @@ int main(int argc, char** argv)
 
 
 //1972 moves in chess !!!!!! :) :) :) :)
+//I'll use 4096

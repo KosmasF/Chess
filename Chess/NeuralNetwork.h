@@ -54,6 +54,8 @@ public:
 
 	float* BackPropagate(float* expectedOutput, float* input, float mutationRate);
 
+	float* EmptyGradient();
+
 	void AddToWeights(float* data);
 
 	float GetLoss(float* output, float* predictedOutput);

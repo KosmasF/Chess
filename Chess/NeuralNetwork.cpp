@@ -618,6 +618,14 @@ float* NeuralNetwork::BackPropagate(float* expectedOutput, float* input, float m
 	return data;
 }
 
+float* NeuralNetwork::EmptyGradient()
+{
+	float* data = (float*)malloc(sizeof(float) * GetNumberOfWeights());
+	memset(data, 0, sizeof(float) * GetNumberOfWeights());
+
+	return data;
+}
+
 void NeuralNetwork::AddToWeights(float* data)
 {
 	//int buffer = 0;
@@ -650,7 +658,7 @@ float NeuralNetwork::GetLoss(float* output, float* predictedOutput)
 		loss += diff*diff;
 		total++;
 	}
-	return loss / total;
+	return loss;
 }
 
 float* NeuralNetwork::AverageWeightVector(float** vectors, int num)
