@@ -3,6 +3,8 @@
 #include <iostream>
 #include "InversedPieces.h"
 #include "MovementLog.h"
+#include <cmath>
+#include <cstring>
 
 struct Position;
 
