@@ -1,5 +1,7 @@
 C:\Users\Others\source\repos\Chess\Chess\ActivationMethods.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Release\ActivationMethods.obj
+C:\Users\Others\source\repos\Chess\Chess\Batch.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Release\Batch.obj
 C:\Users\Others\source\repos\Chess\Chess\Board.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Release\Board.obj
+C:\Users\Others\source\repos\Chess\Chess\BoardCalculations.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Release\BoardCalculations.obj
 C:\Users\Others\source\repos\Chess\Chess\Game.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Release\Game.obj
 C:\Users\Others\source\repos\Chess\Chess\Graph.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Release\Graph.obj
 C:\Users\Others\source\repos\Chess\Chess\InversedPieces.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Release\InversedPieces.obj

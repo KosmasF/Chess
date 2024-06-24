@@ -86,7 +86,7 @@ NeuralNetwork::~NeuralNetwork()
 	free(LayerSize);
 }
 
-float* NeuralNetwork::Generate(float* input)
+float* NeuralNetwork::Generate(float* input, bool freeInput)
 {
 	int inputLength = LayerSize[0];
 
@@ -107,7 +107,10 @@ float* NeuralNetwork::Generate(float* input)
 		{
 			layerOutput[i] = neurons[i + buffer]->Generate(input);
 		}
-		delete[] input;
+		if (!freeInput && layer == 1)
+			;
+		else
+			delete[] input;
 		input = layerOutput;
 	}
 
@@ -417,6 +420,10 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 					forwardNeuronsDerivative += GetWeightBetweenNeurons(neuron, i) * forwardNeuronsDerivatives[i];
 				}
 
+				if (forwardNeuronsDerivative == 0)
+				{
+					forwardNeuronsDerivative += std::numeric_limits<float>::min();
+				}
 				forwardNeuronsDerivatives[neuron] = forwardNeuronsDerivative;
 			}
 			return forwardNeuronsDerivatives[neuron];

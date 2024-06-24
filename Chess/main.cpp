@@ -12,7 +12,6 @@
 //#define INTERNAL_SERVER
 
 const bool graphical = 0;
-
 int outputToMove(float x , float y)
 {
     return (int)(x*7 + ((y*7)*8));
@@ -31,89 +30,7 @@ void LaunchStockfish()
 
 #define ReadFile
 
-float calcBatch(NonGraphicalBoard* board, SocketConnection* stockfish, NeuralNetwork* nn, float mutationRate, float** batchGenerationGradientDescent, int batch
-#ifdef ReadFile
-    , std::fstream* gameFile , int* fails
-
-#endif
-)
-{
-#ifndef ReadFile
-    //--------RANDOMIZATION---------
-    board->Randomize(rand(), false);
-#else
-    //--------FILE DATABASE--------
-    std::string sa;
-    Position id;
-
-    if (gameFile->is_open())
-    {
-        getline(*gameFile, sa, ' ');
-
-        //std::cout << sa << "\n";
-        if (sa[0] == '$')
-        {
-            //gameFile.close();
-            getline(*gameFile, sa, ' ');
-            //SetPiecesAsDefault(pieces);
-            board->SetPiecesAsDefault(board->pieces);
-            goto abort;
-        }
-        else
-        {
-            id = Board::TranslateMove(sa.c_str(), board->pieces, board->whitePlays);
-            if (!(id.x == -1 && id.y == -1))
-            {
-                int tmp = 0;
-                bool success = Board::MakeMove(id.x, id.y, board->Pieces, board->allowCastling, board->WhiteDefaultPromotionPiece, board->BlackDefaultPromotionPiece, nullptr, true, tmp, Board::WhiteEnPassant, Board::BlackEnPassant);
-                if (!success)
-                {
-                    (*fails)++;
-                    //__debugbreak();
-                    //Board::MakeMove(id.x, id.y, board.Pieces, board.allowCastling, board.WhiteDefaultPromotionPiece, board.BlackDefaultPromotionPiece, nullptr, true, tmp, Board::WhiteEnPassant, Board::BlackEnPassant);
-                    //board.PrintStatus(true);
-                }
-                board->whitePlays = !board->whitePlays;
-            }
-            else
-            {
-                (*fails)++;
-            }
-        }
-    }
-#endif
-
-    //const char* fen = Game::GetFen(board->Pieces, board->allowCastling, 0);
-    //float eval = stockfish->getEval(fen);
-    //if (!(board->whitePlays))
-        //eval *= -1;
-    //delete[] fen;
-
-    
-    Position output = id;
-
-    if (!(output.x == -1 && output.y == -1))
-    {
-        float* expected = new float[64 * 64];
-        memset(expected, 0, 64 * 64 * sizeof(float));
-        expected[output.y * 64 + output.x] = 1;
-        
-        float* generationStepVector = nn->BackPropagate(expected, board->Status(!(board->whitePlays)), mutationRate);
-        batchGenerationGradientDescent[batch] = generationStepVector;
-        float* NNoutput = nn->Generate(board->Status(!(board->whitePlays)));
-        float loss = nn->GetLoss(NNoutput, expected);
-
-        return loss;
-
-    }
-    else
-    {
-        abort:
-        batchGenerationGradientDescent[batch] = nn->EmptyGradient();
-    }
-
-    return 1;
-}
+#include "Batch.h"
 
 int main(int argc, char** argv)
 {
@@ -350,7 +267,7 @@ int main(int argc, char** argv)
                     batchThreads[batch] = std::thread(calcBatch, &board, &stockfish, &nn, mutationRate, batchGenerationGradientDescent, batch);
                     batchThreads[batch].join();
                 #else
-                    loss = calcBatch(& board, nullptr, & nn, mutationRate, batchGenerationGradientDescent, batch, & gameFile, & fails);
+                    loss = Batch::calcBatch(& board, nullptr, & nn, mutationRate, batchGenerationGradientDescent, batch, & gameFile, & fails);
 
                     //batchThreads[batch].join();
 
