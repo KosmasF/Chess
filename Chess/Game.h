@@ -92,6 +92,10 @@ private:
     std::fstream* gameFile;
     const char* gameFilePath = "games/output.pgn";
     std::fstream* OpenGameFile(const char* path, int gameIndex);
+
+    const char* predictorPath = "networks/predictorTest.nn";
+    NeuralNetwork predictor = NeuralNetwork(predictorPath);
+
 public:
 	const int screenHeight = 536;
 	const int LogSize = 200;

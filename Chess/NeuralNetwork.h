@@ -2,6 +2,7 @@
 #pragma warning (disable : 4996)
 #include "Neuron.h"
 #include "ActivationMethods.h"
+#include <limits>
 
 
 class NeuralNetwork
@@ -36,7 +37,7 @@ public:
 
 	~NeuralNetwork();
 
-	float* Generate(float* input);
+	float* Generate(float* input, bool freeInput = true);
 
 	void* Data();
 
@@ -53,6 +54,8 @@ public:
 	void Mutate(float mutationRate);
 
 	float* BackPropagate(float* expectedOutput, float* input, float mutationRate);
+
+	float* EmptyGradient();
 
 	void AddToWeights(float* data);
 

@@ -5,14 +5,13 @@
 #include "NeuralNetwork.h"
 #include <thread>
 #include <intrin.h>
+#include "Graph.h"
 
 #pragma warning (disable : 4996)
 #include <stdio.h>
+//#define INTERNAL_SERVER
 
-#define INTERNAL_SERVER
-
-const bool graphical = 1;
-
+const bool graphical = 0;
 int outputToMove(float x , float y)
 {
     return (int)(x*7 + ((y*7)*8));
@@ -31,61 +30,7 @@ void LaunchStockfish()
 
 #define ReadFile
 
-void calcBatch(NonGraphicalBoard* board, SocketConnection* stockfish, NeuralNetwork* nn, float mutationRate, float** batchGenerationGradientDescent, int batch
-#ifdef ReadFile
-    , std::fstream* gameFile , int* fails
-
-#endif
-)
-{
-#ifndef ReadFile
-    //--------RANDOMIZATION---------
-    board->Randomize(rand(), false);
-#else
-    //--------FILE DATABASE--------
-
-    if (gameFile->is_open())
-    {
-        std::string sa;
-        getline(*gameFile, sa, ' ');
-
-        //std::cout << sa << "\n";
-        if (sa[0] == '$')
-        {
-            //gameFile.close();
-            getline(*gameFile, sa, ' ');
-            //SetPiecesAsDefault(pieces);
-            board->SetPiecesAsDefault(board->pieces);
-        }
-        else
-        {
-            Position id = Board::TranslateMove(sa.c_str(), board->pieces, board->whitePlays);
-            if (!(id.x == -1 && id.y == -1))
-            {
-                int tmp = 0;
-                bool success = Board::MakeMove(id.x, id.y, board->Pieces, board->allowCastling, board->WhiteDefaultPromotionPiece, board->BlackDefaultPromotionPiece, nullptr, true, tmp, Board::WhiteEnPassant, Board::BlackEnPassant);
-                if (!success)
-                {
-                    *fails++;
-                    //__debugbreak();
-                    //Board::MakeMove(id.x, id.y, board.Pieces, board.allowCastling, board.WhiteDefaultPromotionPiece, board.BlackDefaultPromotionPiece, nullptr, true, tmp, Board::WhiteEnPassant, Board::BlackEnPassant);
-                    //board.PrintStatus(true);
-                }
-                board->whitePlays = !board->whitePlays;
-            }
-        }
-    }
-#endif
-
-    const char* fen = Game::GetFen(board->Pieces, board->allowCastling, 0);
-    float eval = stockfish->getEval(fen);
-    if (!(board->whitePlays))
-        eval *= -1;
-    delete[] fen;
-
-    float* generationStepVector = nn->BackPropagate(&eval, board->Status(true), mutationRate);
-    batchGenerationGradientDescent[batch] = generationStepVector;
-}
+#include "Batch.h"
 
 int main(int argc, char** argv)
 {
@@ -273,19 +218,21 @@ int main(int argc, char** argv)
 
             //END SET UP
 
-            SocketConnection stockfish;
-            stockfish.Setup(argc, argv);
+            //SocketConnection stockfish;
+            //stockfish.Setup(argc, argv);
+
+            Graph graph = Graph(1000);
 
             time_t startTime = time(NULL);
             srand(startTime);
 
             printf("Setup\n");
 
-            const int batchSize = 100;
-            const int batches = 20;
+            const int batchSize = 10;
+            const int batches = 1000;
 
-            int networkSizes[] = { 64,256,1 };
-            float (*activationMethods[])(float) = {None,None,None};
+            int networkSizes[] = { 64, 512, 64 * 64};
+            float (*activationMethods[])(float) = {None,Sigmoid};
 
             //NeuralNetwork nn = NeuralNetwork("networks/testedNonRandom3LayersBIG.nn");
             NeuralNetwork nn = NeuralNetwork(networkSizes, sizeof(networkSizes) / sizeof(int) , activationMethods, true);
@@ -295,12 +242,13 @@ int main(int argc, char** argv)
             //const char* path = "networks/testEvaluatorNonRandomWeights.nn";
             //nn.LoadFromDisk(path);
 
-            const float mutationRate = 0.0005f;
+            const float mutationRate = 1.f;
 
             std::thread batchThreads[batchSize];
 
             printf("Training...\n");
 
+            float loss = 0;
             int iterations = 0;
             while (iterations < batches)
             {
@@ -319,8 +267,9 @@ int main(int argc, char** argv)
                     batchThreads[batch] = std::thread(calcBatch, &board, &stockfish, &nn, mutationRate, batchGenerationGradientDescent, batch);
                     batchThreads[batch].join();
                 #else
-                    batchThreads[batch] = std::thread(calcBatch, &board, &stockfish, &nn, mutationRate, batchGenerationGradientDescent, batch, &gameFile, &fails);
-                    batchThreads[batch].join();
+                    loss = Batch::calcBatch(& board, nullptr, & nn, mutationRate, batchGenerationGradientDescent, batch, & gameFile, & fails);
+
+                    //batchThreads[batch].join();
 
                 #endif
 
@@ -333,8 +282,8 @@ int main(int argc, char** argv)
                     //batchThreads[batch].join();
                     //Server can't handle instant attempts
                 }
-
-                output = nn.Generate(board.Status(board.whitePlays));
+                //output = nn.Generate(board.Status(board.whitePlays));
+                //output = nn.Generate(input);
 
                 float* batchGradientDescent = nn.AverageWeightVector(batchGenerationGradientDescent,batchSize);
                 nn.AddToWeights(batchGradientDescent);
@@ -343,25 +292,83 @@ int main(int argc, char** argv)
                 delete[] batchGradientDescent;
                 delete[] batchGenerationGradientDescent;
 
-                float loss = nn.GetLoss(output, &eval);
+                //float loss = nn.GetLoss(output, &eval);
 
-                if (loss == INFINITY)
+                if (WindowShouldClose())//(loss == ((float)(1e+300 * 1e+300)))
                 {
-                    goto Shutdown;
+                   goto Shutdown;
                 }
+                /*
 
+                if (gameFile.is_open())
+                {
+                    std::string sa;
+                    getline(gameFile, sa, ' ');
+
+                    //std::cout << sa << "\n";
+                    if (sa[0] == '$')
+                    {
+                        //gameFile.close();
+                        getline(gameFile, sa, ' ');
+                        //SetPiecesAsDefault(pieces);
+                        board.SetPiecesAsDefault(board.pieces);
+                    }
+                    else
+                    {
+                        Position id = Board::TranslateMove(sa.c_str(), board.pieces, board.whitePlays);
+                        if (!(id.x == -1 && id.y == -1))
+                        {
+                            int tmp = 0;
+                            bool success = Board::MakeMove(id.x, id.y, board.Pieces, board.allowCastling, board.WhiteDefaultPromotionPiece, board.BlackDefaultPromotionPiece, nullptr, true, tmp, Board::WhiteEnPassant, Board::BlackEnPassant);
+                            if (!success)
+                            {
+                                fails++;
+                                //__debugbreak();
+                                //Board::MakeMove(id.x, id.y, board.Pieces, board.allowCastling, board.WhiteDefaultPromotionPiece, board.BlackDefaultPromotionPiece, nullptr, true, tmp, Board::WhiteEnPassant, Board::BlackEnPassant);
+                                //board.PrintStatus(true);
+                            }
+                            board.whitePlays = !board.whitePlays;
+                        }
+                        else
+                        {
+                            fails++;
+                        }
+
+                        float* output = nn.Generate(board.Status(board.whitePlays));
+                        float* input = new float[2];
+                        input[0] = id.x;
+                        input[1] = id.y;
+                        float loss = nn.GetLoss(output, input); 
+                        if (loss < 1)
+                        {
+                            //__debugbreak();
+                        }
+                        delete[] output;
+                        delete[] input;
+                        printf("Iteration %d , loss: %f ,fails: %i\n", iterations, loss, fails);
+
+                        graph.Add(loss);
+                        graph.Draw();
+
+                    }
+                }*/
+
+                graph.Add(loss);
+                graph.Draw();
                 printf("Iteration %d , loss: %f \n", iterations, loss);
                 //if (iterations == 383)  __debugbreak();
 
                 delete[] output;
 
                 iterations++;
+                //printf("Iteration %d\n", iterations);
             }
+            
 
             printf("Closing...\n");
             //char path[256];
             //std::cin >> path;
-            //const char* path = "networks/nnRe-evalInMasterGamesErrorCorrection.nn";
+            //const char* path = "networks/predictorTest.nn";
             //nn.Save(path);
 
             printf("Training started in %i and ended, duration: %f\n",(int)startTime, (float)(time(NULL) - startTime));
@@ -382,3 +389,7 @@ int main(int argc, char** argv)
 
     return 0;
 }
+
+
+//1972 moves in chess !!!!!! :) :) :) :)
+//I'll use 4096

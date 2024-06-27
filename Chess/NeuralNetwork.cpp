@@ -86,7 +86,7 @@ NeuralNetwork::~NeuralNetwork()
 	free(LayerSize);
 }
 
-float* NeuralNetwork::Generate(float* input)
+float* NeuralNetwork::Generate(float* input, bool freeInput)
 {
 	int inputLength = LayerSize[0];
 
@@ -107,7 +107,10 @@ float* NeuralNetwork::Generate(float* input)
 		{
 			layerOutput[i] = neurons[i + buffer]->Generate(input);
 		}
-		delete[] input;
+		if (!freeInput && layer == 1)
+			;
+		else
+			delete[] input;
 		input = layerOutput;
 	}
 
@@ -417,6 +420,10 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 					forwardNeuronsDerivative += GetWeightBetweenNeurons(neuron, i) * forwardNeuronsDerivatives[i];
 				}
 
+				if (forwardNeuronsDerivative == 0)
+				{
+					forwardNeuronsDerivative += std::numeric_limits<float>::min();
+				}
 				forwardNeuronsDerivatives[neuron] = forwardNeuronsDerivative;
 			}
 			return forwardNeuronsDerivatives[neuron];
@@ -618,6 +625,14 @@ float* NeuralNetwork::BackPropagate(float* expectedOutput, float* input, float m
 	return data;
 }
 
+float* NeuralNetwork::EmptyGradient()
+{
+	float* data = (float*)malloc(sizeof(float) * GetNumberOfWeights());
+	memset(data, 0, sizeof(float) * GetNumberOfWeights());
+
+	return data;
+}
+
 void NeuralNetwork::AddToWeights(float* data)
 {
 	//int buffer = 0;
@@ -650,7 +665,7 @@ float NeuralNetwork::GetLoss(float* output, float* predictedOutput)
 		loss += diff*diff;
 		total++;
 	}
-	return loss / total;
+	return loss;
 }
 
 float* NeuralNetwork::AverageWeightVector(float** vectors, int num)

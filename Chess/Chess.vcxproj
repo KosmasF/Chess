@@ -146,8 +146,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ActivationMethods.cpp" />
+    <ClCompile Include="Batch.cpp" />
     <ClCompile Include="Board.cpp" />
+    <ClCompile Include="BoardCalculations.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="Graph.cpp" />
     <ClCompile Include="InversedPieces.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MovementLog.cpp" />
@@ -162,8 +165,10 @@
   <ItemGroup>
     <ClInclude Include="ActivationMethods.h" />
     <ClInclude Include="Board.h" />
+    <ClInclude Include="BoardCalculations.h" />
     <ClInclude Include="Game.h" />
-    <ClInclude Include="Header.h" />
+    <ClInclude Include="Graph.h" />
+    <ClInclude Include="Batch.h" />
     <ClInclude Include="InversedPieces.h" />
     <ClInclude Include="MovementLog.h" />
     <ClInclude Include="NeuralNetwork.h" />

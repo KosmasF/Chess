@@ -318,6 +318,19 @@ void Game::Update()
         }
 
     }
+    if (IsKeyPressed(KEY_P))
+    {
+        float* status = NonGraphicalBoard::Status(movementLog->WhitePlays(), pieces, WhitePawn, BlackPawn, WhiteBishop, BlackBishop, WhiteKnight, BlackKnight, WhiteRook, BlackRook, WhiteQueen, BlackQueen, WhiteKing, BlackKing);
+        float* MovePointer = predictor.Generate(status);
+        printf("Predicted Move: %i, %i\n", (int)MovePointer[0], (int)MovePointer[1]);
+        board->DrawMove(MovePointer[0], MovePointer[1]);
+        delete[] MovePointer;
+    }
+
+    for (int i = 0; i < defaultBranchSize; i++)
+    {
+        board->DrawMove(dataToDraw.bestMoves[i][0], dataToDraw.bestMoves[i][1]);
+    }
 
     movementLog->Draw();
 
@@ -587,11 +600,6 @@ void Game::DrawBar(float num, int offset)
 
         DrawText(buffer, screenWidth - MeasureText(buffer, 20) - 20, screenHeight + offset, 20, WHITE);
 
-    }
-
-    for (int i = 0; i < defaultBranchSize; i++)
-    {
-        board->DrawMove(dataToDraw.bestMoves[i][0], dataToDraw.bestMoves[i][1]);
     }
 }
 

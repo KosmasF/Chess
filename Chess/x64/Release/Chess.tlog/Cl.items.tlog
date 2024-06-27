@@ -1,6 +1,9 @@
 C:\Users\Others\source\repos\Chess\Chess\ActivationMethods.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Release\ActivationMethods.obj
+C:\Users\Others\source\repos\Chess\Chess\Batch.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Release\Batch.obj
 C:\Users\Others\source\repos\Chess\Chess\Board.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Release\Board.obj
+C:\Users\Others\source\repos\Chess\Chess\BoardCalculations.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Release\BoardCalculations.obj
 C:\Users\Others\source\repos\Chess\Chess\Game.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Release\Game.obj
+C:\Users\Others\source\repos\Chess\Chess\Graph.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Release\Graph.obj
 C:\Users\Others\source\repos\Chess\Chess\InversedPieces.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Release\InversedPieces.obj
 C:\Users\Others\source\repos\Chess\Chess\main.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Release\main.obj
 C:\Users\Others\source\repos\Chess\Chess\MovementLog.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Release\MovementLog.obj
@@ -9,4 +12,5 @@ C:\Users\Others\source\repos\Chess\Chess\Neuron.cpp;C:\Users\Others\source\repos
 C:\Users\Others\source\repos\Chess\Chess\NonGraphicalBoard.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Release\NonGraphicalBoard.obj
 C:\Users\Others\source\repos\Chess\Chess\Piece.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Release\Piece.obj
 C:\Users\Others\source\repos\Chess\Chess\PieceTypes.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Release\PieceTypes.obj
+C:\Users\Others\source\repos\Chess\Chess\SocketConnection.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Release\SocketConnection.obj
 C:\Users\Others\source\repos\Chess\Chess\Sprites.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Release\Sprites.obj

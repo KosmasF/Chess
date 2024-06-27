@@ -16,10 +16,6 @@ float liL(float input)
 	return input;
 }
 
-float Sigmoid(float input)
-{
-	return ((1 / (1 + (exp(-input)))) * 2) - 1;
-}
 
 float FastSigmoid(float input,int smooth)
 {

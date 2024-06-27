@@ -1,6 +1,9 @@
 C:\Users\Others\source\repos\Chess\Chess\ActivationMethods.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Debug\ActivationMethods.obj
+C:\Users\Others\source\repos\Chess\Chess\Batch.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Debug\Batch.obj
 C:\Users\Others\source\repos\Chess\Chess\Board.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Debug\Board.obj
+C:\Users\Others\source\repos\Chess\Chess\BoardCalculations.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Debug\BoardCalculations.obj
 C:\Users\Others\source\repos\Chess\Chess\Game.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Debug\Game.obj
+C:\Users\Others\source\repos\Chess\Chess\Graph.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Debug\Graph.obj
 C:\Users\Others\source\repos\Chess\Chess\InversedPieces.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Debug\InversedPieces.obj
 C:\Users\Others\source\repos\Chess\Chess\main.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Debug\main.obj
 C:\Users\Others\source\repos\Chess\Chess\MovementLog.cpp;C:\Users\Others\source\repos\Chess\Chess\x64\Debug\MovementLog.obj
