@@ -75,6 +75,7 @@ bool Pawn::IsLegal(Piece** pieces, int Original, int ToCheck, Board* board, bool
 
 
 CheckIfKingIsAttacked:
+	//printf("RET\n");
 	return IsKingInAttack(pieces, CheckKing, Original, ToCheck, board, allowCastling);
 }
 

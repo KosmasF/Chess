@@ -68,12 +68,14 @@ bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, 
 	int idx = To;
 	int CollectedPiece = From;
 
+	//printf("%i, %i",idx,CollectedPiece);
+
 	if (pieces[CollectedPiece]->IsLegal(pieces, CollectedPiece, idx, nullptr, allowCastling))
 	{
 		if (!disableLogging)
 			std::cout << "MOVEMENT LOG: ";
 		char* notation = MovementNotation(pieces, idx, CollectedPiece, allowCastling);
-		if (!(pieces[CollectedPiece]->GetName() == "K" && abs(idx - CollectedPiece) == 2))
+		if (!(pieces[CollectedPiece]->GetName()[0] == 'K' && abs(idx - CollectedPiece) == 2))
 		{
 			if (!disableLogging)
 				std::cout << (notation);
@@ -82,11 +84,11 @@ bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, 
 
 		if (pieces[idx] != nullptr)
 		{
-			if (pieces[idx]->GetName() == "Invalid!" && pieces[idx]->IsWhite() && pieces[CollectedPiece]->GetName() == "")
+			if (strcmp(pieces[idx]->GetName(), "Invalid!") == 0 && pieces[idx]->IsWhite() && pieces[CollectedPiece]->GetName()[0] == '\0')
 			{
 				pieces[idx - 8] = nullptr;
 			}
-			if (pieces[idx]->GetName() == "Invalid!" && !(pieces[idx]->IsWhite()) && pieces[CollectedPiece]->GetName() == "")
+			if (strcmp(pieces[idx]->GetName(), "Invalid!") == 0 && !(pieces[idx]->IsWhite()) && pieces[CollectedPiece]->GetName()[0] == '\0')
 			{
 				pieces[idx + 8] = nullptr;
 			}
@@ -96,7 +98,7 @@ bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, 
 		{
 			if (pieces[i] != nullptr)
 			{
-				if (pieces[i]->GetName() == "Invalid!" && !(pieces[CollectedPiece]->IsWhite() ^ pieces[i]->IsWhite()))
+				if (strcmp(pieces[i]->GetName(), "Invalid!") == 0 && !(pieces[CollectedPiece]->IsWhite() ^ pieces[i]->IsWhite()))
 				{
 					pieces[i] = nullptr;
 				}
@@ -108,7 +110,7 @@ bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, 
 
 		bool castle = false;
 		//Castling
-		if (pieces[idx]->GetName() == "K")
+		if (pieces[idx]->GetName()[0] == 'K')
 		{
 			if (idx - CollectedPiece == 2)
 			{
@@ -171,7 +173,7 @@ bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, 
 		for (int i = 0; i < totalNumSquares; i++)
 		{
 			if (pieces[i] != nullptr)
-				if (pieces[i]->GetName() == "K")
+				if (pieces[i]->GetName()[0] == 'K')
 				{
 					if (((King*)(pieces[i]))->IsAttacked(pieces, i, nullptr, allowCastling))
 					{
@@ -192,7 +194,7 @@ bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, 
 		if (!disableLogging)
 			std::cout << std::endl;
 
-		if (pieces[idx]->GetName() == "")
+		if (pieces[idx]->GetName()[0] == '\0')
 		{
 			if (pieces[idx]->IsWhite() && (int)(idx / 8) == 0)
 				pieces[idx] = (Piece*)WhiteDefaultPromotionPiece;
@@ -212,7 +214,7 @@ bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, 
 
 
 		//Check for allowCastling!
-		if (pieces[idx]->GetName() == "K")
+		if (pieces[idx]->GetName()[0] == 'K')
 		{
 			if (pieces[idx]->IsWhite())
 			{
@@ -225,7 +227,7 @@ bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, 
 				allowCastling[3] = false;
 			}
 		}
-		if (pieces[idx]->GetName() == "R")
+		if (pieces[idx]->GetName()[0] == 'R')
 		{
 			if (CollectedPiece == 56)
 				allowCastling[0] = false;
@@ -260,7 +262,7 @@ Position Board::TranslateMove(const char* move, Piece** pieces, bool whitePlays)
 		{
 			if (pieces[i] != nullptr)
 			{
-				if (pieces[i]->GetName() == "K" && pieces[i]->IsWhite() == whitePlays)
+				if (pieces[i]->GetName()[0] == 'K' && pieces[i]->IsWhite() == whitePlays)
 				{
 					return { i , i - 2 };
 				}
@@ -275,7 +277,7 @@ Position Board::TranslateMove(const char* move, Piece** pieces, bool whitePlays)
 		{
 			if (pieces[i] != nullptr)
 			{
-				if (pieces[i]->GetName() == "K" && pieces[i]->IsWhite() == whitePlays)
+				if (pieces[i]->GetName()[0] == 'K' && pieces[i]->IsWhite() == whitePlays)
 				{
 					return { i , i + 2 };
 				}
@@ -416,7 +418,7 @@ void Board::CheckInput(PiecesArray pieces , void* WhiteDefaultPromotionPiece, vo
 				{
 					if (!(pieces[idx]->IsWhite() ^ !Inversed))
 					{
-						if (pieces[idx]->GetName() != "Invalid!")
+						if (strcmp(pieces[idx]->GetName(), "Invalid!") != 0)
 						{
 							CollectedPiece = idx;
 							std::cout << "Collected Piece: " << CollectedPiece << std::endl;
@@ -500,7 +502,7 @@ char* Board::MovementNotation(PiecesArray pieces, int Destination, int Location 
 
 	}
 
-	if (pieces[Destination] != nullptr && (!(pieces[Destination]->GetName() == "Invalid!")  || pieces[Location]->GetName() == ""))
+	if (pieces[Destination] != nullptr && (!(strcmp(pieces[Destination]->GetName() , "Invalid!") == 0)  || pieces[Location]->GetName()[0] == '\0'))
 	{
 		if (typeid(*pieces[Location]).name() == typeid(Pawn).name())
 		{

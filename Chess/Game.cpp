@@ -140,7 +140,7 @@ const char* Game::GetFen(PiecesArray FenPieces, bool* castling, int lastMoveInde
     {
         if (FenPieces[i] != nullptr)
         {
-            if (FenPieces[i]->GetName() == "Invalid!" && FenPieces[i]->IsWhite() && !whiteMoves)
+            if (strcmp(FenPieces[i]->GetName() , "Invalid!") == 0 && FenPieces[i]->IsWhite() && !whiteMoves)
             {
                 Position pos = Piece::Get2DCords(i, 8);
                 value[buffer] = (char)(pos.x + 97);
@@ -149,7 +149,7 @@ const char* Game::GetFen(PiecesArray FenPieces, bool* castling, int lastMoveInde
                 buffer++;
                 foundPawn = true;
             }
-            if (FenPieces[i]->GetName() == "Invalid!" && !(FenPieces[i]->IsWhite()) && whiteMoves)
+            if (strcmp(FenPieces[i]->GetName() , "Invalid!") == 0 && !(FenPieces[i]->IsWhite()) && whiteMoves)
             {
                 Position pos = Piece::Get2DCords(i, 8);
                 value[buffer] = (char)(pos.x + 97);
@@ -327,9 +327,12 @@ void Game::Update()
         delete[] MovePointer;
     }
 
-    for (int i = 0; i < defaultBranchSize; i++)
+    if(showBestMoves)
     {
-        board->DrawMove(dataToDraw.bestMoves[i][0], dataToDraw.bestMoves[i][1]);
+        for (int i = 0; i < defaultBranchSize; i++)
+        {
+            board->DrawMove(dataToDraw.bestMoves[i][0], dataToDraw.bestMoves[i][1]);
+        }
     }
 
     movementLog->Draw();

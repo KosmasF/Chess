@@ -72,7 +72,8 @@ private:
 
     int evalLineHeight = 20;
 
-    const bool blackIsPlayer = true;
+    const bool blackIsPlayer = false;
+    const bool showBestMoves = false;
 
     static const int defaultBranchSize = 5;
 

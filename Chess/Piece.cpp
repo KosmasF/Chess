@@ -25,6 +25,7 @@ Position Piece::Get2DCordsDrawable(int idx , Board* board)
 Position Piece::Get2DCords(int idx, int numSquares)
 {
 	int x, y;
+	//printf("%i\n",numSquares);
 	x = idx % numSquares;
 	y = idx / numSquares;
 
@@ -71,15 +72,18 @@ bool Piece::IsKingInAttack(Piece** pieces, bool CheckKing , int Original , int T
 		return true;
 
 	King* king = nullptr;
-	int kingIndex = 64;
+	int kingIndex = -1;
 	for (int i = 0; i < 64; i++)
 	{
 		if (pieces[i] != nullptr)
-			if (pieces[i]->GetName() == "K" && pieces[i]->IsWhite() == IsWhite())
+		{
+			//printf("%s",pieces[i]->GetName());
+			if (pieces[i]->GetName()[0] == 'K' && pieces[i]->IsWhite() == IsWhite())
 			{
 				king = (King*)pieces[i];
 				kingIndex = i;
 			}
+		}
 	}
 	if (king == nullptr)
 		return false;
@@ -111,7 +115,7 @@ bool Piece::EnPassantOrNullptr(Piece* piece, bool pawnEating)
 		else
 			return false;
 	}
-	if (piece->GetName() == "Invalid!")
+	if (strcmp(piece->GetName(), "Invalid!") == 0)
 	{
 		return true;
 	}

@@ -9,9 +9,9 @@
 
 #pragma warning (disable : 4996)
 #include <stdio.h>
-//#define INTERNAL_SERVER
+#define INTERNAL_SERVER
 
-const bool graphical = 0;
+const bool graphical = 1;
 int outputToMove(float x , float y)
 {
     return (int)(x*7 + ((y*7)*8));
