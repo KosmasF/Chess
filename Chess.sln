@@ -10,6 +10,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Chess", "Chess\Chess.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenCL test", "Chess\Open CL\OpenCL test.vcxproj", "{45F8F23D-C405-405B-93B2-BC2461158049}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NeuralNetwork", "NeuralNetwork\NeuralNetwork.vcxproj", "{2CEA0640-977E-4FC0-AE64-45BF72BEA9E0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -34,6 +36,14 @@ Global
 		{45F8F23D-C405-405B-93B2-BC2461158049}.Release|x64.Build.0 = Release|x64
 		{45F8F23D-C405-405B-93B2-BC2461158049}.Release|x86.ActiveCfg = Release|Win32
 		{45F8F23D-C405-405B-93B2-BC2461158049}.Release|x86.Build.0 = Release|Win32
+		{2CEA0640-977E-4FC0-AE64-45BF72BEA9E0}.Debug|x64.ActiveCfg = Debug|x64
+		{2CEA0640-977E-4FC0-AE64-45BF72BEA9E0}.Debug|x64.Build.0 = Debug|x64
+		{2CEA0640-977E-4FC0-AE64-45BF72BEA9E0}.Debug|x86.ActiveCfg = Debug|Win32
+		{2CEA0640-977E-4FC0-AE64-45BF72BEA9E0}.Debug|x86.Build.0 = Debug|Win32
+		{2CEA0640-977E-4FC0-AE64-45BF72BEA9E0}.Release|x64.ActiveCfg = Release|x64
+		{2CEA0640-977E-4FC0-AE64-45BF72BEA9E0}.Release|x64.Build.0 = Release|x64
+		{2CEA0640-977E-4FC0-AE64-45BF72BEA9E0}.Release|x86.ActiveCfg = Release|Win32
+		{2CEA0640-977E-4FC0-AE64-45BF72BEA9E0}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
