@@ -7,6 +7,8 @@
 #include <intrin.h>
 #include "Graph.h"
 
+#include "Open CL/GPU.h"
+
 
 #ifdef _MSVC_LANG //Check if we are using c++ with visual studio
 #pragma warning (disable : 4996)

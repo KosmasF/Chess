@@ -179,6 +179,11 @@
     <ClInclude Include="SocketConnection.h" />
     <ClInclude Include="Sprites.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="Open CL\OpenCL test.vcxproj">
+      <Project>{45f8f23d-c405-405b-93b2-bc2461158049}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
