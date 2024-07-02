@@ -46,16 +46,16 @@ void Board::DrawMove(int From, int To)
 	float angleOffset = asin(offset / size);
 	angleOffset = abs(angleOffset);
 
-	int ang = angle * (180 / PI);
+	//int ang = angle * (180 / PI); // From radians to degress
 
 	Vector2 UpperPoint = { 
-		(cos(angle + angleOffset) * (size - offset)) + startPos.x,
-		(- sin(angle + angleOffset) * (size - offset)) + startPos.y
+		((float)cos((double)(angle + angleOffset)) * (size - offset)) + startPos.x,
+		((float)-sin(angle + angleOffset) * (size - offset)) + startPos.y
 	};
 
 	Vector2 LowerPoint = {
-		cos(angle - angleOffset) * (size - offset)+startPos.x,
-		-sin(angle - angleOffset) * (size - offset)+startPos.y
+		((float)cos(((double)angle - angleOffset))) * (size - offset)+startPos.x,
+		((float)-sin(((double)angle - angleOffset))) * (size - offset)+startPos.y
 	};
 
 	DrawTriangle({ (float)endPos.x,(float)endPos.y }, UpperPoint, LowerPoint, ORANGE);

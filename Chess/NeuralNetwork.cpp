@@ -88,7 +88,7 @@ NeuralNetwork::~NeuralNetwork()
 
 float* NeuralNetwork::Generate(float* input, bool freeInput)
 {
-	int inputLength = LayerSize[0];
+	//int inputLength = LayerSize[0];
 
 	for (int layer = 1; layer < LayerNum; layer++)
 	{
@@ -437,6 +437,7 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 	}
 }
 
+/*
 float* NeuralNetwork::PreCalcNeuronDerivatives()
 {
 	int NonInputNeuronNum = NeuronNum - LayerSize[0];
@@ -450,7 +451,7 @@ float* NeuralNetwork::PreCalcNeuronDerivatives()
 
 
 	return result;
-}
+}*/
 
 int NeuralNetwork::StartingIndexOfLayer(int layer)
 {

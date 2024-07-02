@@ -1,0 +1,387 @@
+Windows PowerShell
+Copyright (C) 2009 Microsoft Corporation. All rights reserved.
+
+PS C:\Users\haha morning> cd Chess
+PS C:\Users\haha morning\Chess> ./build
+
+C:\Users\haha morning\Chess>C:/raylib/w64devkit/bin/make.exe RAYLIB_PATH=C:/raylib/raylib PROJECT_NAME=Chess.exe OBJS=Ch
+ess/*.cpp BUILD_MODE=DEBUG
+mingw32-make Chess.exe
+make[1]: Entering directory 'C:/Users/haha morning/Chess'
+g++ -o Chess.exe Chess/*.cpp -Wall -std=c++14 -D_DEFAULT_SOURCE -Wno-missing-braces -g -O0 C:/raylib/raylib/src/raylib.r
+c.data -I. -IC:/raylib/raylib/src -IC:/raylib/raylib/src/external -L. -LC:/raylib/raylib/src -LC:/raylib/raylib/src -lra
+ylib -lopengl32 -lgdi32 -lwinmm -lws2_32 -DPLATFORM_DESKTOP
+Chess/Board.cpp: In member function 'void Board::DrawMove(int, int)':
+Chess/Board.cpp:52:62: warning: narrowing conversion of '((cos(((double)(angle + angleOffset))) * ((double)(size - (floa
+t)offset))) + (double)startPos.Position::x)' from 'double' to 'float' [-Wnarrowing]
+   52 |                 (cos(angle + angleOffset) * (size - offset)) + startPos.x,
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
+Chess/Board.cpp:53:64: warning: narrowing conversion of '(((- sin(((double)(angle + angleOffset)))) * ((double)(size - (
+float)offset))) + (double)startPos.Position::y)' from 'double' to 'float' [-Wnarrowing]
+   53 |                 (- sin(angle + angleOffset) * (size - offset)) + startPos.y
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
+Chess/Board.cpp:57:59: warning: narrowing conversion of '((cos(((double)(angle - angleOffset))) * ((double)(size - (floa
+t)offset))) + (double)startPos.Position::x)' from 'double' to 'float' [-Wnarrowing]
+   57 |                 cos(angle - angleOffset) * (size - offset)+startPos.x,
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~
+Chess/Board.cpp:58:60: warning: narrowing conversion of '(((- sin(((double)(angle - angleOffset)))) * ((double)(size - (
+float)offset))) + (double)startPos.Position::y)' from 'double' to 'float' [-Wnarrowing]
+   58 |                 -sin(angle - angleOffset) * (size - offset)+startPos.y
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~
+Chess/Board.cpp:49:13: warning: unused variable 'ang' [-Wunused-variable]
+   49 |         int ang = angle * (180 / PI);
+      |             ^~~
+In file included from Chess/BoardCalculations.h:3,
+                 from Chess/BoardCalculations.cpp:1:
+Chess/NeuralNetwork.h:2: warning: ignoring '#pragma warning ' [-Wunknown-pragmas]
+    2 | #pragma warning (disable : 4996)
+      |
+In file included from Chess/Game.h:11,
+                 from Chess/Game.cpp:1:
+Chess/SocketConnection.h:19: warning: ignoring '#pragma comment ' [-Wunknown-pragmas]
+   19 | #pragma comment (lib, "Ws2_32.lib")
+      |
+Chess/SocketConnection.h:20: warning: ignoring '#pragma comment ' [-Wunknown-pragmas]
+   20 | #pragma comment (lib, "Mswsock.lib")
+      |
+Chess/SocketConnection.h:21: warning: ignoring '#pragma comment ' [-Wunknown-pragmas]
+   21 | #pragma comment (lib, "AdvApi32.lib")
+      |
+In file included from Chess/Game.h:12:
+Chess/NeuralNetwork.h:2: warning: ignoring '#pragma warning ' [-Wunknown-pragmas]
+    2 | #pragma warning (disable : 4996)
+      |
+Chess/Game.cpp: In destructor 'Game::~Game()':
+Chess/Game.cpp:68:5: warning: deleting object of polymorphic class type 'Piece' which has non-virtual destructor might c
+ause undefined behavior [-Wdelete-non-virtual-dtor]
+   68 |     delete Board::WhiteEnPassant;//Static variable
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Chess/Game.cpp:69:5: warning: deleting object of polymorphic class type 'Piece' which has non-virtual destructor might c
+ause undefined behavior [-Wdelete-non-virtual-dtor]
+   69 |     delete Board::BlackEnPassant;//Static variable
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Chess/Game.cpp:72:5: warning: deleting object of polymorphic class type 'Pawn' which has non-virtual destructor might ca
+use undefined behavior [-Wdelete-non-virtual-dtor]
+   72 |     delete WhitePawn;
+      |     ^~~~~~~~~~~~~~~~
+Chess/Game.cpp:73:5: warning: deleting object of polymorphic class type 'Pawn' which has non-virtual destructor might ca
+use undefined behavior [-Wdelete-non-virtual-dtor]
+   73 |     delete BlackPawn;
+      |     ^~~~~~~~~~~~~~~~
+Chess/Game.cpp:74:5: warning: deleting object of polymorphic class type 'Bishop' which has non-virtual destructor might
+cause undefined behavior [-Wdelete-non-virtual-dtor]
+   74 |     delete WhiteBishop;
+      |     ^~~~~~~~~~~~~~~~~~
+Chess/Game.cpp:75:5: warning: deleting object of polymorphic class type 'Bishop' which has non-virtual destructor might
+cause undefined behavior [-Wdelete-non-virtual-dtor]
+   75 |     delete BlackBishop;
+      |     ^~~~~~~~~~~~~~~~~~
+Chess/Game.cpp:76:5: warning: deleting object of polymorphic class type 'Knight' which has non-virtual destructor might
+cause undefined behavior [-Wdelete-non-virtual-dtor]
+   76 |     delete WhiteKnight;
+      |     ^~~~~~~~~~~~~~~~~~
+Chess/Game.cpp:77:5: warning: deleting object of polymorphic class type 'Knight' which has non-virtual destructor might
+cause undefined behavior [-Wdelete-non-virtual-dtor]
+   77 |     delete BlackKnight;
+      |     ^~~~~~~~~~~~~~~~~~
+Chess/Game.cpp:78:5: warning: deleting object of polymorphic class type 'Rook' which has non-virtual destructor might ca
+use undefined behavior [-Wdelete-non-virtual-dtor]
+   78 |     delete WhiteRook;
+      |     ^~~~~~~~~~~~~~~~
+Chess/Game.cpp:79:5: warning: deleting object of polymorphic class type 'Rook' which has non-virtual destructor might ca
+use undefined behavior [-Wdelete-non-virtual-dtor]
+   79 |     delete BlackRook;
+      |     ^~~~~~~~~~~~~~~~
+Chess/Game.cpp:80:5: warning: deleting object of polymorphic class type 'Queen' which has non-virtual destructor might c
+ause undefined behavior [-Wdelete-non-virtual-dtor]
+   80 |     delete WhiteQueen;
+      |     ^~~~~~~~~~~~~~~~~
+Chess/Game.cpp:81:5: warning: deleting object of polymorphic class type 'Queen' which has non-virtual destructor might c
+ause undefined behavior [-Wdelete-non-virtual-dtor]
+   81 |     delete BlackQueen;
+      |     ^~~~~~~~~~~~~~~~~
+Chess/Game.cpp:82:5: warning: deleting object of polymorphic class type 'King' which has non-virtual destructor might ca
+use undefined behavior [-Wdelete-non-virtual-dtor]
+   82 |     delete WhiteKing;
+      |     ^~~~~~~~~~~~~~~~
+Chess/Game.cpp:83:5: warning: deleting object of polymorphic class type 'King' which has non-virtual destructor might ca
+use undefined behavior [-Wdelete-non-virtual-dtor]
+   83 |     delete BlackKing;
+      |     ^~~~~~~~~~~~~~~~
+Chess/Game.cpp: In member function 'void Game::Update()':
+Chess/Game.cpp:194:23: warning: comparison of integer expressions of different signedness: 'int' and 'long long unsigned
+ int' [-Wsign-compare]
+  194 |     for (int i =0 ; i < sizeof boards / sizeof(Board*) ; i ++)
+      |                     ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Chess/Game.cpp:229:27: warning: unused variable 'currentEval' [-Wunused-variable]
+  229 |                     float currentEval = stockfish.getEval(fen);
+      |                           ^~~~~~~~~~~
+In file included from Chess/NeuralNetwork.cpp:1:
+Chess/NeuralNetwork.h:2: warning: ignoring '#pragma warning ' [-Wunknown-pragmas]
+    2 | #pragma warning (disable : 4996)
+      |
+Chess/NeuralNetwork.cpp: In member function 'float* NeuralNetwork::Generate(float*, bool)':
+Chess/NeuralNetwork.cpp:91:13: warning: unused variable 'inputLength' [-Wunused-variable]
+   91 |         int inputLength = LayerSize[0];
+      |             ^~~~~~~~~~~
+Chess/NeuralNetwork.cpp: In member function 'float* NeuralNetwork::PreCalcNeuronDerivatives()':
+Chess/NeuralNetwork.cpp:448:25: warning: value computed is not used [-Wunused-value]
+  448 |                 result[i];
+      |                 ~~~~~~~~^
+Chess/NeuralNetwork.cpp:448:25: warning: statement has no effect [-Wunused-value]
+Chess/NonGraphicalBoard.cpp: In destructor 'NonGraphicalBoard::~NonGraphicalBoard()':
+Chess/NonGraphicalBoard.cpp:32:5: warning: deleting object of polymorphic class type 'Pawn' which has non-virtual destru
+ctor might cause undefined behavior [-Wdelete-non-virtual-dtor]
+   32 |     delete WhitePawn;
+      |     ^~~~~~~~~~~~~~~~
+Chess/NonGraphicalBoard.cpp:33:5: warning: deleting object of polymorphic class type 'Pawn' which has non-virtual destru
+ctor might cause undefined behavior [-Wdelete-non-virtual-dtor]
+   33 |     delete BlackPawn;
+      |     ^~~~~~~~~~~~~~~~
+Chess/NonGraphicalBoard.cpp:34:5: warning: deleting object of polymorphic class type 'Bishop' which has non-virtual dest
+ructor might cause undefined behavior [-Wdelete-non-virtual-dtor]
+   34 |     delete WhiteBishop;
+      |     ^~~~~~~~~~~~~~~~~~
+Chess/NonGraphicalBoard.cpp:35:5: warning: deleting object of polymorphic class type 'Bishop' which has non-virtual dest
+ructor might cause undefined behavior [-Wdelete-non-virtual-dtor]
+   35 |     delete BlackBishop;
+      |     ^~~~~~~~~~~~~~~~~~
+Chess/NonGraphicalBoard.cpp:36:5: warning: deleting object of polymorphic class type 'Knight' which has non-virtual dest
+ructor might cause undefined behavior [-Wdelete-non-virtual-dtor]
+   36 |     delete WhiteKnight;
+      |     ^~~~~~~~~~~~~~~~~~
+Chess/NonGraphicalBoard.cpp:37:5: warning: deleting object of polymorphic class type 'Knight' which has non-virtual dest
+ructor might cause undefined behavior [-Wdelete-non-virtual-dtor]
+   37 |     delete BlackKnight;
+      |     ^~~~~~~~~~~~~~~~~~
+Chess/NonGraphicalBoard.cpp:38:5: warning: deleting object of polymorphic class type 'Rook' which has non-virtual destru
+ctor might cause undefined behavior [-Wdelete-non-virtual-dtor]
+   38 |     delete WhiteRook;
+      |     ^~~~~~~~~~~~~~~~
+Chess/NonGraphicalBoard.cpp:39:5: warning: deleting object of polymorphic class type 'Rook' which has non-virtual destru
+ctor might cause undefined behavior [-Wdelete-non-virtual-dtor]
+   39 |     delete BlackRook;
+      |     ^~~~~~~~~~~~~~~~
+Chess/NonGraphicalBoard.cpp:40:5: warning: deleting object of polymorphic class type 'Queen' which has non-virtual destr
+uctor might cause undefined behavior [-Wdelete-non-virtual-dtor]
+   40 |     delete WhiteQueen;
+      |     ^~~~~~~~~~~~~~~~~
+Chess/NonGraphicalBoard.cpp:41:5: warning: deleting object of polymorphic class type 'Queen' which has non-virtual destr
+uctor might cause undefined behavior [-Wdelete-non-virtual-dtor]
+   41 |     delete BlackQueen;
+      |     ^~~~~~~~~~~~~~~~~
+Chess/NonGraphicalBoard.cpp:42:5: warning: deleting object of polymorphic class type 'King' which has non-virtual destru
+ctor might cause undefined behavior [-Wdelete-non-virtual-dtor]
+   42 |     delete WhiteKing;
+      |     ^~~~~~~~~~~~~~~~
+Chess/NonGraphicalBoard.cpp:43:5: warning: deleting object of polymorphic class type 'King' which has non-virtual destru
+ctor might cause undefined behavior [-Wdelete-non-virtual-dtor]
+   43 |     delete BlackKing;
+      |     ^~~~~~~~~~~~~~~~
+Chess/PieceTypes.cpp: In member function 'virtual bool Bishop::IsLegal(Piece**, int, int, Board*, bool*, bool, bool, boo
+l)':
+Chess/PieceTypes.cpp:114:28: warning: suggest explicit braces to avoid ambiguous 'else' [-Wdangling-else]
+  114 |                         if (Get2DCords(Original, board->numSquares).x < Get2DCords(ToCheck, board->numSquares).x
+)
+      |                            ^
+Chess/PieceTypes.cpp:121:28: warning: suggest explicit braces to avoid ambiguous 'else' [-Wdangling-else]
+  121 |                         if (Get2DCords(Original, board->numSquares).x > Get2DCords(ToCheck, board->numSquares).x
+)
+      |                            ^
+Chess/PieceTypes.cpp:128:28: warning: suggest explicit braces to avoid ambiguous 'else' [-Wdangling-else]
+  128 |                         if (Get2DCords(Original, board->numSquares).x > Get2DCords(ToCheck, board->numSquares).x
+)
+      |                            ^
+Chess/PieceTypes.cpp:135:28: warning: suggest explicit braces to avoid ambiguous 'else' [-Wdangling-else]
+  135 |                         if (Get2DCords(Original, board->numSquares).x < Get2DCords(ToCheck, board->numSquares).x
+)
+      |                            ^
+Chess/PieceTypes.cpp: In member function 'virtual bool Rook::IsLegal(Piece**, int, int, Board*, bool*, bool, bool, bool)
+':
+Chess/PieceTypes.cpp:240:20: warning: suggest explicit braces to avoid ambiguous 'else' [-Wdangling-else]
+  240 |                 if ((ToCheck - Original) % 8 == 0 && ToCheck - Original > 0)
+      |                    ^
+Chess/PieceTypes.cpp:246:20: warning: suggest explicit braces to avoid ambiguous 'else' [-Wdangling-else]
+  246 |                 if ((Original - ToCheck) % 8 == 0 && ToCheck - Original < 0)
+      |                    ^
+Chess/PieceTypes.cpp:254:27: warning: suggest explicit braces to avoid ambiguous 'else' [-Wdangling-else]
+  254 |                         if(ToCheck > Original)
+      |                           ^
+Chess/PieceTypes.cpp:260:28: warning: suggest explicit braces to avoid ambiguous 'else' [-Wdangling-else]
+  260 |                         if (ToCheck < Original)
+      |                            ^
+Chess/PieceTypes.cpp: In destructor 'Queen::~Queen()':
+Chess/PieceTypes.cpp:298:9: warning: deleting object of polymorphic class type 'Rook' which has non-virtual destructor m
+ight cause undefined behavior [-Wdelete-non-virtual-dtor]
+  298 |         delete rook;
+      |         ^~~~~~~~~~~
+Chess/PieceTypes.cpp:299:9: warning: deleting object of polymorphic class type 'Bishop' which has non-virtual destructor
+ might cause undefined behavior [-Wdelete-non-virtual-dtor]
+  299 |         delete bishop;
+      |         ^~~~~~~~~~~~~
+Chess/PieceTypes.cpp: In member function 'bool King::IsAttacked(Piece**, int, Board*, bool*)':
+Chess/PieceTypes.cpp:423:28: warning: suggest explicit braces to avoid ambiguous 'else' [-Wdangling-else]
+  423 |                         if ((((pieces[i]->IsWhite() && !IsWhite()) || (!pieces[i]->IsWhite() && IsWhite()))))
+      |                            ^
+In file included from Chess/SocketConnection.cpp:1:
+Chess/SocketConnection.h:19: warning: ignoring '#pragma comment ' [-Wunknown-pragmas]
+   19 | #pragma comment (lib, "Ws2_32.lib")
+      |
+Chess/SocketConnection.h:20: warning: ignoring '#pragma comment ' [-Wunknown-pragmas]
+   20 | #pragma comment (lib, "Mswsock.lib")
+      |
+Chess/SocketConnection.h:21: warning: ignoring '#pragma comment ' [-Wunknown-pragmas]
+   21 | #pragma comment (lib, "AdvApi32.lib")
+      |
+Chess/SocketConnection.cpp:79:5: warning: multi-line comment [-Wcomment]
+   79 |     //----------------------------Start Communication--------------------------------\\
+      |     ^
+Chess/SocketConnection.cpp:92:5: warning: multi-line comment [-Wcomment]
+   92 |     //-----------------------------Communication Loop--------------------------------\\
+      |     ^
+Chess/SocketConnection.cpp:118:5: warning: multi-line comment [-Wcomment]
+  118 |     //--------------------------------------SHUTDOWN----------------------------------\\
+      |     ^
+Chess/SocketConnection.cpp:159:5: warning: multi-line comment [-Wcomment]
+  159 |     //----------------------------Start Communication--------------------------------\\
+      |     ^
+Chess/SocketConnection.cpp:183:5: warning: multi-line comment [-Wcomment]
+  183 |     //-----------------------------Communication Loop--------------------------------\\
+      |     ^
+Chess/SocketConnection.cpp:201:5: warning: multi-line comment [-Wcomment]
+  201 |     //--------------------------------------SHUTDOWN----------------------------------\\
+      |     ^
+Chess/SocketConnection.cpp: In member function 'bool SocketConnection::Setup(int, char**)':
+Chess/SocketConnection.cpp:51:49: warning: format '%ld' expects argument of type 'long int', but argument 2 has type 'in
+t' [-Wformat=]
+   51 |             printf("socket failed with error: %ld\n", WSAGetLastError());
+      |                                               ~~^     ~~~~~~~~~~~~~~~~~
+      |                                                 |                    |
+      |                                                 long int             int
+      |                                               %d
+Chess/SocketConnection.cpp: In member function 'bool SocketConnection::Commune()':
+Chess/SocketConnection.cpp:90:27: warning: format '%ld' expects argument of type 'long int', but argument 2 has type 'in
+t' [-Wformat=]
+   90 |     printf("Bytes Sent: %ld\n", iResult);
+      |                         ~~^     ~~~~~~~
+      |                           |     |
+      |                           |     int
+      |                           long int
+      |                         %d
+In file included from Chess/Game.h:11,
+                 from Chess/main.cpp:3:
+Chess/SocketConnection.h:19: warning: ignoring '#pragma comment ' [-Wunknown-pragmas]
+   19 | #pragma comment (lib, "Ws2_32.lib")
+      |
+Chess/SocketConnection.h:20: warning: ignoring '#pragma comment ' [-Wunknown-pragmas]
+   20 | #pragma comment (lib, "Mswsock.lib")
+      |
+Chess/SocketConnection.h:21: warning: ignoring '#pragma comment ' [-Wunknown-pragmas]
+   21 | #pragma comment (lib, "AdvApi32.lib")
+      |
+In file included from Chess/Game.h:12:
+Chess/NeuralNetwork.h:2: warning: ignoring '#pragma warning ' [-Wunknown-pragmas]
+    2 | #pragma warning (disable : 4996)
+      |
+Chess/main.cpp:10: warning: ignoring '#pragma warning ' [-Wunknown-pragmas]
+   10 | #pragma warning (disable : 4996)
+      |
+Chess/main.cpp:94:21: warning: multi-line comment [-Wcomment]
+   94 |                     //-------------MOVES--------------\\
+      |                     ^
+Chess/main.cpp:144:17: warning: multi-line comment [-Wcomment]
+  144 |                 //---------MUTATION--------------\\
+      |                 ^
+Chess/main.cpp:157:17: warning: multi-line comment [-Wcomment]
+  157 |                 //----------LOOP FLOW------------\\
+      |                 ^
+Chess/main.cpp: In function 'int main(int, char**)':
+Chess/main.cpp:256:23: warning: unused variable 'eval' [-Wunused-variable]
+  256 |                 float eval = 0;
+      |                       ^~~~
+make[1]: Leaving directory 'C:/Users/haha morning/Chess'
+
+C:\Users\haha morning\Chess>move Chess.exe Chess/Chess.exe
+        1 αρχεία μετακινήθηκαν.
+
+C:\Users\haha morning\Chess>cd Chess
+
+C:\Users\haha morning\Chess\Chess>Chess.exe
+Loaded file: networks/nnRe-evalInMasterGamesErrorCorrection.nn with size of: 68893 bytes
+Launching Stockfish..
+Loaded file: networks/testedNonRandom3LayersBIG.nn with size of: 68893 bytes
+Loaded file: networks/nnRe-evalInMasterGames.nn with size of: 68893 bytes
+Loaded file: networks/nnRe-evalInMasterGamesErrorCorrection.nn with size of: 68893 bytes
+Stockfish 280524 64 by T. Romstad, M. Costalba, J. Kiiski, G. Linscott
+Loaded file: networks/predictorTest.nn with size of: 201130 bytes
+INFO: Initializing raylib 5.0
+INFO: Platform backend: DESKTOP (GLFW)
+INFO: Supported raylib modules:
+INFO:     > rcore:..... loaded (mandatory)
+INFO:     > rlgl:...... loaded (mandatory)
+INFO:     > rshapes:... loaded (optional)
+INFO:     > rtextures:. loaded (optional)
+INFO:     > rtext:..... loaded (optional)
+INFO:     > rmodels:... loaded (optional)
+INFO:     > raudio:.... loaded (optional)
+Waiting For Input...
+INFO: DISPLAY: Device initialized successfully
+INFO:     > Display size: 1920 x 1080
+INFO:     > Screen size:  1272 x 616
+INFO:     > Render size:  1272 x 616
+INFO:     > Viewport offsets: 0, 0
+INFO: GLAD: OpenGL extensions loaded successfully
+INFO: GL: Supported extensions count: 187
+INFO: GL: OpenGL device information:
+INFO:     > Vendor:   Intel
+INFO:     > Renderer: Intel(R) HD Graphics
+INFO:     > Version:  3.3.0 - Build 10.18.10.4276
+INFO:     > GLSL:     3.30 - Build 10.18.10.4276
+INFO: GL: VAO extension detected, VAO functions loaded successfully
+INFO: GL: NPOT textures extension detected, full NPOT textures supported
+INFO: GL: DXT compressed textures supported
+INFO: GL: ETC2/EAC compressed textures supported
+INFO: PLATFORM: DESKTOP (GLFW): Initialized successfully
+INFO: TEXTURE: [ID 1] Texture loaded successfully (1x1 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 1] Default texture loaded successfully
+INFO: SHADER: [ID 1] Vertex shader compiled successfully
+INFO: SHADER: [ID 2] Fragment shader compiled successfully
+INFO: SHADER: [ID 3] Program shader loaded successfully
+INFO: SHADER: [ID 3] Default shader loaded successfully
+INFO: RLGL: Render batch vertex buffers loaded successfully in RAM (CPU)
+INFO: RLGL: Render batch vertex buffers loaded successfully in VRAM (GPU)
+INFO: RLGL: Default OpenGL state initialized successfully
+INFO: TEXTURE: [ID 2] Texture loaded successfully (128x128 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Default font loaded successfully (224 glyphs)
+INFO: TIMER: Target time per frame: 16.667 milliseconds
+INFO: FILEIO: [spritesheet.png] File loaded successfully
+INFO: IMAGE: Data loaded successfully (1200x400 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 3] Texture loaded successfully (67x67 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 4] Texture loaded successfully (67x67 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 5] Texture loaded successfully (67x67 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 6] Texture loaded successfully (67x67 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 7] Texture loaded successfully (67x67 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 8] Texture loaded successfully (67x67 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 9] Texture loaded successfully (67x67 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 10] Texture loaded successfully (67x67 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 11] Texture loaded successfully (67x67 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 12] Texture loaded successfully (67x67 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 13] Texture loaded successfully (67x67 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 14] Texture loaded successfully (67x67 | R8G8B8A8 | 1 mipmaps)
+Connecting with server...
+Connected Successfully with Stockfish server!
+$2013
+2133
+2042
+INFO: TEXTURE: [ID 2] Unloaded texture data from VRAM (GPU)
+INFO: SHADER: [ID 3] Default shader unloaded successfully
+INFO: TEXTURE: [ID 1] Default texture unloaded successfully
+INFO: Window closed successfully
+Server Closed!
+
+C:\Users\haha morning\Chess\Chess>cd ..
+
+C:\Users\haha morning\Chess>timeout 99999
+
+Αναμονή για 99988 δευτερόλεπτα, πατήστε ένα πλήκτρο για συνέχεια ...
+PS C:\Users\haha morning\Chess>

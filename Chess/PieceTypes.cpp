@@ -112,31 +112,39 @@ bool Bishop::IsLegal(Piece** pieces, int Original, int ToCheck, Board* board, bo
 	{
 		if ((ToCheck - Original) % 9 == 0 && ToCheck - Original > 0)
 			if (Get2DCords(Original, board->numSquares).x < Get2DCords(ToCheck, board->numSquares).x)
+			{
 				if ((ToCheck - Original) / 9 == 1)
 					goto CheckIfKingIsAttacked;
 				else if (IsLegal(pieces, Original, ToCheck - 9, board,allowCastling ,oppositePieceIgnorance = false))
 					goto CheckIfKingIsAttacked;
+			}
 
 		if ((ToCheck - Original) % 7 == 0 && ToCheck - Original > 0)
 			if (Get2DCords(Original, board->numSquares).x > Get2DCords(ToCheck, board->numSquares).x)
+			{
 				if ((ToCheck - Original) / 7 == 1)
 					goto CheckIfKingIsAttacked;
 				else if (IsLegal(pieces, Original, ToCheck - 7, board,allowCastling , oppositePieceIgnorance = false))
 					goto CheckIfKingIsAttacked;
+			}
 
 		if ((Original - ToCheck) % 9 == 0 && ToCheck - Original < 0)
 			if (Get2DCords(Original, board->numSquares).x > Get2DCords(ToCheck, board->numSquares).x)
+			{
 				if ((Original - ToCheck) / 9 == 1)
 					goto CheckIfKingIsAttacked;
 				else if (IsLegal(pieces, Original, ToCheck + 9, board, allowCastling,oppositePieceIgnorance = false))
 					goto CheckIfKingIsAttacked;
+			}
 
 		if ((Original - ToCheck) % 7 == 0 && ToCheck - Original < 0)
 			if (Get2DCords(Original, board->numSquares).x < Get2DCords(ToCheck, board->numSquares).x)
+			{
 				if ((Original - ToCheck) / 7 == 1)
 					goto CheckIfKingIsAttacked;
 				else if (IsLegal(pieces, Original, ToCheck + 7, board,allowCastling ,oppositePieceIgnorance = false))
 					goto CheckIfKingIsAttacked;
+			}
 	}
 	
 
@@ -238,30 +246,38 @@ bool Rook::IsLegal(Piece** pieces, int Original, int ToCheck, Board* board, bool
 	if (EnPassantOrNullptr(pieces[ToCheck]) || ((((pieces[ToCheck]->IsWhite() && !IsWhite()) || (!pieces[ToCheck]->IsWhite() && IsWhite())) && oppositePieceIgnorance)) || ignoreColor)
 	{
 		if ((ToCheck - Original) % 8 == 0 && ToCheck - Original > 0)
+		{
 			if ((ToCheck - Original) / 8 == 1)
 				goto CheckIfKingIsAttacked;
 			else if (IsLegal(pieces, Original, ToCheck - 8, board,allowCastling, oppositePieceIgnorance = false))
 				goto CheckIfKingIsAttacked;
+		}
 
 		if ((Original - ToCheck) % 8 == 0 && ToCheck - Original < 0)
+		{
 			if ((Original - ToCheck) / 8 == 1)
 				goto CheckIfKingIsAttacked;
 			else if (IsLegal(pieces, Original, ToCheck + 8, board,allowCastling, oppositePieceIgnorance = false))
 				goto CheckIfKingIsAttacked;
+		}
 
 		if (Get2DCords(Original, board->numSquares).y == Get2DCords(ToCheck, board->numSquares).y)
 		{
 			if(ToCheck > Original)
+			{
 				if ((ToCheck - Original) == 1)
 					goto CheckIfKingIsAttacked;
 				else if (IsLegal(pieces, Original, ToCheck - 1, board,allowCastling, oppositePieceIgnorance = false))
 					goto CheckIfKingIsAttacked;
+			}
 
 			if (ToCheck < Original)
+			{
 				if ((Original - ToCheck) == 1)
 					goto CheckIfKingIsAttacked;
 				else if (IsLegal(pieces, Original, ToCheck + 1, board, allowCastling, oppositePieceIgnorance = false))
 					goto CheckIfKingIsAttacked;
+			}
 		}
 
 	}
@@ -421,13 +437,17 @@ bool King::IsAttacked(Piece** pieces, int ToCheck, Board* board ,bool* allowCast
 	{
 		if (pieces[i] != nullptr)
 			if ((((pieces[i]->IsWhite() && !IsWhite()) || (!pieces[i]->IsWhite() && IsWhite()))))
+			{
 				if (typeid(*pieces[i]).name() == typeid(Pawn).name())
 				{ 
 					if (pieces[i]->IsLegal(pieces, i, ToCheck, board ,allowCastling, false))
 						return true;
 				}
 				else if (pieces[i]->IsLegal(pieces, i, ToCheck, board, allowCastling, true, true, false))
-						return true;
+				{
+					return true;
+				}
+			}
 	}
 	return false;
 }

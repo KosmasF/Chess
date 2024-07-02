@@ -1,7 +1,7 @@
 #pragma once
 #include "ActivationMethods.h"
 #include "random"
-#include "chrono";
+#include "chrono"
 
 class Neuron
 {

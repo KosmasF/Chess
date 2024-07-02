@@ -16,9 +16,14 @@
     }*/
 
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
+
+#ifdef _MSVC_LANG //Check if we are using c++ with visual studio
+
 #pragma comment (lib, "Ws2_32.lib")
 #pragma comment (lib, "Mswsock.lib")
 #pragma comment (lib, "AdvApi32.lib")
+
+#endif // _MSVC_LANG
 
 
 #define DEFAULT_BUFLEN 512

@@ -48,7 +48,7 @@ bool SocketConnection::Setup(int argc, char** argv)
         ConnectSocket = socket(ptr->ai_family, ptr->ai_socktype,
             ptr->ai_protocol);
         if (ConnectSocket == INVALID_SOCKET) {
-            printf("socket failed with error: %ld\n", WSAGetLastError());
+            printf("socket failed with error: %d\n", WSAGetLastError());
             WSACleanup();
             return 1;
         }
@@ -76,7 +76,7 @@ bool SocketConnection::Setup(int argc, char** argv)
 
 bool SocketConnection::Commune()
 {
-    //----------------------------Start Communication--------------------------------\\
+    //----------------------------Start Communication--------------------------------
 
     // Send an initial buffer
     iResult = send(ConnectSocket, sendbuf, (int)strlen(sendbuf), 0);
@@ -87,9 +87,9 @@ bool SocketConnection::Commune()
         return 1;
     }
 
-    printf("Bytes Sent: %ld\n", iResult);
+    printf("Bytes Sent: %d\n", iResult);
 
-    //-----------------------------Communication Loop--------------------------------\\
+    //-----------------------------Communication Loop--------------------------------
 
     // Receive until the peer closes the connection
     do {
@@ -115,7 +115,7 @@ bool SocketConnection::Commune()
     } while (iResult > 0);
 
 
-    //--------------------------------------SHUTDOWN----------------------------------\\
+    //--------------------------------------SHUTDOWN----------------------------------
 
     // shutdown the connection since no more data will be sent
     iResult = shutdown(ConnectSocket, SD_SEND);
@@ -156,7 +156,7 @@ SocketConnection::~SocketConnection()
 
 float SocketConnection::getEval(const char* fen)
 {
-    //----------------------------Start Communication--------------------------------\\
+    //----------------------------Start Communication--------------------------------//
 
     // Send an initial buffer
     iResult = send(ConnectSocket, "Eval", (int)strlen(sendbuf), 0);//Len = 5;
@@ -180,7 +180,7 @@ float SocketConnection::getEval(const char* fen)
         return 0;
     }
 
-    //-----------------------------Communication Loop--------------------------------\\
+    //-----------------------------Communication Loop--------------------------------//
 
     // Receive until the peer closes the connection
     do {
@@ -198,7 +198,7 @@ float SocketConnection::getEval(const char* fen)
     } while (iResult > 0);
 
     SHUTDOWN:
-    //--------------------------------------SHUTDOWN----------------------------------\\
+    //--------------------------------------SHUTDOWN----------------------------------//
 
     return *((float*)recvbuf);
 }

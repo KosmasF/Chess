@@ -191,7 +191,7 @@ void Game::Update()
     BeginDrawing();
     ClearBackground(RAYWHITE);
 
-    for (int i =0 ; i < sizeof boards / sizeof(Board*) ; i ++)
+    for (int i =0 ; i < (int)(sizeof(boards) / sizeof(Board*)); i ++)
     {
         Board* board = boards[i];
 
@@ -226,7 +226,7 @@ void Game::Update()
                 else
                 {
                     const char* fen = GetFen(Pieces,allowCastling,movementLog->lastMoveIndex);
-                    float currentEval = stockfish.getEval(fen);
+                    //float currentEval = stockfish.getEval(fen);
 
                     int maxEvalDiff = -( - 154 - 154);
                     int bestMoveIndex;

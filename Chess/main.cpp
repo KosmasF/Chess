@@ -7,7 +7,11 @@
 #include <intrin.h>
 #include "Graph.h"
 
+
+#ifdef _MSVC_LANG //Check if we are using c++ with visual studio
 #pragma warning (disable : 4996)
+#endif //_MSVC_LANG
+
 #include <stdio.h>
 #define INTERNAL_SERVER
 
@@ -91,7 +95,7 @@ int main(int argc, char** argv)
                     float* output;
                     bool move;
 
-                    //-------------MOVES--------------\\
+                    //-------------MOVES--------------//
 
 
                     //WHITE
@@ -141,7 +145,7 @@ int main(int argc, char** argv)
                 //std::cout << output[0] << std::endl;
 
             EndLoop:
-                //---------MUTATION--------------\\
+                //---------MUTATION--------------//
                     
                 if (epochs > 1)
                 {
@@ -154,7 +158,7 @@ int main(int argc, char** argv)
 
 
 
-                //----------LOOP FLOW------------\\
+                //----------LOOP FLOW------------//
                 
                     //running = false;
                 epochs--;
@@ -253,7 +257,7 @@ int main(int argc, char** argv)
             while (iterations < batches)
             {
                 float* output = nullptr;
-                float eval = 0;
+                //float eval = 0; I dont want it because of functionalization of calcBatch
                 float** batchGenerationGradientDescent = new float*[batchSize];
 
                 for (int batch = 0; batch < batchSize; batch++)

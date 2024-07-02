@@ -1,5 +1,9 @@
 #pragma once
+
+#ifdef _MSVC_LANG //Check if we are using c++ with visual studio
 #pragma warning (disable : 4996)
+#endif //_MSVC_LANG
+
 #include "Neuron.h"
 #include "ActivationMethods.h"
 #include <limits>
@@ -23,7 +27,7 @@ private:
 	float* GetAllActivations(float* input);
 	float PartialDerivativeOfErrorFunction(int neuron, float* activations, float* predictedOutput);// Recursive
 	float PartialDerivativeOfErrorFunction(int neuron, float* activations, float* predictedOutput, float* forwardNeuronsDerivatives);// Non-recursive
-	float* PreCalcNeuronDerivatives();
+	//float* PreCalcNeuronDerivatives();
 	int StartingIndexOfLayer(int layer);
 	int StartingIndexOfLayerIncludingInputLayer(int layer);
 	int GetIndexOfWeight(int source, int destination);
