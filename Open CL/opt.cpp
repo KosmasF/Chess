@@ -1,10 +1,11 @@
 for (int layer = LayerNum - 1; layer > 0; layer--)
 {
-	int start_j = StartingIndexOfLayerIncludingInputLayer(layer-1);
-	int start_i = StartingIndexOfLayerIncludingInputLayer(layer);
-	int idx = GetNumberOfWeights();
+	const int start_j = StartingIndexOfLayerIncludingInputLayer(layer-1);
+	const int start_i = StartingIndexOfLayerIncludingInputLayer(layer);
 
-	int LayerIndex = NeuronNum;
+	//int idx = GetNumberOfWeights();
+	//int LayerIndex = NeuronNum;
+
 
 	if(layer == LayerNum - 1)
 	{
@@ -44,4 +45,16 @@ for (int layer = LayerNum - 1; layer > 0; layer--)
 		LayerIndex -= LayerSize[layer + 1];
 
 	}
+	
+}
+
+
+int idx()
+{
+
+}
+
+int LayerIndex()
+{
+
 }
