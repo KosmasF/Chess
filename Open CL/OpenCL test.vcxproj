@@ -112,6 +112,12 @@
       <AdditionalLibraryDirectories>C:\Program Files (x86)\Intel\oneAPI\compiler\2023.1.0\windows\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>OpenCl.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <Lib>
+      <AdditionalDependencies>OpenCL.lib</AdditionalDependencies>
+    </Lib>
+    <Lib>
+      <AdditionalLibraryDirectories>C:\Program Files (x86)\Intel\oneAPI\compiler\2023.1.0\windows\lib</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -131,6 +137,12 @@
       <AdditionalLibraryDirectories>C:\Program Files (x86)\Intel\oneAPI\compiler\2023.1.0\windows\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>OpenCl.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <Lib>
+      <AdditionalDependencies>OpenCL.lib</AdditionalDependencies>
+    </Lib>
+    <Lib>
+      <AdditionalLibraryDirectories>C:\Program Files (x86)\Intel\oneAPI\compiler\2023.1.0\windows\lib</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="GPU.cpp" />

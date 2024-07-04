@@ -6,18 +6,21 @@
 #include <thread>
 #include <intrin.h>
 #include "Graph.h"
+#include <stdio.h>
+#include <sys/utime.h>
 
-#include "Open CL/GPU.h"
+#include "GPU.h"
 
 
 #ifdef _MSVC_LANG //Check if we are using c++ with visual studio
 #pragma warning (disable : 4996)
 #endif //_MSVC_LANG
 
-#include <stdio.h>
 #define INTERNAL_SERVER
 
-const bool graphical = 1;
+static const bool graphical = 0;
+
+
 int outputToMove(float x , float y)
 {
     return (int)(x*7 + ((y*7)*8));
@@ -40,6 +43,7 @@ void LaunchStockfish()
 
 int main(int argc, char** argv)
 {
+    GPU gpu;
 #ifdef INTERNAL_SERVER
     std::thread stockfishThread(LaunchStockfish);
 #endif
@@ -291,7 +295,13 @@ int main(int argc, char** argv)
                 //output = nn.Generate(board.Status(board.whitePlays));
                 //output = nn.Generate(input);
 
-                float* batchGradientDescent = nn.AverageWeightVector(batchGenerationGradientDescent,batchSize);
+                double st = GetTime();
+                //float* batchGradientDescent = nn.AverageWeightVector(batchGenerationGradientDescent,batchSize);
+                float* batchGradientDescent = gpu.AvgVector(batchGenerationGradientDescent, batchSize, nn.GetNumberOfWeights());
+                double ed = GetTime();
+                printf("%f\n", ed-st);
+
+
                 nn.AddToWeights(batchGradientDescent);
                 for (int i = 0; i < batchSize; i++)
                     free(batchGenerationGradientDescent[i]);

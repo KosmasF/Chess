@@ -18,7 +18,6 @@ private:
 	int NeuronNum;
 
 	int GetNeuronDataSize(void* data);
-	int GetNumberOfWeights();
 	float GetWeightBetweenNeurons(int From, int To);
 	int LayerOfNeuron(int neuron);
 	int LayerRelativeOfNeuron(int neuron);
@@ -35,6 +34,7 @@ private:
 	int RetNeuronNum();
 
 public:
+	int GetNumberOfWeights();
 	NeuralNetwork(int* layerSize, int layerNum, float (*activationMethods[])(float), bool normalizeOutput);
 
 	NeuralNetwork(const char* path);

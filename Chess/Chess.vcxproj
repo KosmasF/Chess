@@ -110,7 +110,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../NeuralNetwork/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../NeuralNetwork/;../Open CL/</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -129,7 +129,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../NeuralNetwork/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../NeuralNetwork/;../Open CL/</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -175,7 +175,7 @@
     <ProjectReference Include="..\NeuralNetwork\NeuralNetwork.vcxproj">
       <Project>{2cea0640-977e-4fc0-ae64-45bf72bea9e0}</Project>
     </ProjectReference>
-    <ProjectReference Include="Open CL\OpenCL test.vcxproj">
+    <ProjectReference Include="..\Open CL\OpenCL test.vcxproj">
       <Project>{45f8f23d-c405-405b-93b2-bc2461158049}</Project>
     </ProjectReference>
   </ItemGroup>
