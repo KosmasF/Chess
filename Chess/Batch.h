@@ -73,6 +73,7 @@ namespace Batch
             batchGenerationGradientDescent[batch] = generationStepVector;
             float* NNoutput = nn->Generate(board->Status(!(board->whitePlays)));
             float loss = nn->GetLoss(NNoutput, expected);
+            delete[] NNoutput;
 
             delete[] expected;
 

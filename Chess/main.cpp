@@ -7,7 +7,7 @@
 #include <intrin.h>
 #include "Graph.h"
 #include <stdio.h>
-#include <sys/utime.h>
+//#include <sys/utime.h>
 
 #include "GPU.h"
 
@@ -305,7 +305,8 @@ int main(int argc, char** argv)
                 nn.AddToWeights(batchGradientDescent);
                 for (int i = 0; i < batchSize; i++)
                     free(batchGenerationGradientDescent[i]);
-                delete[] batchGradientDescent;
+                //delete[] batchGradientDescent;
+                free(batchGradientDescent);
                 delete[] batchGenerationGradientDescent;
 
                 //float loss = nn.GetLoss(output, &eval);

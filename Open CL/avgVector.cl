@@ -1,13 +1,9 @@
-__kernel void avg_vector(__global const float* input, __constant int* num, __global float* output, __constant int* vectorSize) 
+__kernel void avg_vector(__global const float* vec1,__global const float* vec2,  __global float* output) 
 {
-int idx = get_global_size(0);
+int idx = get_global_id(0);
+int vectorSize = get_global_size(0);
 
-float result = 0;
-
-for(int i = 0; i < *num; i++)
-{
-    result += input[(i * (*vectorSize)) + idx];
-}
+float result = vec1[idx] + vec2[idx] / 2;
 
 output[idx] = result;
 }

@@ -3,6 +3,7 @@
 #include <CL/cl.h>
 
 #include "GPU.h"
+#include "raylib.h"
 
 
 GPU::GPU()
@@ -220,73 +221,169 @@ cl_program GPU::Build(const char* path, KernelData kernelData)
     return program;
 }
 
-float* GPU::AvgVector(float** vectors, float numVectors, float vectorLength)
+const char* GPU::avgVectorResizable(int numVectors)
 {
-    cl_int inputSize = vectorLength * numVectors * sizeof(float);
+    const int maxSize = 1000;
+    char* result = (char*)malloc(maxSize * sizeof(char));
+    int buffer = 0;
+
+    const char* start = "__kernel void avg_vector(";
+    memcpy(result + buffer, start, strlen(start));
+    buffer += strlen(start);
+
+    for (int i = 0; i < numVectors; i++)
+    {
+        const char* string = "__global const float* vec1,";
+        char* vectorArguments = (char*)malloc(strlen(string));
+        memcpy(vectorArguments, string, strlen(string));
+        vectorArguments[25] = i + 65;
+        memcpy(result + buffer, vectorArguments, strlen(string));
+        buffer += strlen(string);
+        free(vectorArguments);
+    }
+
+    const char* middle = "__global float* output){ int idx = get_global_id(0); int vectorSize = get_global_size(0);float result =  ";
+    memcpy(result + buffer, middle, strlen(middle));
+    buffer += strlen(middle);
+
+    for (int i = 0; i < numVectors; i++)
+    {
+        const char* string = "vec1[idx]";
+        char* vectorArguments = (char*)malloc(strlen(string));
+        memcpy(vectorArguments, string, strlen(string));
+        vectorArguments[3] = i + 65;
+        memcpy(result + buffer, vectorArguments, strlen(string));
+        buffer += strlen(string);
+        free(vectorArguments);
+        if (i != numVectors - 1)
+        {
+            const char* plus = "+";
+            memcpy(result + buffer, plus, strlen(plus));
+            buffer += strlen(plus);
+        }
+        else
+        {
+            const char* plus = "/";
+            memcpy(result + buffer, plus, strlen(plus));
+            buffer += strlen(plus);
+        }
+    }
+
+    char str[20];
+    sprintf(str, "%d", numVectors);
+    memcpy(result + buffer, str, strlen(str));
+    buffer += strlen(str);
+
+    const char* end = ";output[idx] = result;}";
+    memcpy(result + buffer, end, strlen(end));
+    buffer += strlen(end);
+
+    result[buffer] = 0;
+    buffer++;
+
+    return result;
+}
+
+float* GPU::AvgVector(float** vectors,const float numVectors, float vectorLength)
+{
+    cl_int inputSize = vectorLength  * sizeof(float);
     cl_int outputSize = vectorLength * sizeof(float);
 
     float* output = (float*)malloc(outputSize);
     memset(output, 0, vectorLength * sizeof(float));
 
-    float* vectorsUnited = (float*)malloc(inputSize);
+    /*float* vectorsUnited = (float*)malloc(inputSize);
     for (int i = 0; i < numVectors; i++)
     {
         int buffer = i * vectorLength;
         memcpy(vectorsUnited + buffer, vectors[i], vectorLength * sizeof(float));
-    }
+    }*/
+    avgVectorResizable(10);
 
     //--------------------------------Setup---------------------------------------------
     KernelData kernelData = Setup();
 
     //---------------------------------Build Code------------------------------------------------------------
-    cl_program program = Build("../Open CL/avgVector.cl", kernelData);
+    cl_int ret;;
+    const char* kernelSource = avgVectorResizable(numVectors);
+    size_t size = strlen(kernelSource);
+    cl_program program = clCreateProgramWithSource(kernelData.context, 1, &(kernelSource), &(size), &ret);
+
+    free((void*)kernelSource);
+
+    // Build and compile the OpenCL kernel program
+    //std::string build_option = "-DTILE_SIZE=" + std::to_string(TILE_SIZE);
+    ret = clBuildProgram(program, 1, &kernelData.device_id, "", NULL, NULL);
+    if (ret == CL_BUILD_PROGRAM_FAILURE) { // If compile failed, print the error message
+        // Determine the size of the log
+        size_t log_size;
+        clGetProgramBuildInfo(program, kernelData.device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+        char* log = (char*)malloc(log_size);
+
+        // Get the log and print it
+        clGetProgramBuildInfo(program, kernelData.device_id, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
+        printf("%s\n", log);
+    }
 
     //---------------------------------Memory buffers------------------------------------------------------
-    cl_int ret;
+    //cl_int ret;
 
-    // Create memory buffers on the device for each matrix
-    cl_mem input_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, inputSize, NULL, &ret);
-    cl_mem size_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, sizeof(int), NULL, &ret);
-    cl_mem output_buffer = clCreateBuffer(kernelData.context, CL_MEM_HOST_WRITE_ONLY, outputSize, NULL, &ret);
-    cl_mem vector_size_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, sizeof(int), NULL, &ret);
+    cl_mem *vector_buffers = (cl_mem*)malloc(numVectors * sizeof(cl_mem));
+
+    for (int i = 0; i < numVectors; i++)
+    {
+        vector_buffers[i] = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, inputSize, NULL, &ret);
+    }
+    //cl_mem size_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, sizeof(int), NULL, &ret);
+    cl_mem output_buffer = clCreateBuffer(kernelData.context, CL_MEM_WRITE_ONLY, outputSize, NULL, &ret);
+    //cl_mem vector_size_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, sizeof(int), NULL, &ret);
 
     // Copy the matrix A, B and C to each device memory counterpart
-    ret = clEnqueueWriteBuffer(kernelData.command_queue, input_buffer, CL_TRUE, 0, inputSize, vectorsUnited, 0, NULL, NULL);
-    ret = clEnqueueWriteBuffer(kernelData.command_queue, size_buffer, CL_TRUE, 0, sizeof(int), &numVectors, 0, NULL, NULL);
-    ret = clEnqueueWriteBuffer(kernelData.command_queue, output_buffer, CL_TRUE, 0, outputSize, output, 0, NULL, NULL);
-    ret = clEnqueueWriteBuffer(kernelData.command_queue, vector_size_buffer, CL_TRUE, 0, sizeof(int), &vectorLength, 0, NULL, NULL);
+
+    for (int i = 0; i < numVectors; i++)
+    {
+        ret = clEnqueueWriteBuffer(kernelData.command_queue, vector_buffers[i], CL_TRUE, 0, inputSize, vectors[i], 0, NULL, NULL);
+    }
+    //ret = clEnqueueWriteBuffer(kernelData.command_queue, size_buffer, CL_TRUE, 0, sizeof(int), &numVectors, 0, NULL, NULL);
+    ret = clEnqueueWriteBuffer(kernelData.command_queue, output_buffer, CL_FALSE, 0, outputSize, output, 0, NULL, NULL);
+    //ret = clEnqueueWriteBuffer(kernelData.command_queue, vector_size_buffer, CL_TRUE, 0, sizeof(int), &vectorLength, 0, NULL, NULL);
 
     //------------------------------------Execute------------------------------------------------------------
-     
+    //double st = GetTime();
     // Create the OpenCL kernel
     cl_kernel kernel;
     kernel = clCreateKernel(program, "avg_vector", &ret);
 
     // Set the arguments of the kernel
-    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void*)&input_buffer);// __global const float** input
-    ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void*)&size_buffer);// __constant int num
-    ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), (void*)&output_buffer);// __global float* output
-    ret = clSetKernelArg(kernel, 3, sizeof(cl_mem), (void*)&vector_size_buffer);// __constant int* vectorSize
+
+    for (int i = 0; i < numVectors; i++)
+    {
+        ret = clSetKernelArg(kernel, i, sizeof(cl_mem), (void*)&vector_buffers[i]);
+    }
+    ret = clSetKernelArg(kernel, numVectors, sizeof(cl_mem), (void*)&output_buffer);// __global float* output
+    // = clSetKernelArg(kernel, 3, sizeof(cl_mem), (void*)&vector_size_buffer);// __constant int* vectorSize
 
     cl_int dimensions = 1;
-    size_t global_item_size[] = { vectorLength};
-    size_t local_item_size[] = { vectorLength};
+    size_t local_item_size[] = { 16 };
+    size_t global_item_size[] = {vectorLength};
+
 
     cl_event perf_event;
     cl_ulong start, end;
 
     // Execute the OpenCL kernel
     //ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, NULL, global_item_size, local_item_size, 0, NULL, &perf_event);
-    ret = clEnqueueTask(kernelData.command_queue, kernel, NULL, NULL, &perf_event);
+    //ret = clEnqueueTask(kernelData.command_queue, kernel, NULL, NULL, &perf_event);
+    ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, NULL, global_item_size, local_item_size, NULL, nullptr, &perf_event);
     //CL_INVALID_KERNEL
     // Capture performance event from target device. In this case the event is to retrive the execution time.
     ret = clWaitForEvents(1, &perf_event);
-    ret = clGetEventProfilingInfo(perf_event, CL_PROFILING_COMMAND_START, sizeof(start), &start, NULL);
-    ret = clGetEventProfilingInfo(perf_event, CL_PROFILING_COMMAND_END, sizeof(end), &end, NULL);
-    std::cout << "OpenCL matrix multiplication: " << (float)(end - start) / 1000000000 << " sec" << std::endl;
+    //ret = clGetEventProfilingInfo(perf_event, CL_PROFILING_COMMAND_START, sizeof(start), &start, NULL);
+    //ret = clGetEventProfilingInfo(perf_event, CL_PROFILING_COMMAND_END, sizeof(end), &end, NULL);
+    //std::cout << "OpenCL matrix multiplication: " << (float)(end - start) / 1000000000 << " sec" << std::endl;
 
     // Read the memory buffer C from the device into the local variable C
-    ret = clEnqueueReadBuffer(kernelData.command_queue, output_buffer, CL_TRUE, 0, outputSize, output, 0, NULL, NULL);
+    ret = clEnqueueReadBuffer(kernelData.command_queue, output_buffer, CL_TRUE, 0, outputSize, output, NULL, nullptr, NULL);
 
     // Make sure all the command in the command queue has been executed
     ret = clFinish(kernelData.command_queue);
@@ -296,6 +393,7 @@ float* GPU::AvgVector(float** vectors, float numVectors, float vectorLength)
     ret = clReleaseCommandQueue(kernelData.command_queue);
     ret = clReleaseContext(kernelData.context);
 
-
+    //free(vectorsUnited);
+    free(vector_buffers);
     return output;
 }

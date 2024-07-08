@@ -43,6 +43,8 @@ private:
     FileData LoadFile(const char* path);//"vector.cl"
     KernelData Setup();
     cl_program Build(const char* path, KernelData kernelData);
+
+    const char* avgVectorResizable(int numVectors);
 #endif //__OPENCL_CL_H
 
 };
