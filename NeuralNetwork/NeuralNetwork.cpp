@@ -107,10 +107,14 @@ float* NeuralNetwork::Generate(float* input, bool freeInput)
 		{
 			layerOutput[i] = neurons[i + buffer]->Generate(input);
 		}
-		if (!freeInput && layer == 1)
-			;
-		else
-			delete[] input;
+			if (!freeInput && layer == 1)
+			{
+				;
+			}
+			else
+			{
+				delete[] input;
+			}
 		input = layerOutput;
 	}
 

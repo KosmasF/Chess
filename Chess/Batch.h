@@ -67,15 +67,16 @@ namespace Batch
 
         if (!(id.x == -1 && id.y == -1))
         {
-            float* expected = BoardCalculations::FindMoveProbabilities(board->pieces, board->allowCastling, board->Status(!(board->whitePlays)));
+            float* status = board->Status(!(board->whitePlays));
+            float* expected = BoardCalculations::FindMoveProbabilities(board->pieces, board->allowCastling,status);
 
             float* generationStepVector = nn->BackPropagate(expected, board->Status(!(board->whitePlays)), mutationRate);
             batchGenerationGradientDescent[batch] = generationStepVector;
-            float* NNoutput = nn->Generate(board->Status(!(board->whitePlays)));
+            float* NNoutput = nn->Generate(status);
             float loss = nn->GetLoss(NNoutput, expected);
-            delete[] NNoutput;
 
-            delete[] expected;
+            free(NNoutput);
+            free(expected);
 
             return loss;
 

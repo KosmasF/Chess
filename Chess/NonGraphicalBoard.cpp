@@ -45,7 +45,7 @@ NonGraphicalBoard::~NonGraphicalBoard()
 
 float* NonGraphicalBoard::Status(bool isWhite)
 {
-    float* status = new float[64];
+    float* status = (float*)malloc(64*sizeof(float));
 
     for (int i = 0; i < 64; i++)
     {

@@ -4,7 +4,7 @@ NeuralNetwork BoardCalculations::evaluator = NeuralNetwork("networks/nnRe-evalIn
 
 float* BoardCalculations::FindMoveProbabilities(Piece** pieces, bool* allowCastling, float* boardStatus)
 {
-	float* output = new float[64 * 64];
+	float* output = (float*)malloc(64*64*sizeof(float));
 
 	for (int Location = 0; Location < 64; Location++)
 	{
@@ -14,7 +14,9 @@ float* BoardCalculations::FindMoveProbabilities(Piece** pieces, bool* allowCastl
 			{
 				if (pieces[Location]->IsLegal(pieces, Location, Destination, nullptr, allowCastling))
 				{
-					output[MoveToIndex(Location, Destination)] = Sigmoid(evaluator.Generate(boardStatus, false)[0]);
+					float* eval = evaluator.Generate(boardStatus, false);
+					output[MoveToIndex(Location, Destination)] = Sigmoid(eval[0]);
+					delete[] eval;
 				}
 			}
 			output[MoveToIndex(Location, Destination)] = -1;
