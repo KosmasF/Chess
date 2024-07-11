@@ -30,19 +30,24 @@ class GPU
 {
 public:
     GPU();
+    ~GPU();
     int RunForSize();
     float* AvgVector(float** vectors, float numVectors, float vectorLength);
+    void AvgVectorSetup(float numVectors);
 
     float* BackPropagate();
 
 #ifdef __OPENCL_CL_H // If we have opecl included in inside the .lib
 private:
+    KernelData kernelData;
+
     cl_uint ret_num_platforms = 0;
     cl_uint GetPlatformIndex(cl_platform_id* platforms);
 
     FileData LoadFile(const char* path);//"vector.cl"
     KernelData Setup();
-    cl_program Build(const char* path, KernelData kernelData);
+    cl_program BuildFromFile(const char* path);
+    cl_program BuildFromString(const char* source);
 
     const char* avgVectorResizable(int numVectors);
 #endif //__OPENCL_CL_H

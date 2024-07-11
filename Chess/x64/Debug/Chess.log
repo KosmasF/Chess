@@ -1,1 +1,4 @@
-﻿  Chess.vcxproj -> C:\Users\Others\source\repos\Chess\x64\Debug\Chess.exe
+﻿  main.cpp
+C:\Users\Others\source\repos\Chess\Chess\main.cpp(237,19): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Users\Others\source\repos\Chess\Chess\main.cpp(300,125): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  Chess.vcxproj -> C:\Users\Others\source\repos\Chess\x64\Debug\Chess.exe
