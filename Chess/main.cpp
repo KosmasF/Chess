@@ -43,7 +43,7 @@ void LaunchStockfish()
 
 int main(int argc, char** argv)
 {
-    GPU gpu;
+    GPU gpu = GPU();
 #ifdef INTERNAL_SERVER
     std::thread stockfishThread(LaunchStockfish);
 #endif

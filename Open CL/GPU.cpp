@@ -116,6 +116,7 @@ cl_uint GPU::GetPlatformIndex(cl_platform_id* platforms) {
             std::cout << " [Selected] " << i << std::endl;
             selected_platform_index = i;
             delete[] platform_name;
+            //free(required_platform_subname);
             return selected_platform_index;
             // return the first match
         }
@@ -123,6 +124,7 @@ cl_uint GPU::GetPlatformIndex(cl_platform_id* platforms) {
         //        cout << endl;
         //        delete [] platform_name;
     }
+    free(required_platform_subname);
     return -1;
 }
 
@@ -186,6 +188,8 @@ KernelData GPU::Setup()
 
     // Create a command queue with the capability of performance profiling for target device
     cl_command_queue command_queue = clCreateCommandQueue(context, device_id, CL_QUEUE_PROFILING_ENABLE, &ret);
+
+    delete[] platform_id;
 
     return {
         device_id,
@@ -298,7 +302,7 @@ float* GPU::AvgVector(float** vectors,const float numVectors, float vectorLength
         int buffer = i * vectorLength;
         memcpy(vectorsUnited + buffer, vectors[i], vectorLength * sizeof(float));
     }*/
-    avgVectorResizable(10);
+    //avgVectorResizable(10);
 
     //--------------------------------Setup---------------------------------------------
     KernelData kernelData = Setup();
@@ -345,7 +349,7 @@ float* GPU::AvgVector(float** vectors,const float numVectors, float vectorLength
         ret = clEnqueueWriteBuffer(kernelData.command_queue, vector_buffers[i], CL_TRUE, 0, inputSize, vectors[i], 0, NULL, NULL);
     }
     //ret = clEnqueueWriteBuffer(kernelData.command_queue, size_buffer, CL_TRUE, 0, sizeof(int), &numVectors, 0, NULL, NULL);
-    ret = clEnqueueWriteBuffer(kernelData.command_queue, output_buffer, CL_FALSE, 0, outputSize, output, 0, NULL, NULL);
+    ret = clEnqueueWriteBuffer(kernelData.command_queue, output_buffer, CL_TRUE, 0, outputSize, output, 0, NULL, NULL);
     //ret = clEnqueueWriteBuffer(kernelData.command_queue, vector_size_buffer, CL_TRUE, 0, sizeof(int), &vectorLength, 0, NULL, NULL);
 
     //------------------------------------Execute------------------------------------------------------------
@@ -363,13 +367,18 @@ float* GPU::AvgVector(float** vectors,const float numVectors, float vectorLength
     ret = clSetKernelArg(kernel, numVectors, sizeof(cl_mem), (void*)&output_buffer);// __global float* output
     // = clSetKernelArg(kernel, 3, sizeof(cl_mem), (void*)&vector_size_buffer);// __constant int* vectorSize
 
+    cl_uint maxDimensions;
+    ret = clGetDeviceInfo(kernelData.device_id, CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, sizeof(cl_uint), &maxDimensions, NULL);
+    size_t* max_work_sizes = (size_t*)malloc(sizeof(size_t)*maxDimensions);
+    ret = clGetDeviceInfo(kernelData.device_id, CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(size_t) * maxDimensions, max_work_sizes, NULL);
+    size_t max_work_size = max_work_sizes[0];
     cl_int dimensions = 1;
-    size_t local_item_size[] = { 16 };
+    size_t local_item_size[] = { max_work_size };
     size_t global_item_size[] = {vectorLength};
+    free(max_work_sizes);
 
 
     cl_event perf_event;
-    cl_ulong start, end;
 
     // Execute the OpenCL kernel
     //ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, NULL, global_item_size, local_item_size, 0, NULL, &perf_event);
@@ -389,6 +398,12 @@ float* GPU::AvgVector(float** vectors,const float numVectors, float vectorLength
     ret = clFinish(kernelData.command_queue);
 
     //------------------------------------------CleanUp------------------------------------------------------------
+    for (int i = 0; i < numVectors; i++)
+    {
+        ret = clReleaseMemObject(vector_buffers[i]);
+    }
+    ret = clReleaseMemObject(output_buffer);
+    ret = clReleaseKernel(kernel);
     ret = clReleaseProgram(program);
     ret = clReleaseCommandQueue(kernelData.command_queue);
     ret = clReleaseContext(kernelData.context);

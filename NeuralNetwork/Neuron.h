@@ -21,6 +21,8 @@ public:
 public:
 	Neuron(int inputSize , float (*Activation)(float), bool normalize = false);
 
+	~Neuron();
+
 	float Generate(float* input);
 
 	void* Data();

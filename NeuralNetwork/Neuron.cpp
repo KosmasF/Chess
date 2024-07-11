@@ -35,6 +35,11 @@ Neuron::Neuron(int inputSize, float (*Activation)(float), bool normalize)
 		SetRandomData();
 }
 
+Neuron::~Neuron()
+{
+	delete[] weights;
+}
+
 float Neuron::Generate(float* input)
 {
 	float output = 0;
