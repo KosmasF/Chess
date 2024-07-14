@@ -242,7 +242,7 @@ int main(int argc, char** argv)
             const int batches = 1000;
 
             int networkSizes[] = { 64, 512, 64 * 64};
-            float (*activationMethods[])(float) = {None,Sigmoid};
+            float (*activationMethods[])(float) = {None,None};
 
             //NeuralNetwork nn = NeuralNetwork("networks/testedNonRandom3LayersBIG.nn");
             NeuralNetwork nn = NeuralNetwork(networkSizes, sizeof(networkSizes) / sizeof(int) , activationMethods, true);
@@ -277,7 +277,7 @@ int main(int argc, char** argv)
                     batchThreads[batch] = std::thread(calcBatch, &board, &stockfish, &nn, mutationRate, batchGenerationGradientDescent, batch);
                     batchThreads[batch].join();
                 #else
-                    loss = Batch::calcBatch(& board, nullptr, & nn, mutationRate, batchGenerationGradientDescent, batch, & gameFile, & fails);
+                    loss = Batch::calcBatch(& board, nullptr, & nn, mutationRate, batchGenerationGradientDescent, batch, & gameFile, & fails, & gpu);
 
                     //batchThreads[batch].join();
 

@@ -11,7 +11,7 @@
 
 class NeuralNetwork
 {
-private:
+public://PRIVATE
 	Neuron** neurons;
 	int* LayerSize;
 	int LayerNum;
@@ -23,7 +23,6 @@ private:
 	int LayerRelativeOfNeuron(int neuron);
 	int LayerRelativeOfNeuronIncludingInputLayer(int neuron);
 	int LayerOfNeuronIncludingInputLayer(int neuron);
-	float* GetAllActivations(float* input);
 	float PartialDerivativeOfErrorFunction(int neuron, float* activations, float* predictedOutput);// Recursive
 	float PartialDerivativeOfErrorFunction(int neuron, float* activations, float* predictedOutput, float* forwardNeuronsDerivatives);// Non-recursive
 	//float* PreCalcNeuronDerivatives();
@@ -34,6 +33,7 @@ private:
 	int RetNeuronNum();
 
 public:
+	float* GetAllActivations(float* input);
 	int GetNumberOfWeights();
 	NeuralNetwork(int* layerSize, int layerNum, float (*activationMethods[])(float), bool normalizeOutput);
 

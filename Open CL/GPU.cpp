@@ -363,6 +363,28 @@ float* GPU::AvgVector(float** vectors,const float numVectors, float vectorLength
     return output;
 }
 
-void GPU::AvgVectorSetup(float numVectors)
+float* GPU::BackPropagate(const float* activations, const float* expectedOutput, const int* LayerSize, const int LayerNum, const float mutationRate, const int weightsNum)
 {
+    float* data = (float*)malloc(sizeof(float) * weightsNum);
+    if (data == nullptr)
+        return nullptr;
+
+    //float zeroValuesCounter = 0;
+    //float zeroedActivations = 0;
+
+    int NeuronNum = 0;
+    for (int i = 1; i < LayerNum; i++)
+    {
+        NeuronNum += LayerSize[i];
+    }
+    float* forwardNeuronsDerivatives = (float*)malloc((NeuronNum) * sizeof(float));
+    memset(forwardNeuronsDerivatives, 0, (NeuronNum) * sizeof(float));
+
+    AGAIN:
+
+    cl_program program = BuildFromFile("../Open CL/back_prop.cl");
+
+    printf("||||||||||||||||||||||||||||||||||||||||||||\n\n\n");
+
+    goto AGAIN;
 }

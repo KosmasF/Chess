@@ -31,11 +31,9 @@ class GPU
 public:
     GPU();
     ~GPU();
-    int RunForSize();
-    float* AvgVector(float** vectors, float numVectors, float vectorLength);
-    void AvgVectorSetup(float numVectors);
 
-    float* BackPropagate();
+    float* AvgVector(float** vectors, float numVectors, float vectorLength);
+    float* BackPropagate(const float* activations, const float* expectedOutput, const int* LayerSize, const int LayerNum, const float mutationRate, const int weightsNum);
 
 #ifdef __OPENCL_CL_H // If we have opecl included in inside the .lib
 private:

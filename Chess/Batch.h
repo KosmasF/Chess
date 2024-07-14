@@ -12,7 +12,7 @@ namespace Batch
         , std::fstream* gameFile, int* fails
 
 #endif
-    )
+    ,GPU* gpu)
     {
 #ifndef ReadFile
         //--------RANDOMIZATION---------
@@ -71,6 +71,7 @@ namespace Batch
             float* expected = BoardCalculations::FindMoveProbabilities(board->pieces, board->allowCastling,status);
 
             float* generationStepVector = nn->BackPropagate(expected, board->Status(!(board->whitePlays)), mutationRate);
+            float* parallelVector = gpu->BackPropagate(nn->GetAllActivations(status), expected, nn->LayerSize, nn->LayerNum, mutationRate, nn->GetNumberOfWeights());
             batchGenerationGradientDescent[batch] = generationStepVector;
             float* NNoutput = nn->Generate(status);
             float loss = nn->GetLoss(NNoutput, expected);

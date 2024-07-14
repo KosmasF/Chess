@@ -370,6 +370,8 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 	}
 }
 
+
+
 float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activations, float* predictedOutput, float* forwardNeuronsDerivatives)
 {
 	//if (forwardNeuronsDerivatives[neuron] == 0)
