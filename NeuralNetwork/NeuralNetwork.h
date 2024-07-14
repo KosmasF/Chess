@@ -4,6 +4,8 @@
 #pragma warning (disable : 4996)
 #endif //_MSVC_LANG
 
+#define _UNIFIED_WEIGTS_ARRAY
+
 #include "Neuron.h"
 #include "ActivationMethods.h"
 #include <limits>
@@ -17,6 +19,15 @@ public://PRIVATE
 	int LayerNum;
 	int NeuronNum;
 
+#ifdef _UNIFIED_WEIGTS_ARRAY
+	float* weights;
+
+	int* weights_buffer_lookup_table;
+
+#endif _UNIFIED_WEIGTS_ARRAY
+
+
+
 	int GetNeuronDataSize(void* data);
 	float GetWeightBetweenNeurons(int From, int To);
 	int LayerOfNeuron(int neuron);
@@ -29,8 +40,10 @@ public://PRIVATE
 	int StartingIndexOfLayer(int layer);
 	int StartingIndexOfLayerIncludingInputLayer(int layer);
 	int GetIndexOfWeight(int source, int destination);
+	int GetIndexOfNeuron(int layer, int idx);
 
 	int RetNeuronNum();
+
 
 public:
 	float* GetAllActivations(float* input);

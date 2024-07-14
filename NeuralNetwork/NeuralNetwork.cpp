@@ -10,6 +10,13 @@ NeuralNetwork::NeuralNetwork(int* layerSize, int layerNum, float (*activationMet
 
 	SetNeuronNum();
 
+	#ifdef _UNIFIED_WEIGTS_ARRAY
+	weights = (float*)malloc(GetNumberOfWeights() * sizeof(float));
+	int weight_buffer = 0;
+	weights_buffer_lookup_table = (int*)malloc(NeuronNum * sizeof(int));
+	int idx = 0;
+	#endif
+
 	neurons = new Neuron*[NeuronNum];
 
 	for (int layer = 1; layer < layerNum; layer++)
@@ -24,7 +31,13 @@ NeuralNetwork::NeuralNetwork(int* layerSize, int layerNum, float (*activationMet
 		}
 		for (int i = 0; i < layerSize[layer]; i++)
 		{
+#ifndef _UNIFIED_WEIGTS_ARRAY
 			neurons[i+buffer] = new Neuron(layerSize[layer - 1], activationMethods[layer - 1], normalizeOutput);
+#else
+			weights_buffer_lookup_table[idx] = weight_buffer;
+			neurons[i + buffer] = new Neuron(layerSize[layer - 1], activationMethods[layer - 1], normalizeOutput, weights, weight_buffer);
+			idx++;
+#endif
 		}
 	}
 
@@ -55,6 +68,13 @@ NeuralNetwork::NeuralNetwork(const char* path)
 	NeuronNum = RetNeuronNum();
 	neurons = new Neuron * [NeuronNum];
 
+#ifdef _UNIFIED_WEIGTS_ARRAY
+	weights = (float*)malloc(GetNumberOfWeights() * sizeof(float));
+	int weight_buffer = 0;
+	weights_buffer_lookup_table = (int*)malloc(NeuronNum * sizeof(int));
+	int idx = 0;
+#endif
+
 	for (int layer = 1; layer < LayerNum; layer++)
 	{
 		int buffer = 0;
@@ -67,7 +87,13 @@ NeuralNetwork::NeuralNetwork(const char* path)
 		}
 		for (int i = 0; i < LayerSize[layer]; i++)
 		{
-			neurons[i + buffer] = new Neuron(LayerSize[layer - 1], layer != LayerNum - 1 ? None : None);
+#ifndef _UNIFIED_WEIGTS_ARRAY
+			neurons[i + buffer] = new Neuron(LayerSize[layer - 1], None);
+#else
+			weights_buffer_lookup_table[idx] = weight_buffer;
+			neurons[i + buffer] = new Neuron(LayerSize[layer - 1], None, false, weights, weight_buffer);
+			idx++;
+#endif
 		}
 	}
 
@@ -84,6 +110,11 @@ NeuralNetwork::~NeuralNetwork()
 	delete[] neurons;
 
 	free(LayerSize);
+
+#ifdef _UNIFIED_WEIGTS_ARRAY
+	free(weights);
+	free(weights_buffer_lookup_table);
+#endif
 }
 
 float* NeuralNetwork::Generate(float* input, bool freeInput)
@@ -499,6 +530,16 @@ int NeuralNetwork::GetIndexOfWeight(int source, int destination)
 	result += LayerRelativeOfNeuronIncludingInputLayer(destination);
 
 	return result;
+}
+
+int NeuralNetwork::GetIndexOfNeuron(int layer, int idx)
+{
+	int result = 0;
+	for (int i = 1; i < layer; i++)
+	{
+		result += LayerSize[i];
+	}
+	return result + idx;
 }
 
 

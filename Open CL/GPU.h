@@ -7,6 +7,7 @@
 #include <string.h>
 #include <iostream>
 #include <string>
+#include <cmath>
 
 #ifdef _MSVC_LANG //Check if we are using c++ with visual studio
 #pragma warning (disable : 4996)
@@ -33,7 +34,7 @@ public:
     ~GPU();
 
     float* AvgVector(float** vectors, float numVectors, float vectorLength);
-    float* BackPropagate(const float* activations, const float* expectedOutput, const int* LayerSize, const int LayerNum, const float mutationRate, const int weightsNum);
+    float* BackPropagate(const float* activations, const float* expectedOutput, const int* LayerSize, const int LayerNum, const float mutationRate, const int weightsNum, const float* weights, const int* weights_buffer_lookup_table);
 
 #ifdef __OPENCL_CL_H // If we have opecl included in inside the .lib
 private:

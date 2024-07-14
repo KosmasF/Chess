@@ -297,6 +297,9 @@ int main(int argc, char** argv)
 
                 double st = GetTime();
                 //float* batchGradientDescent = nn.AverageWeightVector(batchGenerationGradientDescent,batchSize);
+                #ifndef _UNIFIED_WEIGTS_ARRAY
+                #error
+                #endif
                 float* batchGradientDescent = gpu.AvgVector(batchGenerationGradientDescent, batchSize, nn.GetNumberOfWeights());
                 double ed = GetTime();
                 printf("%f\n", ed-st);

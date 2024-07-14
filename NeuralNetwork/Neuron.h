@@ -20,6 +20,7 @@ public:
 
 public:
 	Neuron(int inputSize , float (*Activation)(float), bool normalize = false);
+	Neuron(int inputSize, float (*Activation)(float), bool normalize, float* global_weights_array, int& weight_buffer);
 
 	~Neuron();
 

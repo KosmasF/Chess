@@ -344,10 +344,11 @@ float* GPU::AvgVector(float** vectors,const float numVectors, float vectorLength
     //std::cout << "OpenCL matrix multiplication: " << (float)(end - start) / 1000000000 << " sec" << std::endl;
 
     // Read the memory buffer C from the device into the local variable C
-    ret = clEnqueueReadBuffer(kernelData.command_queue, output_buffer, CL_TRUE, 0, outputSize, output, NULL, nullptr, NULL);
 
     // Make sure all the command in the command queue has been executed
     ret = clFinish(kernelData.command_queue);
+
+    ret = clEnqueueReadBuffer(kernelData.command_queue, output_buffer, CL_TRUE, 0, outputSize, output, NULL, nullptr, NULL);
 
     //------------------------------------------CleanUp------------------------------------------------------------
     for (int i = 0; i < numVectors; i++)
@@ -363,11 +364,12 @@ float* GPU::AvgVector(float** vectors,const float numVectors, float vectorLength
     return output;
 }
 
-float* GPU::BackPropagate(const float* activations, const float* expectedOutput, const int* LayerSize, const int LayerNum, const float mutationRate, const int weightsNum)
+float* GPU::BackPropagate(const float* activations, const float* expectedOutput, const int* LayerSize, const int LayerNum, const float mutationRate, const int weightsNum, const float* weights, const int* weights_buffer_lookup_table)
 {
     float* data = (float*)malloc(sizeof(float) * weightsNum);
     if (data == nullptr)
         return nullptr;
+
 
     //float zeroValuesCounter = 0;
     //float zeroedActivations = 0;
@@ -377,14 +379,108 @@ float* GPU::BackPropagate(const float* activations, const float* expectedOutput,
     {
         NeuronNum += LayerSize[i];
     }
+
+
     float* forwardNeuronsDerivatives = (float*)malloc((NeuronNum) * sizeof(float));
     memset(forwardNeuronsDerivatives, 0, (NeuronNum) * sizeof(float));
 
-    AGAIN:
+
+
 
     cl_program program = BuildFromFile("../Open CL/back_prop.cl");
 
-    printf("||||||||||||||||||||||||||||||||||||||||||||\n\n\n");
+    cl_int ret;
 
-    goto AGAIN;
+    //-------------------------------------------------------BUFFERS-----------------------------------------------------------------------
+
+    //Declare
+
+    cl_mem activations_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, (NeuronNum + LayerSize[0]) * sizeof(float), NULL, &ret);
+    cl_mem expected_output_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, LayerSize[LayerNum - 1] * sizeof(float), NULL, &ret);
+    cl_mem layer_size_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, LayerNum * sizeof(int), NULL, &ret);
+    cl_mem weights_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, weightsNum * sizeof(float), NULL, &ret);
+    cl_mem weights_buffer_lookup_table_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, NeuronNum * sizeof(int), NULL, &ret);
+
+    cl_mem forward_neuron_derivatives_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_WRITE, NeuronNum * sizeof(float), NULL, &ret);
+
+    cl_mem data_buffer = clCreateBuffer(kernelData.context, CL_MEM_WRITE_ONLY, weightsNum * sizeof(float), NULL, &ret);
+
+    //Init
+
+    ret = clEnqueueWriteBuffer(kernelData.command_queue, activations_buffer, CL_TRUE, 0, (NeuronNum + LayerSize[0]) * sizeof(float), activations, 0, nullptr, nullptr);
+    ret = clEnqueueWriteBuffer(kernelData.command_queue, expected_output_buffer, CL_TRUE, 0, LayerSize[LayerNum - 1] * sizeof(float), expectedOutput, 0, nullptr, nullptr);
+    ret = clEnqueueWriteBuffer(kernelData.command_queue, layer_size_buffer, CL_TRUE, 0, LayerNum * sizeof(int), LayerSize, 0, nullptr, nullptr);
+    ret = clEnqueueWriteBuffer(kernelData.command_queue, weights_buffer, CL_TRUE, 0, weightsNum * sizeof(float), weights, 0, nullptr, nullptr);
+    ret = clEnqueueWriteBuffer(kernelData.command_queue, weights_buffer_lookup_table_buffer, CL_TRUE, 0, NeuronNum * sizeof(int), weights_buffer_lookup_table, 0, nullptr, nullptr);
+
+    ret = clEnqueueWriteBuffer(kernelData.command_queue, forward_neuron_derivatives_buffer, CL_TRUE, 0, NeuronNum * sizeof(float), forwardNeuronsDerivatives, 0, nullptr, nullptr);
+
+
+    //Create kernel
+
+    cl_kernel kernel;
+    kernel = clCreateKernel(program, "back_prob", &ret);
+
+    //Set args
+
+    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &activations_buffer);
+    ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), &expected_output_buffer);
+    ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), &layer_size_buffer);
+    ret = clSetKernelArg(kernel, 3, sizeof(cl_mem), &weights_buffer);
+    ret = clSetKernelArg(kernel, 4, sizeof(cl_mem), &weights_buffer_lookup_table_buffer);
+
+    ret = clSetKernelArg(kernel, 5, sizeof(cl_mem), &forward_neuron_derivatives_buffer);
+
+    ret = clSetKernelArg(kernel, 6, sizeof(cl_mem), &data_buffer);
+
+    ret = clSetKernelArg(kernel, 7, sizeof(float), &mutationRate);
+    ret = clSetKernelArg(kernel, 8, sizeof(int), &LayerNum);
+
+
+    for (int layer = LayerNum - 1; layer > 0; layer--)
+    {
+        //------------------------------------------------------Enqueque-kernel----------------------------------------------------
+
+        ret = clSetKernelArg(kernel, 9, sizeof(int), &layer);
+
+        //Get max values
+
+            cl_uint maxDimensions;
+            ret = clGetDeviceInfo(kernelData.device_id, CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, sizeof(cl_uint), &maxDimensions, NULL);
+            size_t* max_work_sizes = (size_t*)malloc(sizeof(size_t) * maxDimensions);
+            ret = clGetDeviceInfo(kernelData.device_id, CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(size_t) * maxDimensions, max_work_sizes, NULL);
+            size_t max_work_size = max_work_sizes[0];
+            free(max_work_sizes);
+
+            //Set dim + work size values
+
+            cl_int dimensions = 2;
+            size_t global_item_size[] = { LayerSize[layer - 1], LayerSize[layer]};
+            size_t local_item_size[] = { 16,16 };
+
+        //ND range kernel
+
+        cl_event perf_event;
+        ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, NULL, global_item_size, local_item_size, NULL, nullptr, &perf_event);
+
+        //----------------------------------------------------------Execute---------------------------------------------------------
+
+
+        ret = clFinish(kernelData.command_queue);
+
+        ret = clEnqueueReadBuffer(kernelData.command_queue, data_buffer, CL_TRUE, 0, weightsNum * sizeof(float), data, NULL, nullptr, NULL);
+
+
+    }
+
+
+
+
+
+
+
+
+
+    free(forwardNeuronsDerivatives);
+    return data;
 }

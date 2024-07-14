@@ -35,9 +35,30 @@ Neuron::Neuron(int inputSize, float (*Activation)(float), bool normalize)
 		SetRandomData();
 }
 
+Neuron::Neuron(int inputSize, float(*Activation)(float), bool normalize, float* global_weights_array, int& weight_buffer)
+{
+	weights = global_weights_array + weight_buffer;
+	numWeights = inputSize;
+	weight_buffer += numWeights;
+	ActivationMethod = Activation;
+	bias = 0;
+
+	if (normalize)
+	{
+		for (int i = 0; i < inputSize; i++)
+		{
+			weights[i] = 1.f / inputSize;//+ 0.1f;
+		}
+	}
+	else
+		SetRandomData();
+}
+
 Neuron::~Neuron()
 {
+#ifndef _UNIFIED_WEIGTS_ARRAY
 	delete[] weights;
+#endif
 }
 
 float Neuron::Generate(float* input)
