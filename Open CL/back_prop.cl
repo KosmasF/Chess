@@ -91,65 +91,21 @@ float GetWeightBetweenNeurons(int From, int To, const __global int* LayerSize, i
 	return weights[weights_buffer_lookup_table[GetIndexOfNeuron(To, LayerSize, LayerNum)] + From - StartingIndexOfLayer(From, LayerSize)];
 }
 
-__kernel void prev_layer(
-	int neuron,
-	const __global int* LayerSize,
-	int LayerNum,
-	const __global float* weights ,
-	const __global float* weights_buffer_lookup_table,
-	__global float* forwardNeuronsDerivatives,
-	float* forwardNeuronsDerivative
-)
+float PartialDerivativeOfErrorFunctionLastLayer(int neuron, __global float* activations, __global float* predictedOutput, __global float* forwardNeuronsDerivatives, const __global int* LayerSize, const int LayerNum, const __global float* weights, const __global int* weights_buffer_lookup_table)
 {
-	int i = get_global_id(0);
-	*forwardNeuronsDerivative += GetWeightBetweenNeurons(neuron, i, LayerSize,LayerNum, weights,weights_buffer_lookup_table ) * forwardNeuronsDerivatives[i];
+	if (forwardNeuronsDerivatives[neuron] == 0)
+		forwardNeuronsDerivatives[neuron] = (activations[neuron + LayerSize[0]] - predictedOutput[neuron - StartingIndexOfLayer(LayerNum - 1, LayerSize)]);
+	return forwardNeuronsDerivatives[neuron];
 }
 
-float PartialDerivativeOfErrorFunction(int neuron, __global float* activations, __global float* predictedOutput, __global float* forwardNeuronsDerivatives, const __global int* LayerSize, const int LayerNum, const __global float* weights, const __global int* weights_buffer_lookup_table)
+float PartialDerivativeOfErrorFunctionHiddenLayer(int neuron, __global float* activations, __global float* predictedOutput, __global float* forwardNeuronsDerivatives, const __global int* LayerSize, const int LayerNum, const __global float* weights, const __global int* weights_buffer_lookup_table)
 {
-	if (LayerOfNeuron(neuron, LayerSize, LayerNum) == LayerNum - 1)
-	{
-        if (forwardNeuronsDerivatives[neuron] == 0)
-            forwardNeuronsDerivatives[neuron] = (activations[neuron + LayerSize[0]] - predictedOutput[neuron - StartingIndexOfLayer(LayerNum - 1, LayerSize)]);
-        return forwardNeuronsDerivatives[neuron];
-	}
-	else
-	{	
-        if (forwardNeuronsDerivatives[neuron] == 0)
-        {
-            float forwardNeuronsDerivative = 0;
-			float* fd = &forwardNeuronsDerivative;
-            for (int i = StartingIndexOfLayer(LayerOfNeuron(neuron, LayerSize, LayerNum) + 1, LayerSize); i < StartingIndexOfLayer(LayerOfNeuron(neuron, LayerSize, LayerNum) + 1, LayerSize) + (LayerSize[LayerOfNeuron(neuron, LayerSize, LayerNum) + 1]); i++)
-            {
-                forwardNeuronsDerivative += GetWeightBetweenNeurons(neuron, i, LayerSize,LayerNum, weights,weights_buffer_lookup_table ) * forwardNeuronsDerivatives[i];
-            }
-
-			printf("1. %f",forwardNeuronsDerivative);
-
-			int size = StartingIndexOfLayer(LayerOfNeuron(neuron, LayerSize, LayerNum) + 1, LayerSize) + (LayerSize[LayerOfNeuron(neuron, LayerSize, LayerNum) + 1]);
-			size_t global_size = size;
-			enqueue_kernel(get_default_queue(), &global_size, ^{prev_layer(neuron, LayerSize,LayerNum, weights,weights_buffer_lookup_table,forwardNeuronsDerivatives, fd );});
-
-			printf("2. %f",forwardNeuronsDerivative);
-
-            if (forwardNeuronsDerivative == 0)
-            {
-                forwardNeuronsDerivative += 0.01f;
-            }
-            
-			forwardNeuronsDerivatives[neuron] = forwardNeuronsDerivative;
-        }
-		else
-		{
-			printf("SKIPPED!\n");
-		}
-        return forwardNeuronsDerivatives[neuron];
-    }
+	return forwardNeuronsDerivatives[neuron];
 }
 
 
-
-__kernel void back_prob(__global const float* activations,
+__kernel void back_prob_last_layer(
+						__global const float* activations,
                         __global const float* expectedOutput,
                         __global const int* LayerSize,
 						__global const float* weights,
@@ -166,7 +122,29 @@ __kernel void back_prob(__global const float* activations,
 
     int I = i + StartingIndexOfLayerIncludingInputLayer(layer, LayerSize);
     int J = j + StartingIndexOfLayerIncludingInputLayer(layer-1, LayerSize);
-    data[GetIndexOfWeight(J , I, LayerSize, LayerNum)] = activations[J] * PartialDerivativeOfErrorFunction(I - LayerSize[0], activations, expectedOutput, forwardNeuronsDerivatives, LayerSize, LayerNum, weights, weights_buffer_lookup_table) * (-mutationRate);
+    data[GetIndexOfWeight(J , I, LayerSize, LayerNum)] = activations[J] * PartialDerivativeOfErrorFunctionLastLayer(I - LayerSize[0], activations, expectedOutput, forwardNeuronsDerivatives, LayerSize, LayerNum, weights, weights_buffer_lookup_table) * (-mutationRate);
+
+}
+
+__kernel void back_prob_hidden_layer(
+						__global const float* activations,
+                        __global const float* expectedOutput,
+                        __global const int* LayerSize,
+						__global const float* weights,
+						__global const int* weights_buffer_lookup_table,
+                        __global float* forwardNeuronsDerivatives,
+                        __global float* data,
+                        float mutationRate,
+                        int LayerNum,
+						int layer					
+)
+{
+    int j = get_global_id(0);
+    int i = get_global_id(1);
+
+    int I = i + StartingIndexOfLayerIncludingInputLayer(layer, LayerSize);
+    int J = j + StartingIndexOfLayerIncludingInputLayer(layer-1, LayerSize);
+    data[GetIndexOfWeight(J , I, LayerSize, LayerNum)] = activations[J] * PartialDerivativeOfErrorFunctionHiddenLayer(I - LayerSize[0], activations, expectedOutput, forwardNeuronsDerivatives, LayerSize, LayerNum, weights, weights_buffer_lookup_table) * (-mutationRate);
 
 }
 

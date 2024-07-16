@@ -196,6 +196,21 @@ cl_program GPU::BuildFromString(const char* source)
     return program;
 }
 
+size_t GPU::GetMaxLocalWorkSize()
+{
+    cl_int ret;
+
+    cl_uint maxDimensions;
+    ret = clGetDeviceInfo(kernelData.device_id, CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, sizeof(cl_uint), &maxDimensions, NULL);
+    size_t* max_work_sizes = (size_t*)malloc(sizeof(size_t) * maxDimensions);
+    ret = clGetDeviceInfo(kernelData.device_id, CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(size_t) * maxDimensions, max_work_sizes, NULL);
+    size_t max_work_size = max_work_sizes[0];
+    free(max_work_sizes);
+
+
+    return max_work_size; 
+}
+
 const char* GPU::avgVectorResizable(int numVectors)
 {
     const int maxSize = 1000;
@@ -418,45 +433,54 @@ float* GPU::BackPropagate(const float* activations, const float* expectedOutput,
 
     for (int layer = LayerNum - 1; layer > 0; layer--)
     {
-
-        //Create kernel
-
+        bool isLastLayer = layer == LayerNum - 1;
         cl_kernel kernel;
-        kernel = clCreateKernel(program, "back_prob", &ret);
 
-        //Set args
+        if (isLastLayer)
+        {
+            //Create kernel
 
-        ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &activations_buffer);
-        ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), &expected_output_buffer);
-        ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), &layer_size_buffer);
-        ret = clSetKernelArg(kernel, 3, sizeof(cl_mem), &weights_buffer);
-        ret = clSetKernelArg(kernel, 4, sizeof(cl_mem), &weights_buffer_lookup_table_buffer);
+            kernel = clCreateKernel(program, "back_prob_last_layer", &ret);
 
-        ret = clSetKernelArg(kernel, 5, sizeof(cl_mem), &forward_neuron_derivatives_buffer);
+            //Set args
 
-        ret = clSetKernelArg(kernel, 6, sizeof(cl_mem), &data_buffer);
+            ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &activations_buffer);
+            ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), &expected_output_buffer);
+            ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), &layer_size_buffer);
+            ret = clSetKernelArg(kernel, 3, sizeof(cl_mem), &weights_buffer);
+            ret = clSetKernelArg(kernel, 4, sizeof(cl_mem), &weights_buffer_lookup_table_buffer);
+            ret = clSetKernelArg(kernel, 5, sizeof(cl_mem), &forward_neuron_derivatives_buffer);
+            ret = clSetKernelArg(kernel, 6, sizeof(cl_mem), &data_buffer);
+            ret = clSetKernelArg(kernel, 7, sizeof(float), &mutationRate);
+            ret = clSetKernelArg(kernel, 8, sizeof(int), &LayerNum);
+            ret = clSetKernelArg(kernel, 9, sizeof(int), &layer);
+        }
+        else
+        {
+            kernel = clCreateKernel(program, "back_prob_hidden_layer", &ret);
 
-        ret = clSetKernelArg(kernel, 7, sizeof(float), &mutationRate);
-        ret = clSetKernelArg(kernel, 8, sizeof(int), &LayerNum);
 
-        //------------------------------------------------------Enqueque-kernel----------------------------------------------------
+            ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &activations_buffer);
+            ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), &expected_output_buffer);
+            ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), &layer_size_buffer);
+            ret = clSetKernelArg(kernel, 3, sizeof(cl_mem), &weights_buffer);
+            ret = clSetKernelArg(kernel, 4, sizeof(cl_mem), &weights_buffer_lookup_table_buffer);
+            ret = clSetKernelArg(kernel, 5, sizeof(cl_mem), &forward_neuron_derivatives_buffer);
+            ret = clSetKernelArg(kernel, 6, sizeof(cl_mem), &data_buffer);
+            ret = clSetKernelArg(kernel, 7, sizeof(float), &mutationRate);
+            ret = clSetKernelArg(kernel, 8, sizeof(int), &LayerNum);
+            ret = clSetKernelArg(kernel, 9, sizeof(int), &layer);
 
-        ret = clSetKernelArg(kernel, 9, sizeof(int), &layer);
+            ret = clEnqueueReadBuffer(kernelData.command_queue, forward_neuron_derivatives_buffer, CL_TRUE, 0, NeuronNum * sizeof(float), forwardNeuronsDerivatives, 0, nullptr, nullptr);
 
-        //Get max values
+            SetHiddenLayerForwardNeuronDerivative(forwardNeuronsDerivatives, LayerSize, weights, weights_buffer_lookup_table, layer);
+        }
 
-            cl_uint maxDimensions;
-            ret = clGetDeviceInfo(kernelData.device_id, CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, sizeof(cl_uint), &maxDimensions, NULL);
-            size_t* max_work_sizes = (size_t*)malloc(sizeof(size_t) * maxDimensions);
-            ret = clGetDeviceInfo(kernelData.device_id, CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(size_t) * maxDimensions, max_work_sizes, NULL);
-            size_t max_work_size = max_work_sizes[0];
-            free(max_work_sizes);
+        //Set dim + work size values
 
-            //Set dim + work size values
-
-            cl_int dimensions = 2;
-            size_t global_item_size[] = { LayerSize[layer - 1], LayerSize[layer]};
-            size_t local_item_size[] = { 16,16 };
+        cl_int dimensions = 2;
+        size_t global_item_size[] = { LayerSize[layer - 1], LayerSize[layer] };
+        size_t local_item_size[] = { 16,16 };
 
         //ND range kernel
 
@@ -465,15 +489,11 @@ float* GPU::BackPropagate(const float* activations, const float* expectedOutput,
 
         //----------------------------------------------------------Execute---------------------------------------------------------
 
-
         ret = clFinish(kernelData.command_queue);
-
-        ret = clEnqueueReadBuffer(kernelData.command_queue, data_buffer, CL_TRUE, 0, weightsNum * sizeof(float), data, NULL, nullptr, NULL);
-
-
     }
 
 
+    ret = clEnqueueReadBuffer(kernelData.command_queue, data_buffer, CL_TRUE, 0, weightsNum * sizeof(float), data, NULL, nullptr, NULL);
 
 
 
@@ -483,4 +503,79 @@ float* GPU::BackPropagate(const float* activations, const float* expectedOutput,
 
     free(forwardNeuronsDerivatives);
     return data;
+}
+
+float* GPU::vector_matrix_multiplication(const float* vector, const float* matrix, const int vec_width, const int matrix_width)
+{
+    float* output = (float*)malloc(matrix_width * sizeof(float));
+
+    cl_program program = BuildFromFile("../Open CL/vec_mat_mul.cl", "");
+
+    cl_int ret;
+
+    cl_mem vector_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, vec_width * sizeof(float), nullptr, &ret);
+    cl_mem matrix_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, vec_width * matrix_width * sizeof(float), nullptr, &ret);
+    cl_mem output_buffer = clCreateBuffer(kernelData.context, CL_MEM_WRITE_ONLY, matrix_width * sizeof(float), nullptr, &ret);
+
+    ret = clEnqueueWriteBuffer(kernelData.command_queue, vector_buffer, CL_TRUE, 0, vec_width * sizeof(float), vector, NULL, nullptr, nullptr);
+    ret = clEnqueueWriteBuffer(kernelData.command_queue, matrix_buffer, CL_TRUE, 0, vec_width * matrix_width * sizeof(float), matrix, NULL, nullptr, nullptr);
+
+    cl_kernel kernel = clCreateKernel(program, "vec_mat_mul", &ret);
+
+    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &vector_buffer);
+    ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), &matrix_buffer);
+    ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), &output_buffer);
+    ret = clSetKernelArg(kernel, 3, sizeof(int), &vec_width);
+
+    int dimensions = 1;
+    size_t global_work_size[] = { matrix_width };
+    size_t local_work_size[] = { GetMaxLocalWorkSize() };
+
+    ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, 0, global_work_size, local_work_size, 0, nullptr, nullptr);
+
+    ret = clFinish(kernelData.command_queue);
+
+    ret = clEnqueueReadBuffer(kernelData.command_queue, output_buffer, CL_TRUE, 0, matrix_width * sizeof(float), output, 0, nullptr, nullptr);
+
+    return output;
+}
+
+float* GPU::GetHiddenLayerForwardNeuronDerivative(const float* forwardNeuronDerivatives, const int* LayerSize, const float* weights, const int* weights_buffer_lookup_table, int layer)
+{
+    int fd_idx = 0;
+    for (int i = 1; i < layer + 1; i++)
+    {
+        fd_idx += LayerSize[i];
+    }
+
+    const float* vector = forwardNeuronDerivatives + fd_idx;
+
+    int wt_idx = 0;
+    for (int i = 1; i < layer; i++)
+    {
+        wt_idx += LayerSize[i];
+    }
+
+    int w_idx = weights_buffer_lookup_table[wt_idx];
+
+    const float* matrix = weights + w_idx;
+    
+    float* output = vector_matrix_multiplication(vector, matrix, LayerSize[layer + 1], LayerSize[layer]);
+
+    return output;
+}
+
+void GPU::SetHiddenLayerForwardNeuronDerivative(float* forwardNeuronDerivatives, const int* LayerSize, const float* weights, const int* weights_buffer_lookup_table, int layer)
+{
+    float* output = GetHiddenLayerForwardNeuronDerivative(forwardNeuronDerivatives, LayerSize, weights, weights_buffer_lookup_table, layer);
+
+    int idx = 0;
+    for (int i = 1; i < layer; i++)
+    {
+        idx += LayerSize[i];
+    }
+
+    memcpy(forwardNeuronDerivatives + idx, output, LayerSize[layer]);
+
+    free(output);
 }

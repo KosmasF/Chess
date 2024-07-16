@@ -35,6 +35,9 @@ public:
 
     float* AvgVector(float** vectors, float numVectors, float vectorLength);
     float* BackPropagate(const float* activations, const float* expectedOutput, const int* LayerSize, const int LayerNum, const float mutationRate, const int weightsNum, const float* weights, const int* weights_buffer_lookup_table);
+    float* vector_matrix_multiplication(const float* vector, const float* matrix, const int vec_width, const int matrix_width);
+    float* GetHiddenLayerForwardNeuronDerivative(const float* forwardNeuronDerivatives, const int* LayerSize, const float* weights, const int* weights_buffer_lookup_table, int layer);
+    void SetHiddenLayerForwardNeuronDerivative(float* forwardNeuronDerivatives, const int* LayerSize, const float* weights, const int* weights_buffer_lookup_table, int layer);
 
 #ifdef __OPENCL_CL_H // If we have opecl included in inside the .lib
 private:
@@ -47,6 +50,8 @@ private:
     KernelData Setup();
     cl_program BuildFromFile(const char* path, const char* args);
     cl_program BuildFromString(const char* source);
+
+    size_t GetMaxLocalWorkSize();
 
     const char* avgVectorResizable(int numVectors);
 #endif //__OPENCL_CL_H
