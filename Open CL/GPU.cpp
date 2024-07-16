@@ -146,7 +146,7 @@ KernelData GPU::Setup()
     };
 }
 
-cl_program GPU::BuildFromFile(const char* path)
+cl_program GPU::BuildFromFile(const char* path, const char* args)
 {
     cl_int ret;
     FileData file = LoadFile(path);
@@ -156,7 +156,7 @@ cl_program GPU::BuildFromFile(const char* path)
 
     // Build and compile the OpenCL kernel program
     //std::string build_option = "-DTILE_SIZE=" + std::to_string(TILE_SIZE);
-    ret = clBuildProgram(program, 1, &kernelData.device_id, "", NULL, NULL);
+    ret = clBuildProgram(program, 1, &kernelData.device_id, args, NULL, NULL);
     if (ret == CL_BUILD_PROGRAM_FAILURE) { // If compile failed, print the error message
         // Determine the size of the log
         size_t log_size;
@@ -387,7 +387,7 @@ float* GPU::BackPropagate(const float* activations, const float* expectedOutput,
 
 
 
-    cl_program program = BuildFromFile("../Open CL/back_prop.cl");
+    cl_program program = BuildFromFile("../Open CL/back_prop.cl", "-cl-std=CL2.0");
 
     cl_int ret;
 
@@ -416,29 +416,29 @@ float* GPU::BackPropagate(const float* activations, const float* expectedOutput,
     ret = clEnqueueWriteBuffer(kernelData.command_queue, forward_neuron_derivatives_buffer, CL_TRUE, 0, NeuronNum * sizeof(float), forwardNeuronsDerivatives, 0, nullptr, nullptr);
 
 
-    //Create kernel
-
-    cl_kernel kernel;
-    kernel = clCreateKernel(program, "back_prob", &ret);
-
-    //Set args
-
-    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &activations_buffer);
-    ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), &expected_output_buffer);
-    ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), &layer_size_buffer);
-    ret = clSetKernelArg(kernel, 3, sizeof(cl_mem), &weights_buffer);
-    ret = clSetKernelArg(kernel, 4, sizeof(cl_mem), &weights_buffer_lookup_table_buffer);
-
-    ret = clSetKernelArg(kernel, 5, sizeof(cl_mem), &forward_neuron_derivatives_buffer);
-
-    ret = clSetKernelArg(kernel, 6, sizeof(cl_mem), &data_buffer);
-
-    ret = clSetKernelArg(kernel, 7, sizeof(float), &mutationRate);
-    ret = clSetKernelArg(kernel, 8, sizeof(int), &LayerNum);
-
-
     for (int layer = LayerNum - 1; layer > 0; layer--)
     {
+
+        //Create kernel
+
+        cl_kernel kernel;
+        kernel = clCreateKernel(program, "back_prob", &ret);
+
+        //Set args
+
+        ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &activations_buffer);
+        ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), &expected_output_buffer);
+        ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), &layer_size_buffer);
+        ret = clSetKernelArg(kernel, 3, sizeof(cl_mem), &weights_buffer);
+        ret = clSetKernelArg(kernel, 4, sizeof(cl_mem), &weights_buffer_lookup_table_buffer);
+
+        ret = clSetKernelArg(kernel, 5, sizeof(cl_mem), &forward_neuron_derivatives_buffer);
+
+        ret = clSetKernelArg(kernel, 6, sizeof(cl_mem), &data_buffer);
+
+        ret = clSetKernelArg(kernel, 7, sizeof(float), &mutationRate);
+        ret = clSetKernelArg(kernel, 8, sizeof(int), &LayerNum);
+
         //------------------------------------------------------Enqueque-kernel----------------------------------------------------
 
         ret = clSetKernelArg(kernel, 9, sizeof(int), &layer);

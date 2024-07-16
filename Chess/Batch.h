@@ -71,7 +71,7 @@ namespace Batch
             float* expected = BoardCalculations::FindMoveProbabilities(board->pieces, board->allowCastling,status);
 
             float* generationStepVector = nn->BackPropagate(expected, board->Status(!(board->whitePlays)), mutationRate);
-            //float* parallelVector = gpu->BackPropagate(nn->GetAllActivations(board->Status(!(board->whitePlays))), expected, nn->LayerSize, nn->LayerNum, mutationRate, nn->GetNumberOfWeights(), nn->weights, nn->weights_buffer_lookup_table);
+            float* parallelVector = gpu->BackPropagate(nn->GetAllActivations(board->Status(!(board->whitePlays))), expected, nn->LayerSize, nn->LayerNum, mutationRate, nn->GetNumberOfWeights(), nn->weights, nn->weights_buffer_lookup_table);
             
             /*
             int win = 0;
