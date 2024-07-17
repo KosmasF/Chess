@@ -474,6 +474,8 @@ float* GPU::BackPropagate(const float* activations, const float* expectedOutput,
             ret = clEnqueueReadBuffer(kernelData.command_queue, forward_neuron_derivatives_buffer, CL_TRUE, 0, NeuronNum * sizeof(float), forwardNeuronsDerivatives, 0, nullptr, nullptr);
 
             SetHiddenLayerForwardNeuronDerivative(forwardNeuronsDerivatives, LayerSize, weights, weights_buffer_lookup_table, layer);
+
+            ret = clEnqueueWriteBuffer(kernelData.command_queue, forward_neuron_derivatives_buffer, CL_TRUE, 0, NeuronNum * sizeof(float), forwardNeuronsDerivatives, 0, nullptr, nullptr);
         }
 
         //Set dim + work size values
@@ -575,7 +577,7 @@ void GPU::SetHiddenLayerForwardNeuronDerivative(float* forwardNeuronDerivatives,
         idx += LayerSize[i];
     }
 
-    memcpy(forwardNeuronDerivatives + idx, output, LayerSize[layer]);
+    memcpy(forwardNeuronDerivatives + idx, output, LayerSize[layer] * sizeof(float));
 
     free(output);
 }

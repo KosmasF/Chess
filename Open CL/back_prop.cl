@@ -98,12 +98,6 @@ float PartialDerivativeOfErrorFunctionLastLayer(int neuron, __global float* acti
 	return forwardNeuronsDerivatives[neuron];
 }
 
-float PartialDerivativeOfErrorFunctionHiddenLayer(int neuron, __global float* activations, __global float* predictedOutput, __global float* forwardNeuronsDerivatives, const __global int* LayerSize, const int LayerNum, const __global float* weights, const __global int* weights_buffer_lookup_table)
-{
-	return forwardNeuronsDerivatives[neuron];
-}
-
-
 __kernel void back_prob_last_layer(
 						__global const float* activations,
                         __global const float* expectedOutput,
@@ -144,7 +138,7 @@ __kernel void back_prob_hidden_layer(
 
     int I = i + StartingIndexOfLayerIncludingInputLayer(layer, LayerSize);
     int J = j + StartingIndexOfLayerIncludingInputLayer(layer-1, LayerSize);
-    data[GetIndexOfWeight(J , I, LayerSize, LayerNum)] = activations[J] * PartialDerivativeOfErrorFunctionHiddenLayer(I - LayerSize[0], activations, expectedOutput, forwardNeuronsDerivatives, LayerSize, LayerNum, weights, weights_buffer_lookup_table) * (-mutationRate);
+    data[GetIndexOfWeight(J , I, LayerSize, LayerNum)] = activations[J] * forwardNeuronsDerivatives[I - LayerSize[0]] * (-mutationRate);
 
 }
 

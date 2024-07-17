@@ -452,6 +452,7 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 			if (forwardNeuronsDerivatives[neuron] == 0)
 			{
 				float forwardNeuronsDerivative = 0;
+				int b = StartingIndexOfLayer(LayerOfNeuron(neuron) + 1) + (LayerSize[LayerOfNeuron(neuron) + 1]);
 				for (int i = StartingIndexOfLayer(LayerOfNeuron(neuron) + 1); i < StartingIndexOfLayer(LayerOfNeuron(neuron) + 1) + (LayerSize[LayerOfNeuron(neuron) + 1]); i++)
 				{
 					forwardNeuronsDerivative += GetWeightBetweenNeurons(neuron, i) * forwardNeuronsDerivatives[i];
