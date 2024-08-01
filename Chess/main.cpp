@@ -288,7 +288,6 @@ int main(int argc, char** argv)
 
                     //calcBatch(&board, &stockfish, &nn, mutationRate, batchGenerationGradientDescent, batch);
                 }
-
                 for (int batch = 0; batch < batchSize; batch++)
                 {
                     //batchThreads[batch].join();

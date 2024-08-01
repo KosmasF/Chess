@@ -5,7 +5,7 @@
 #pragma warning (disable : 4996)
 #endif //_MSVC_LANG
 
-#include "Neuron.h"
+#include "Layer.h"
 #include "ActivationMethods.h"
 #include <limits>
 
@@ -13,7 +13,7 @@
 class NeuralNetwork
 {
 public://PRIVATE
-	Neuron** neurons;
+	Layer** layers;
 	int* LayerSize;
 	int LayerNum;
 	int NeuronNum;

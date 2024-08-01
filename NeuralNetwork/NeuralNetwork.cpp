@@ -17,27 +17,18 @@ NeuralNetwork::NeuralNetwork(int* layerSize, int layerNum, float (*activationMet
 	int idx = 0;
 	#endif
 
-	neurons = new Neuron*[NeuronNum];
+	layers = new Layer*[layerNum - 1];
 
 	for (int layer = 1; layer < layerNum; layer++)
 	{
-		int buffer = 0;
-		int focusLayer = layer;
+		layers[layer - 1] = new Layer(LayerSize[layer], LayerSize[layer - 1], weights + weight_buffer);
+		layers[layer - 1]->setWeights(normalizeOutput);
 
-		while (focusLayer > 1)
-		{
-			buffer += layerSize[focusLayer - 1];
-			focusLayer--;
-		}
 		for (int i = 0; i < layerSize[layer]; i++)
 		{
-#ifndef _UNIFIED_WEIGTS_ARRAY
-			neurons[i+buffer] = new Neuron(layerSize[layer - 1], activationMethods[layer - 1], normalizeOutput);
-#else
 			weights_buffer_lookup_table[idx] = weight_buffer;
-			neurons[i + buffer] = new Neuron(layerSize[layer - 1], activationMethods[layer - 1], normalizeOutput, weights, weight_buffer);
+			weight_buffer += layerSize[layer - 1];
 			idx++;
-#endif
 		}
 	}
 
@@ -49,7 +40,7 @@ NeuralNetwork::NeuralNetwork(const char* path)
 	LayerNum = 0;
 	NeuronNum = 0;
 
-	neurons = nullptr;
+	layers = nullptr;
 	LayerSize = nullptr;
 	void* data = FromDiskData(path);
 	void* LoadData = data;
@@ -66,7 +57,7 @@ NeuralNetwork::NeuralNetwork(const char* path)
 	memcpy(LayerSize, LayerSizePos, sizeof(int) * LayerNum);
 
 	NeuronNum = RetNeuronNum();
-	neurons = new Neuron * [NeuronNum];
+	layers = new Layer * [LayerNum - 1];
 
 #ifdef _UNIFIED_WEIGTS_ARRAY
 	weights = (float*)malloc(GetNumberOfWeights() * sizeof(float));
@@ -77,23 +68,14 @@ NeuralNetwork::NeuralNetwork(const char* path)
 
 	for (int layer = 1; layer < LayerNum; layer++)
 	{
-		int buffer = 0;
-		int focusLayer = layer;
+		layers[layer - 1] = new Layer(LayerSize[layer], LayerSize[layer - 1], weights + weight_buffer);
+		layers[layer - 1]->setWeights(false);
 
-		while (focusLayer > 1)
-		{
-			buffer += LayerSize[focusLayer - 1];
-			focusLayer--;
-		}
 		for (int i = 0; i < LayerSize[layer]; i++)
 		{
-#ifndef _UNIFIED_WEIGTS_ARRAY
-			neurons[i + buffer] = new Neuron(LayerSize[layer - 1], None);
-#else
 			weights_buffer_lookup_table[idx] = weight_buffer;
-			neurons[i + buffer] = new Neuron(LayerSize[layer - 1], None, false, weights, weight_buffer);
+			weight_buffer += LayerSize[layer - 1];
 			idx++;
-#endif
 		}
 	}
 
@@ -103,12 +85,10 @@ NeuralNetwork::NeuralNetwork(const char* path)
 
 NeuralNetwork::~NeuralNetwork()
 {
-	for (int i = 0; i < NeuronNum; i++)
+	for (int i = 0; i < LayerSize - 1; i++)
 	{
-		delete neurons[i];
+		delete layers[i];
 	}
-	delete[] neurons;
-
 	free(LayerSize);
 
 #ifdef _UNIFIED_WEIGTS_ARRAY
