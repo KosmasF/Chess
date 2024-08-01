@@ -2,6 +2,7 @@
 #include "ActivationMethods.h"
 #include "random"
 #include "chrono"
+#define _UNIFIED_WEIGTS_ARRAY
 
 class Neuron
 {

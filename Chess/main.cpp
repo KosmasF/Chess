@@ -1,5 +1,7 @@
 //#define SERVER_TEST
 
+#define _UNIFIED_WEIGTS_ARRAY
+
 #include "Game.h"
 #include "NonGraphicalBoard.h"
 #include "NeuralNetwork.h"
@@ -16,7 +18,7 @@
 #pragma warning (disable : 4996)
 #endif //_MSVC_LANG
 
-#define INTERNAL_SERVER
+//#define INTERNAL_SERVER
 
 static const bool graphical = 0;
 
@@ -239,7 +241,7 @@ int main(int argc, char** argv)
             printf("Setup\n");
 
             const int batchSize = 10;
-            const int batches = 1000;
+            const int batches = 12;
 
             int networkSizes[] = { 64, 512, 64 * 64};
             float (*activationMethods[])(float) = {None,None};
@@ -252,7 +254,7 @@ int main(int argc, char** argv)
             //const char* path = "networks/testEvaluatorNonRandomWeights.nn";
             //nn.LoadFromDisk(path);
 
-            const float mutationRate = 1.f;
+            const float mutationRate = 0.001f;
 
             std::thread batchThreads[batchSize];
 
@@ -295,14 +297,15 @@ int main(int argc, char** argv)
                 //output = nn.Generate(board.Status(board.whitePlays));
                 //output = nn.Generate(input);
 
-                double st = GetTime();
+                //double st = GetTime();
                 //float* batchGradientDescent = nn.AverageWeightVector(batchGenerationGradientDescent,batchSize);
                 #ifndef _UNIFIED_WEIGTS_ARRAY
                 #error
                 #endif
+                
                 float* batchGradientDescent = gpu.AvgVector(batchGenerationGradientDescent, batchSize, nn.GetNumberOfWeights());
-                double ed = GetTime();
-                printf("%f\n", ed-st);
+                //double ed = GetTime();
+                //printf("%f\n", ed-st);
 
 
                 nn.AddToWeights(batchGradientDescent);

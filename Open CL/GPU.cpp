@@ -25,7 +25,7 @@ GPU::~GPU()
 
 cl_uint GPU::GetPlatformIndex(cl_platform_id* platforms) {
 
-    char* required_platform_subname = (char*)malloc(5);
+    char* required_platform_subname = (char*)malloc(strlen("Graphics") + 1);
     cl_uint selected_platform_index = 3; //Start at max
 
     strcpy(required_platform_subname, "Graphics"); //Names as per CapsBasic
@@ -102,7 +102,7 @@ KernelData GPU::Setup()
 {
     cl_device_type platformType = CL_DEVICE_TYPE_GPU;
 
-    //std::cout << "Platform " << platformType << std::endl;//" Matrix size " << SIZE << "x" << SIZE << " Tile size " << TILE_SIZE << std::endl;
+    std::cout << "Platform " << platformType << std::endl;//" Matrix size " << SIZE << "x" << SIZE << " Tile size " << TILE_SIZE << std::endl;
 
     //Init variables
     cl_device_id device_id = NULL;
@@ -114,21 +114,21 @@ KernelData GPU::Setup()
 
     cl_platform_id* platform_id = new cl_platform_id[ret_num_platforms]; //List of platforms
 
-    //std::cout << "clGetPlatformIDs " << ret_num_platforms << std::endl;
+    std::cout << "clGetPlatformIDs " << ret_num_platforms << std::endl;
 
     // Get platform and device information
     ret = clGetPlatformIDs(ret_num_platforms, platform_id, 0); //Returns the list of platforms found. Minimum of arg1 and arg3.
 
-    //std::cout << "clGetPlatformIDs List Ret = " << ret << std::endl;
+    std::cout << "clGetPlatformIDs List Ret = " << ret << std::endl;
 
     cl_uint selected_platform_index = GetPlatformIndex(platform_id);
 
-    //std::cout << "getPlatformIndex " << selected_platform_index << std::endl;
+    std::cout << "getPlatformIndex " << selected_platform_index << std::endl;
 
     cl_platform_id platformCPU = platform_id[selected_platform_index];
 
     ret = clGetDeviceIDs(platformCPU, platformType, 1, &device_id, &ret_num_devices); //Returns the devices found
-    //std::cout << "clGetDeviceIDs " << ret << std::endl;
+    std::cout << "clGetDeviceIDs " << ret << std::endl;
     // Create an OpenCL context
     //An OpenCL context is created with one or more devices. Contexts are used by the OpenCL runtime for managing objects such as command-queues, memory, program and kernel objects and for executing kernels on one or more devices specified in the context.
     cl_context context = clCreateContext(NULL, 1, &device_id, NULL, NULL, &ret);
@@ -492,18 +492,26 @@ float* GPU::BackPropagate(const float* activations, const float* expectedOutput,
         //----------------------------------------------------------Execute---------------------------------------------------------
 
         ret = clFinish(kernelData.command_queue);
+        ret = clReleaseKernel(kernel);
     }
 
 
     ret = clEnqueueReadBuffer(kernelData.command_queue, data_buffer, CL_TRUE, 0, weightsNum * sizeof(float), data, NULL, nullptr, NULL);
 
+    //----------------------------------------------------CLEANUP
 
-
-
-
-
+    
+    ret = clReleaseProgram(program);
+    ret = clReleaseMemObject(activations_buffer);
+    ret = clReleaseMemObject(expected_output_buffer);
+    ret = clReleaseMemObject(layer_size_buffer);
+    ret = clReleaseMemObject(weights_buffer);
+    ret = clReleaseMemObject(weights_buffer_lookup_table_buffer);
+    ret = clReleaseMemObject(forward_neuron_derivatives_buffer);
+    ret = clReleaseMemObject(data_buffer);
 
     free(forwardNeuronsDerivatives);
+    free((void*)activations);
     return data;
 }
 
@@ -538,6 +546,12 @@ float* GPU::vector_matrix_multiplication(const float* vector, const float* matri
     ret = clFinish(kernelData.command_queue);
 
     ret = clEnqueueReadBuffer(kernelData.command_queue, output_buffer, CL_TRUE, 0, matrix_width * sizeof(float), output, 0, nullptr, nullptr);
+
+    ret = clReleaseKernel(kernel);
+    ret = clReleaseProgram(program);
+    ret = clReleaseMemObject(vector_buffer);
+    ret = clReleaseMemObject(matrix_buffer);
+    ret = clReleaseMemObject(output_buffer);
 
     return output;
 }

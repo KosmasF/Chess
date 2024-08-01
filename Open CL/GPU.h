@@ -25,6 +25,14 @@ struct KernelData {
     cl_command_queue command_queue;
     cl_uint selected_platform_index;
 };
+#else
+struct KernelData {
+    long long device_id;
+    long long context;
+    long long command_queue;
+    unsigned int selected_platform_index;
+};
+
 #endif //__OPENCL_CL_H
 
 class GPU
@@ -54,6 +62,12 @@ private:
     size_t GetMaxLocalWorkSize();
 
     const char* avgVectorResizable(int numVectors);
+
+#else
+private:// *DISABLED*
+    KernelData kernelDataTEMP;
+    unsigned int ret_num_platforms = 0;
+
 #endif //__OPENCL_CL_H
 
 };

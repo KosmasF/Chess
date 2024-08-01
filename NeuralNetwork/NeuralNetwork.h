@@ -1,10 +1,9 @@
 #pragma once
 
+#define _UNIFIED_WEIGTS_ARRAY
 #ifdef _MSVC_LANG //Check if we are using c++ with visual studio
 #pragma warning (disable : 4996)
 #endif //_MSVC_LANG
-
-#define _UNIFIED_WEIGTS_ARRAY
 
 #include "Neuron.h"
 #include "ActivationMethods.h"
@@ -21,7 +20,6 @@ public://PRIVATE
 
 #ifdef _UNIFIED_WEIGTS_ARRAY
 	float* weights;
-
 	int* weights_buffer_lookup_table;
 
 #endif _UNIFIED_WEIGTS_ARRAY

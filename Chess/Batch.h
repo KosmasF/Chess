@@ -70,7 +70,7 @@ namespace Batch
             float* status = board->Status(!(board->whitePlays));
             float* expected = BoardCalculations::FindMoveProbabilities(board->pieces, board->allowCastling,status);
 
-            float* generationStepVector = nn->BackPropagate(expected, board->Status(!(board->whitePlays)), mutationRate);
+            // ;) float* generationStepVector = nn->BackPropagate(expected, board->Status(!(board->whitePlays)), mutationRate);
             float* parallelVector = gpu->BackPropagate(nn->GetAllActivations(board->Status(!(board->whitePlays))), expected, nn->LayerSize, nn->LayerNum, mutationRate, nn->GetNumberOfWeights(), nn->weights, nn->weights_buffer_lookup_table);
             
             
@@ -96,7 +96,7 @@ namespace Batch
 
             printf("Wins: %d, Losses: %d, Soft Losses: %d\n", win, losses, soft_losses);*/
             
-            batchGenerationGradientDescent[batch] = generationStepVector;//generationStepVector
+            batchGenerationGradientDescent[batch] = parallelVector;//generationStepVector
             float* NNoutput = nn->Generate(status);
             float loss = nn->GetLoss(NNoutput, expected);
 
