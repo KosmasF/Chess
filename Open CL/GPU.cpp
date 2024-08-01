@@ -595,3 +595,38 @@ void GPU::SetHiddenLayerForwardNeuronDerivative(float* forwardNeuronDerivatives,
 
     free(output);
 }
+
+void GPU::VectorIncrement(float* A, const float* B, const int size)
+{
+    cl_int ret;
+    cl_program program = BuildFromFile("../Open CL/vec_add.cl", "");
+
+    cl_mem A_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, size * sizeof(float), nullptr, &ret);
+    cl_mem B_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, size * sizeof(float), nullptr, &ret);
+    cl_mem C_buffer = clCreateBuffer(kernelData.context, CL_MEM_WRITE_ONLY, size * sizeof(float), nullptr, &ret);
+
+    clEnqueueWriteBuffer(kernelData.command_queue, A_buffer, CL_TRUE, 0, size * sizeof(float), A, 0, nullptr, nullptr);
+    clEnqueueWriteBuffer(kernelData.command_queue, B_buffer, CL_TRUE, 0, size * sizeof(float), B, 0, nullptr, nullptr);
+
+    cl_kernel kernel = clCreateKernel(program, "vec_add", &ret);
+
+    clSetKernelArg(kernel, 0, sizeof(cl_mem), A_buffer);
+    clSetKernelArg(kernel, 0, sizeof(cl_mem), B_buffer);
+    clSetKernelArg(kernel, 0, sizeof(cl_mem), C_buffer);
+
+    const int dimensions = 1;
+    size_t global_work_size[] = { size };
+    size_t local_work_size[] = { GetMaxLocalWorkSize() };
+
+    ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, 0, global_work_size, local_work_size, 0, nullptr, nullptr);
+
+    ret = clFinish(kernelData.command_queue);
+
+    clEnqueueReadBuffer(kernelData.command_queue, C_buffer, CL_TRUE, 0, size * sizeof(float), A, 0, nullptr, nullptr);
+ 
+    ret = clReleaseKernel(kernel);
+    ret = clRetainProgram(program);
+    ret = clReleaseMemObject(A_buffer);
+    ret = clReleaseMemObject(B_buffer);
+    ret = clReleaseMemObject(C_buffer);
+}

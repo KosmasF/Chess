@@ -247,7 +247,7 @@ int main(int argc, char** argv)
             float (*activationMethods[])(float) = {None,None};
 
             //NeuralNetwork nn = NeuralNetwork("networks/testedNonRandom3LayersBIG.nn");
-            NeuralNetwork nn = NeuralNetwork(networkSizes, sizeof(networkSizes) / sizeof(int) , activationMethods, true);
+            NeuralNetwork nn = NeuralNetwork(networkSizes, sizeof(networkSizes) / sizeof(int) , activationMethods, true, &gpu);
             NonGraphicalBoard board;
 
 

@@ -46,6 +46,7 @@ public:
     float* vector_matrix_multiplication(const float* vector, const float* matrix, const int vec_width, const int matrix_width);
     float* GetHiddenLayerForwardNeuronDerivative(const float* forwardNeuronDerivatives, const int* LayerSize, const float* weights, const int* weights_buffer_lookup_table, int layer);
     void SetHiddenLayerForwardNeuronDerivative(float* forwardNeuronDerivatives, const int* LayerSize, const float* weights, const int* weights_buffer_lookup_table, int layer);
+    void VectorIncrement(float* A, const float* B, const int size);
 
 #ifdef __OPENCL_CL_H // If we have opecl included in inside the .lib
 private:

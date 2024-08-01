@@ -2,8 +2,10 @@
 #include <iostream>
 #include <intrin.h>
 
-NeuralNetwork::NeuralNetwork(int* layerSize, int layerNum, float (*activationMethods[])(float), bool normalizeOutput)
+NeuralNetwork::NeuralNetwork(int* layerSize, int layerNum, float (*activationMethods[])(float), bool normalizeOutput, GPU* _gpu)
 {
+	gpu = _gpu;
+
 	LayerSize = (int*)malloc(layerNum*sizeof(int));
 	memcpy(LayerSize, layerSize, layerNum * sizeof(int));
 	LayerNum = layerNum;
@@ -21,8 +23,8 @@ NeuralNetwork::NeuralNetwork(int* layerSize, int layerNum, float (*activationMet
 
 	for (int layer = 1; layer < layerNum; layer++)
 	{
-		layers[layer - 1] = new Layer(LayerSize[layer], LayerSize[layer - 1], weights + weight_buffer);
-		layers[layer - 1]->setWeights(normalizeOutput);
+		layers[layer - 1] = new Layer(LayerSize[layer], LayerSize[layer - 1], weights + weight_buffer, None);
+		layers[layer - 1]->SetWeights(normalizeOutput);
 
 		for (int i = 0; i < layerSize[layer]; i++)
 		{
@@ -35,8 +37,10 @@ NeuralNetwork::NeuralNetwork(int* layerSize, int layerNum, float (*activationMet
 	//Finished
 }
 
-NeuralNetwork::NeuralNetwork(const char* path)
-{
+NeuralNetwork::NeuralNetwork(const char* path, GPU* _gpu)
+{ 
+	gpu =  _gpu;
+
 	LayerNum = 0;
 	NeuronNum = 0;
 
@@ -68,8 +72,8 @@ NeuralNetwork::NeuralNetwork(const char* path)
 
 	for (int layer = 1; layer < LayerNum; layer++)
 	{
-		layers[layer - 1] = new Layer(LayerSize[layer], LayerSize[layer - 1], weights + weight_buffer);
-		layers[layer - 1]->setWeights(false);
+		layers[layer - 1] = new Layer(LayerSize[layer], LayerSize[layer - 1], weights + weight_buffer, None);
+		layers[layer - 1]->SetWeights(false);
 
 		for (int i = 0; i < LayerSize[layer]; i++)
 		{
@@ -85,7 +89,7 @@ NeuralNetwork::NeuralNetwork(const char* path)
 
 NeuralNetwork::~NeuralNetwork()
 {
-	for (int i = 0; i < LayerSize - 1; i++)
+	for (int i = 0; i < LayerNum - 1; i++)
 	{
 		delete layers[i];
 	}
@@ -103,33 +107,37 @@ float* NeuralNetwork::Generate(float* input, bool freeInput)
 
 	for (int layer = 1; layer < LayerNum; layer++)
 	{
-		float* layerOutput = new float[LayerSize[layer]];
+		float* layerOutput = layers[layer - 1]->Generate(input, gpu);
 
-
-		int buffer = 0;
-		int focusLayer = layer;
-		while (focusLayer > 1)
+		if (!freeInput && layer == 1)
 		{
-			buffer += LayerSize[focusLayer - 1];
-			focusLayer--;
+			;
+		}
+		else
+		{
+			delete[] input;
 		}
 
-		for (int i = 0; i < LayerSize[layer]; i++)
-		{
-			layerOutput[i] = neurons[i + buffer]->Generate(input);
-		}
-			if (!freeInput && layer == 1)
-			{
-				;
-			}
-			else
-			{
-				delete[] input;
-			}
 		input = layerOutput;
 	}
 
 	return input;
+}
+
+int NeuralNetwork::GetIndexOfNeuronByIndex(int idx)
+{
+	int rem = idx;
+	int result = 0;
+	for (int i = 1; i < LayerNum; i++)
+	{
+		rem -= LayerSize[i];
+		if (rem <= 0)
+		{
+			break;
+		}
+		result += LayerSize[i];
+	}
+	return result + idx;
 }
 
 void* NeuralNetwork::Data()
@@ -138,26 +146,13 @@ void* NeuralNetwork::Data()
 	We need to store:
 		int LayerNum;    Size = 4 bytes
 		int* LayerSize;   Size = LayerNum * 4 bytes
-		Neuron** neurons;   Size = NeuronDataSize
+		float* weights;   Size = NeuronDataSize
 	
 	*/
 
-	void** NeuronData = new void* [NeuronNum];
+	size_t size = sizeof(int) + (LayerNum * sizeof(int)) + (GetNumberOfWeights() * sizeof(float));
 
-	for (int i = 0; i < NeuronNum; i++)
-	{
-		NeuronData[i] = neurons[i]->Data();
-	}
-
-	int NeuronDataSize = 0;
-	for (int i = 0; i < NeuronNum; i++)
-	{
-		NeuronDataSize += GetNeuronDataSize(NeuronData[i]);
-	}
-
-	int size = sizeof(int) + (LayerNum * sizeof(int)) + NeuronDataSize;
-
-	void* output = malloc(size+sizeof(int));
+	void* output = malloc(size + sizeof(int));//The + is the size
 
 	if (output == nullptr)
 	{
@@ -170,22 +165,10 @@ void* NeuralNetwork::Data()
 
 	int* LayerSizePos = (int*)output + 1;
 
-	void* NeuronDataPos = (int*)output + 1 + LayerNum;
+	void* WeightDataPos = (int*)output + 1 + LayerNum;
+	memcpy(WeightDataPos, weights, GetNumberOfWeights() * sizeof(float));
+	
 
-	*LayerNumPos = LayerNum;
-	for (int i = 0; i < LayerNum; i++)
-	{
-		*(LayerSizePos + i) = LayerSize[i];
-	}
-	for (int i = 0; i < NeuronNum; i++)
-	{
-		int currentSize = GetNeuronDataSize(NeuronData[i]);
-		memcpy(NeuronDataPos, NeuronData[i], currentSize);
-		free(NeuronData[i]);
-		NeuronDataPos = (char*)NeuronDataPos + currentSize;
-	}
-
-	delete[] NeuronData;
 	//free(output);
 
 	output = (int*)output - 1;
@@ -203,6 +186,7 @@ void NeuralNetwork::Load(void* data)
 		int LayerNum;
 		int NeuronNum;
 	*/
+
 	int size = ((int*)data)[0];
 	data = (int*)data + 1;
 	size -= 4;
@@ -213,17 +197,12 @@ void NeuralNetwork::Load(void* data)
 	int* LayerSizePos = (int*)data + 1;
 	memcpy(LayerSize, LayerSizePos, sizeof(int) * LayerNum);
 
-	void* NeuronDataPos = (int*)data + 1 + LayerNum;
+	void* WeightsDataPos = (int*)data + 1 + LayerNum;
 	//TODO: make this
 
 	SetNeuronNum();
 
-	for(int i = 0; i < NeuronNum; i++)
-	{
-		int neuronSize = GetNeuronDataSize(NeuronDataPos);
-		neurons[i]->Load(NeuronDataPos);
-		NeuronDataPos = (char*)NeuronDataPos + neuronSize;
-	}
+	memcpy(weights, WeightsDataPos, GetNumberOfWeights() * sizeof(float));
 }
 
 int NeuralNetwork::GetNeuronDataSize(void* data)
@@ -243,8 +222,10 @@ int NeuralNetwork::GetNumberOfWeights()
 
 float NeuralNetwork::GetWeightBetweenNeurons(int From, int To)
 {
-	return neurons[To]->weights[LayerRelativeOfNeuron(From)];
+	//return neurons[To]->weights[LayerRelativeOfNeuron(From)];
+	return weights[weights_buffer_lookup_table[GetIndexOfNeuronByIndex(To)] + From - StartingIndexOfLayer(From)];
 }
+
 
 int NeuralNetwork::LayerOfNeuron(int neuron)
 {
@@ -308,28 +289,16 @@ float* NeuralNetwork::GetAllActivations(float* input)
 
 	for (int layer = 1; layer < LayerNum; layer++)
 	{
-		float* layerOutput = new float[LayerSize[layer]];
+		float* layerOutput = layers[layer - 1]->Generate(input, gpu);
 
+		memcpy(result + resultBuffer, layerOutput, LayerSize[layer] * sizeof(float));
+		resultBuffer += LayerSize[layer];
 
-		int buffer = 0;
-		int focusLayer = layer;
-		while (focusLayer > 1)
-		{
-			buffer += LayerSize[focusLayer - 1];
-			focusLayer--;
-		}
-
-		for (int i = 0; i < LayerSize[layer]; i++)
-		{
-			layerOutput[i] = neurons[i + buffer]->Generate(input);
-			result[resultBuffer] = layerOutput[i];
-			resultBuffer++;
-		}
-		delete[] input;
+		free(input);
 		input = layerOutput;
 	}
 
-	delete[] input;// MEM0RY LEAK BABYYYYYYY!!!!!!!!!!!!!
+	free(input);// MEM0RY LEAK BABYYYYYYY!!!!!!!!!!!!!
 
 	return result;
 }
@@ -338,11 +307,11 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 {
 	if (LayerOfNeuron(neuron) == LayerNum - 1)
 	{
-		if (neurons[neuron]->ActivationMethod == None)
+		if (layers[LayerOfNeuron(neuron)]->ActivationMethod == None)
 		{
 			return (activations[neuron+LayerSize[0]] - predictedOutput[neuron-StartingIndexOfLayer(LayerNum-1)]);
 		}
-		else if (neurons[neuron]->ActivationMethod == Sigmoid)
+		else if (layers[LayerOfNeuron(neuron)]->ActivationMethod == Sigmoid)
 		{
 			return (activations[neuron + LayerSize[0]] - predictedOutput[neuron - StartingIndexOfLayer(LayerNum - 1)]) * 2 * activations[neuron + LayerSize[0]] * (1 - activations[neuron + LayerSize[0]]);
 		}
@@ -354,7 +323,7 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 	else
 	{
 		//return 0.0f;//TEMP
-		if (neurons[neuron]->ActivationMethod == Sigmoid)
+		if (layers[LayerOfNeuron(neuron)]->ActivationMethod == Sigmoid)
 		{
 			float forwardNeuronsDerivative = 0;
 			for (int i = StartingIndexOfLayer(LayerOfNeuron(neuron) + 1); i < StartingIndexOfLayer(LayerOfNeuron(neuron) + 1) + (LayerSize[LayerOfNeuron(neuron) + 1]); i++)
@@ -364,7 +333,7 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 
 			return forwardNeuronsDerivative * 2 * activations[neuron+LayerSize[0]] * (1 - activations[neuron+LayerSize[0]]);
 		}
-		else if (neurons[neuron]->ActivationMethod == None)
+		else if (layers[LayerOfNeuron(neuron)]->ActivationMethod == None)
 		{
 			float forwardNeuronsDerivative = 0;
 			for (int i = StartingIndexOfLayer(LayerOfNeuron(neuron) + 1); i < StartingIndexOfLayer(LayerOfNeuron(neuron) + 1) + (LayerSize[LayerOfNeuron(neuron) + 1]); i++)
@@ -391,13 +360,13 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 	//}
 	if (LayerOfNeuron(neuron) == LayerNum - 1)
 	{
-		if (neurons[neuron]->ActivationMethod == None)
+		if (layers[LayerOfNeuron(neuron)]->ActivationMethod == None)
 		{
 			if (forwardNeuronsDerivatives[neuron] == 0)
 				forwardNeuronsDerivatives[neuron] = (activations[neuron + LayerSize[0]] - predictedOutput[neuron - StartingIndexOfLayer(LayerNum - 1)]);
 			return forwardNeuronsDerivatives[neuron];
 		}
-		else if (neurons[neuron]->ActivationMethod == Sigmoid)
+		else if (layers[LayerOfNeuron(neuron)]->ActivationMethod == Sigmoid)
 		{
 			if (forwardNeuronsDerivatives[neuron] == 0)
 				forwardNeuronsDerivatives[neuron] = (activations[neuron + LayerSize[0]] - predictedOutput[neuron - StartingIndexOfLayer(LayerNum - 1)]) * 2 * activations[neuron + LayerSize[0]] * (1 - activations[neuron + LayerSize[0]]);
@@ -413,7 +382,7 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 	else
 	{
 		//return 0.0f;//TEMP
-		if (neurons[neuron]->ActivationMethod == Sigmoid)
+		if (layers[LayerOfNeuron(neuron)]->ActivationMethod == Sigmoid)
 		{
 			if (forwardNeuronsDerivatives[neuron] == 0)
 			{
@@ -427,7 +396,7 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 
 			return forwardNeuronsDerivatives[neuron];
 		}
-		else if (neurons[neuron]->ActivationMethod == None)
+		else if (layers[LayerOfNeuron(neuron)]->ActivationMethod == None)
 		{
 			if (forwardNeuronsDerivatives[neuron] == 0)
 			{
@@ -597,6 +566,7 @@ void NeuralNetwork::SetNeuronNum()
 	}
 }
 
+/*  DEPRECATED
 void NeuralNetwork::Mutate(float mutationRate)
 {
 	srand(rand());
@@ -605,7 +575,7 @@ void NeuralNetwork::Mutate(float mutationRate)
 	{
 		neurons[i]->Mutate(mutationRate);
 	}
-}
+}*/
 
 float* NeuralNetwork::BackPropagate(float* expectedOutput, float* input, float mutationRate)
 {
@@ -664,6 +634,7 @@ float* NeuralNetwork::EmptyGradient()
 
 void NeuralNetwork::AddToWeights(float* data)
 {
+	/*
 	//int buffer = 0;
 	for (int layer = 1; layer < LayerNum; layer++)
 	{
@@ -681,7 +652,9 @@ void NeuralNetwork::AddToWeights(float* data)
 				//buffer++;
 			}
 		}
-	}
+	}*/
+
+	gpu->VectorIncrement(weights, data, GetNumberOfWeights());
 }
 
 float NeuralNetwork::GetLoss(float* output, float* predictedOutput)

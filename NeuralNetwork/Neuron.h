@@ -4,7 +4,7 @@
 #include "chrono"
 #define _UNIFIED_WEIGTS_ARRAY
 
-#error
+//#error
 
 class Neuron // *deprecated* 
 {

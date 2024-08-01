@@ -1,4 +1,5 @@
 #pragma once
+#include "GPU.h"
 
 #define _UNIFIED_WEIGTS_ARRAY
 #ifdef _MSVC_LANG //Check if we are using c++ with visual studio
@@ -13,10 +14,11 @@
 class NeuralNetwork
 {
 public://PRIVATE
-	Layer** layers;
+	Layer** layers;// IMPORTANT!!! : Input layer is ignored, BUT in layer counter it is!!!
 	int* LayerSize;
 	int LayerNum;
 	int NeuronNum;
+	GPU* gpu;
 
 #ifdef _UNIFIED_WEIGTS_ARRAY
 	float* weights;
@@ -39,6 +41,7 @@ public://PRIVATE
 	int StartingIndexOfLayerIncludingInputLayer(int layer);
 	int GetIndexOfWeight(int source, int destination);
 	int GetIndexOfNeuron(int layer, int idx);
+	int GetIndexOfNeuronByIndex(int idx);
 
 	int RetNeuronNum();
 
@@ -46,9 +49,9 @@ public://PRIVATE
 public:
 	float* GetAllActivations(float* input);
 	int GetNumberOfWeights();
-	NeuralNetwork(int* layerSize, int layerNum, float (*activationMethods[])(float), bool normalizeOutput);
+	NeuralNetwork(int* layerSize, int layerNum, float (*activationMethods[])(float), bool normalizeOutput, GPU* _gpu);
 
-	NeuralNetwork(const char* path);
+	NeuralNetwork(const char* path, GPU* _gpu);
 
 	~NeuralNetwork();
 
@@ -66,7 +69,7 @@ public:
 
 	void SetNeuronNum();
 
-	void Mutate(float mutationRate);
+	//void Mutate(float mutationRate); *DEPRECATED*
 
 	float* BackPropagate(float* expectedOutput, float* input, float mutationRate);
 
