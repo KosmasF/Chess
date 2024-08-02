@@ -1,6 +1,9 @@
 #include "BoardCalculations.h"
+#include "GPU.h"
 
-NeuralNetwork BoardCalculations::evaluator = NeuralNetwork("networks/nnRe-evalInMasterGamesErrorCorrection.nn");
+extern GPU gpu;
+
+NeuralNetwork BoardCalculations::evaluator = NeuralNetwork("networks/nnRe-evalInMasterGamesErrorCorrection.nn", &gpu);
 
 float* BoardCalculations::FindMoveProbabilities(Piece** pieces, bool* allowCastling, float* boardStatus)
 {

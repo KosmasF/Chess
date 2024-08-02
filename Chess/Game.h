@@ -13,6 +13,7 @@
 #include "NonGraphicalBoard.h"
 #include "fstream"
 #include "String"
+#include "GPU.h"
 
 //I HATE RAYLIB!!!
 //I HATE RAYLIB!!!
@@ -34,6 +35,8 @@ struct BranchEvaluationData
         }
     }
 };
+
+extern GPU gpu;
 
 
 class Game
@@ -82,11 +85,11 @@ private:
     BranchEvaluationData<defaultBranchSize> dataToDraw = BranchEvaluationData<defaultBranchSize>();
 
     const char* path = "networks/testedNonRandom3LayersBIG.nn";
-    NeuralNetwork evaluator = NeuralNetwork(path);   
+    NeuralNetwork evaluator = NeuralNetwork(path, &gpu);   
     const char* pathNEW = "networks/nnRe-evalInMasterGames.nn";
-    NeuralNetwork evaluatorNEW = NeuralNetwork(pathNEW);
+    NeuralNetwork evaluatorNEW = NeuralNetwork(pathNEW, &gpu);
     const char* path2 = "networks/nnRe-evalInMasterGamesErrorCorrection.nn";
-    NeuralNetwork evaluator2 = NeuralNetwork(path2);
+    NeuralNetwork evaluator2 = NeuralNetwork(path2, &gpu);
 
     void DrawBar(float num, int offset);
 
@@ -95,7 +98,7 @@ private:
     std::fstream* OpenGameFile(const char* path, int gameIndex);
 
     const char* predictorPath = "networks/predictorTest.nn";
-    NeuralNetwork predictor = NeuralNetwork(predictorPath);
+    NeuralNetwork predictor = NeuralNetwork(predictorPath, &gpu);
 
 public:
 	const int screenHeight = 536;

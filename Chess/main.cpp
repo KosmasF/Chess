@@ -43,9 +43,11 @@ void LaunchStockfish()
 
 #include "Batch.h"
 
+GPU gpu = GPU();
+
 int main(int argc, char** argv)
 {
-    GPU gpu = GPU();
+
 #ifdef INTERNAL_SERVER
     std::thread stockfishThread(LaunchStockfish);
 #endif

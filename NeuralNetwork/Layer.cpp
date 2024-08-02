@@ -1,6 +1,7 @@
 #include "Layer.h"
 #include <vcruntime_string.h>
 #include <stdlib.h>
+#include <algorithm>
 
 
 void Layer::SetWeights(bool normalizeOutput)
@@ -9,12 +10,12 @@ void Layer::SetWeights(bool normalizeOutput)
 	if (normalizeOutput)
 	{
 		float n = 1;
-		memset(weightsMatrix, n, sizeof(float) * num);
+		std::fill(weightsMatrix, weightsMatrix + num, n);
 	}
 	else
 	{
 		float n = 1.f / inputNeurons;
-		memset(weightsMatrix, n, sizeof(float) * num);
+		std::fill(weightsMatrix, weightsMatrix + num, n);
 	}
 
 }
