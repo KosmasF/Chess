@@ -6,7 +6,6 @@
 #include "NonGraphicalBoard.h"
 #include "NeuralNetwork.h"
 #include <thread>
-#include <intrin.h>
 #include "Graph.h"
 #include <stdio.h>
 //#include <sys/utime.h>
@@ -20,7 +19,7 @@
 
 //#define INTERNAL_SERVER
 
-static const bool graphical = 0;
+static const bool graphical = 1;
 
 
 int outputToMove(float x , float y)

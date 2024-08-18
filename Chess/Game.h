@@ -12,7 +12,7 @@
 #include "NeuralNetwork.h"
 #include "NonGraphicalBoard.h"
 #include "fstream"
-#include "String"
+#include "string"
 #include "GPU.h"
 
 //I HATE RAYLIB!!!

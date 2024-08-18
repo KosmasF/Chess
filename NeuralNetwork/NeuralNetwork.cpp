@@ -1,6 +1,6 @@
 #include "NeuralNetwork.h"
 #include <iostream>
-#include <intrin.h>
+//#include <intrin.h> It is __debugbreak()
 
 NeuralNetwork::NeuralNetwork(int* layerSize, int layerNum, float (*activationMethods[])(float), bool normalizeOutput, GPU* _gpu)
 {
@@ -464,7 +464,8 @@ int NeuralNetwork::GetIndexOfWeight(int source, int destination)
 {
 	//The data includes input layer
 	if (destination < source)
-		__debugbreak();
+		//__debugbreak();
+		throw;
 
 	int result = 0;
 

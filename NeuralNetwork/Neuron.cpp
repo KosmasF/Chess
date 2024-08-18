@@ -1,6 +1,7 @@
 #include "Neuron.h"
 #include <iostream>
-#include <windows.h>
+#include <cstring>
+
 
 void Neuron::SetRandomData()
 {

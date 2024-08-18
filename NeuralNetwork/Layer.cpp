@@ -1,5 +1,4 @@
 #include "Layer.h"
-#include <vcruntime_string.h>
 #include <stdlib.h>
 #include <algorithm>
 
