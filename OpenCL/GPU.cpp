@@ -33,15 +33,16 @@ cl_uint GPU::GetPlatformIndex(cl_platform_id* platforms) {
     //std::cout << "Reqd name = " << required_platform_subname << std::endl;
     for (cl_uint i = 0; i < ret_num_platforms; ++i)
     {
-        // Get the length for the i-th platform name
-        size_t platform_name_length = 0;
-        clGetPlatformInfo(
-            platforms[i],
-            CL_PLATFORM_NAME,
-            0,
-            0,
-            &platform_name_length
-        );
+    cl_int err;
+
+    // Determine platform name length
+    size_t platform_name_length = 0;
+    err = clGetPlatformInfo(platforms[i], CL_PLATFORM_NAME, 0, nullptr, &platform_name_length);
+    if (err != CL_SUCCESS) {
+        // Handle error
+        std::cerr << "Error getting platform name length: " << err << std::endl;
+        return -1;
+    }
 
         // Get the name itself for the i-th platform
         char* platform_name = new char[platform_name_length];
@@ -100,14 +101,14 @@ FileData GPU::LoadFile(const char* path)
 
 KernelData GPU::Setup()
 {
-    cl_device_type platformType = CL_DEVICE_TYPE_GPU;
+    cl_device_type platformType = CL_DEVICE_TYPE_CPU;
 
     std::cout << "Platform " << platformType << std::endl;//" Matrix size " << SIZE << "x" << SIZE << " Tile size " << TILE_SIZE << std::endl;
 
     //Init variables
     cl_device_id device_id = NULL;
     cl_uint ret_num_devices;
-
+    
     //Get number of platforms
     cl_int ret = clGetPlatformIDs(0, NULL, &ret_num_platforms);
 
@@ -121,7 +122,7 @@ KernelData GPU::Setup()
 
     std::cout << "clGetPlatformIDs List Ret = " << ret << std::endl;
 
-    cl_uint selected_platform_index = GetPlatformIndex(platform_id);
+    cl_uint selected_platform_index = 0;//GetPlatformIndex(platform_id);
 
     std::cout << "getPlatformIndex " << selected_platform_index << std::endl;
 

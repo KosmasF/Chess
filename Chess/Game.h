@@ -8,12 +8,29 @@
 #include "InversedPieces.h"
 #include "Sprites.h"
 #include "MovementLog.h"
-#include "SocketConnection.h"
 #include "NeuralNetwork.h"
 #include "NonGraphicalBoard.h"
 #include "fstream"
 #include "string"
 #include "GPU.h"
+
+
+//#define USE_STOCKFISH_SERVER
+
+#ifdef USE_STOCKFISH_SERVER
+
+#include "SocketConnection.h"
+
+#else
+
+class Stockfish//TEMPORARY
+{
+    public:
+    float getEval(const char* fen) {return 0;}
+};
+
+#endif
+
 
 //I HATE RAYLIB!!!
 //I HATE RAYLIB!!!
@@ -71,7 +88,11 @@ private:
     Piece* pieces[64];
     PiecesArray Pieces = PiecesArray(pieces, 64);
 
-    SocketConnection stockfish;
+    #ifdef USE_STOCKFISH_SERVER
+        SocketConnection stockfish;
+    #else
+        Stockfish stockfish;
+    #endif
 
     int evalLineHeight = 20;
 
@@ -84,11 +105,11 @@ private:
 
     BranchEvaluationData<defaultBranchSize> dataToDraw = BranchEvaluationData<defaultBranchSize>();
 
-    const char* path = "networks/testedNonRandom3LayersBIG.nn";
+    const char* path = "../networks/testedNonRandom3LayersBIG.nn";
     NeuralNetwork evaluator = NeuralNetwork(path, &gpu);   
-    const char* pathNEW = "networks/nnRe-evalInMasterGames.nn";
+    const char* pathNEW = "../networks/nnRe-evalInMasterGames.nn";
     NeuralNetwork evaluatorNEW = NeuralNetwork(pathNEW, &gpu);
-    const char* path2 = "networks/nnRe-evalInMasterGamesErrorCorrection.nn";
+    const char* path2 = "../networks/nnRe-evalInMasterGamesErrorCorrection.nn";
     NeuralNetwork evaluator2 = NeuralNetwork(path2, &gpu);
 
     void DrawBar(float num, int offset);

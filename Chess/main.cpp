@@ -8,6 +8,7 @@
 #include <thread>
 #include "Graph.h"
 #include <stdio.h>
+#include <stdlib.h>
 //#include <sys/utime.h>
 
 #include "GPU.h"

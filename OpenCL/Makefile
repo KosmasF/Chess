@@ -1,20 +1,17 @@
-
 CC = g++
 CL = ld
-CFLAGS = -g -Wall -Wextra -D CL_TARGET_OPENCL_VERSION=100 -fPIC -pedantic
+CFLAGS = -g -fPIC
 
 SOURCES = $(wildcard *.cpp)
 OBJECTS = $(patsubst %.cpp,%.o,$(SOURCES))
 
-LDFLAGS = -L.  -L/usr/lib -shared
-LDLIBS = -lOpenCL
+LDFLAGS = -relocatable
 INC = -I/usr/include
 
-LIBRARY = libgpu.so
+LIBRARY = libgpu.o
 
 $(LIBRARY) : $(OBJECTS)
-	$(CL) $(LDFLAGS) -o  $(LIBRARY) $(LDLIBS) $(OBJECTS)
-	cp $(LIBRARY) ~/lib/$(LIBRARY)
+	$(CL) --verbose $(LDFLAGS) -o  $(LIBRARY) $(OBJECTS)
 
 $(OBJECTS) : %.o : %.cpp	
 	$(CC) $(INC) $(CFLAGS)  -c $^ -o $@

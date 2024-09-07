@@ -3,7 +3,7 @@
 
 extern GPU gpu;
 
-NeuralNetwork BoardCalculations::evaluator = NeuralNetwork("networks/nnRe-evalInMasterGamesErrorCorrection.nn", &gpu);
+NeuralNetwork BoardCalculations::evaluator = NeuralNetwork("../networks/nnRe-evalInMasterGamesErrorCorrection.nn", &gpu);
 
 float* BoardCalculations::FindMoveProbabilities(Piece** pieces, bool* allowCastling, float* boardStatus)
 {

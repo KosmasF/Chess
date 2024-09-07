@@ -45,6 +45,8 @@ Game::Game(int argc , char** argv)
 
     SetPiecesAsDefault(pieces);
 
+    #ifdef USE_STOCKFISH_SERVER
+
     printf("Connecting with server...\n");
     bool successful = stockfish.Setup(argc,argv);
 
@@ -56,6 +58,8 @@ Game::Game(int argc , char** argv)
     {
         printf("Failed connection with Stockfish!\n");
     }
+
+    #endif
 
     gameFile = OpenGameFile(gameFilePath, 1);
 
