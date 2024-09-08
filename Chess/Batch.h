@@ -57,7 +57,6 @@ namespace Batch
                 }
             }
         }
-#endif
 
         //const char* fen = Game::GetFen(board->Pieces, board->allowCastling, 0);
         //float eval = stockfish->getEval(fen);
@@ -111,5 +110,7 @@ namespace Batch
             batchGenerationGradientDescent[batch] = nn->EmptyGradient();
 
         return 1;
+
+        #endif
     }
 }

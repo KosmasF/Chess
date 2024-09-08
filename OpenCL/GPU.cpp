@@ -10,7 +10,7 @@ GPU::GPU()
 {
     //--------------------------------Setup---------------------------------------------
     kernelData = Setup();
-
+	printf("GPU SETTING UP!!!\n");
 
 
 
@@ -101,7 +101,7 @@ FileData GPU::LoadFile(const char* path)
 
 KernelData GPU::Setup()
 {
-    cl_device_type platformType = CL_DEVICE_TYPE_CPU;
+    cl_device_type platformType = CL_DEVICE_TYPE_GPU;
 
     std::cout << "Platform " << platformType << std::endl;//" Matrix size " << SIZE << "x" << SIZE << " Tile size " << TILE_SIZE << std::endl;
 
@@ -403,7 +403,7 @@ float* GPU::BackPropagate(const float* activations, const float* expectedOutput,
 
 
 
-    cl_program program = BuildFromFile("../Open CL/back_prop.cl", "-cl-std=CL2.0");
+    cl_program program = BuildFromFile("../OpenCL/back_prop.cl", "-cl-std=CL2.0");
 
     cl_int ret;
 
@@ -520,7 +520,7 @@ float* GPU::vector_matrix_multiplication(const float* vector, const float* matri
 {
     float* output = (float*)malloc(matrix_width * sizeof(float));
 
-    cl_program program = BuildFromFile("../Open CL/vec_mat_mul.cl", "");
+    cl_program program = BuildFromFile("../OpenCL/vec_mat_mul.cl", "");
 
     cl_int ret;
 
@@ -540,7 +540,8 @@ float* GPU::vector_matrix_multiplication(const float* vector, const float* matri
 
     int dimensions = 1;
     size_t global_work_size[] = { matrix_width };
-    size_t local_work_size[] = { GetMaxLocalWorkSize() };
+    size_t max_local_work_size = GetMaxLocalWorkSize();
+    size_t local_work_size[] = { max_local_work_size > global_work_size[0] ? matrix_width : max_local_work_size};
 
     ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, 0, global_work_size, local_work_size, 0, nullptr, nullptr);
 
@@ -600,7 +601,7 @@ void GPU::SetHiddenLayerForwardNeuronDerivative(float* forwardNeuronDerivatives,
 void GPU::VectorIncrement(float* A, const float* B, const int size)
 {
     cl_int ret;
-    cl_program program = BuildFromFile("../Open CL/vec_add.cl", "");
+    cl_program program = BuildFromFile("../OpenCL/vec_add.cl", "");
 
     cl_mem A_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, size * sizeof(float), nullptr, &ret);
     cl_mem B_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, size * sizeof(float), nullptr, &ret);

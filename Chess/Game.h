@@ -115,10 +115,10 @@ private:
     void DrawBar(float num, int offset);
 
     std::fstream* gameFile;
-    const char* gameFilePath = "games/output.pgn";
+    const char* gameFilePath = "../games/output.pgn";
     std::fstream* OpenGameFile(const char* path, int gameIndex);
 
-    const char* predictorPath = "networks/predictorTest.nn";
+    const char* predictorPath = "../networks/predictorTest.nn";
     NeuralNetwork predictor = NeuralNetwork(predictorPath, &gpu);
 
 public:
@@ -126,7 +126,7 @@ public:
 	const int LogSize = 200;
 	const int screenWidth = screenHeight * 2 + LogSize;
 
-	const char* spritesheetPath = "spritesheet.png";
+	const char* spritesheetPath = "../spritesheet.png";
 
 	Game(int argc, char** argv);
 

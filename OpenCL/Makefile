@@ -11,7 +11,7 @@ INC = -I/usr/include
 LIBRARY = libgpu.o
 
 $(LIBRARY) : $(OBJECTS)
-	$(CL) --verbose $(LDFLAGS) -o  $(LIBRARY) $(OBJECTS)
+	$(CL) $(LDFLAGS) -o  $(LIBRARY) $(OBJECTS)
 
 $(OBJECTS) : %.o : %.cpp	
 	$(CC) $(INC) $(CFLAGS)  -c $^ -o $@

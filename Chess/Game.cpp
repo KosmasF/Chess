@@ -3,6 +3,7 @@
 
 Game::Game(int argc , char** argv)
 {
+    //throw;
     InitWindow(screenWidth, screenHeight +  (evalLineHeight * 4), "Chess");
     SetTargetFPS(60);
 
