@@ -9,6 +9,8 @@
 #include "Layer.h"
 #include "ActivationMethods.h"
 #include <limits>
+#include <stdio.h>
+#include <stdlib.h>
 
 
 class NeuralNetwork
@@ -19,6 +21,7 @@ public://PRIVATE
 	int LayerNum;
 	int NeuronNum;
 	GPU* gpu;
+	float(*ActivationMethods[])(float);
 
 #ifdef _UNIFIED_WEIGTS_ARRAY
 	float* weights;

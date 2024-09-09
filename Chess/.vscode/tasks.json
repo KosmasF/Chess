@@ -7,6 +7,14 @@
                 "args": [
                 ],
                 "problemMatcher": [],
+            },
+            {
+                "type": "shell",
+                "label": "makefile clean",
+                "command": "make -C .. clean",
+                "args": [
+                ],
+                "problemMatcher": [],
             }
         ],
         "version": "2.0.0"

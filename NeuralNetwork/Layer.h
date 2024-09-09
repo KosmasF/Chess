@@ -10,10 +10,10 @@ public:
 
 	float* weightsMatrix;
 
-	float (*ActivationMethod)(float);
+	float (**ActivationMethod)(float);
 
 	float* Generate(float* input, GPU* gpu);
 	void SetWeights(bool normalizeOutput);
-	Layer(int numNeurons, int numInputNeurons, float* weightsPTR, float (*ActMethod)(float));
+	Layer(int numNeurons, int numInputNeurons, float* weightsPTR, float (**ActMethod)(float));
 };
 

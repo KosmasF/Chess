@@ -19,7 +19,7 @@ void Layer::SetWeights(bool normalizeOutput)
 
 }
 
-Layer::Layer(int numNeurons, int numInputNeurons, float* weightsPTR, float (*ActMethod)(float))
+Layer::Layer(int numNeurons, int numInputNeurons, float* weightsPTR, float (**ActMethod)(float))
 {
 	inputNeurons = numInputNeurons;
 	neurons = numNeurons;
@@ -30,6 +30,7 @@ Layer::Layer(int numNeurons, int numInputNeurons, float* weightsPTR, float (*Act
 float* Layer::Generate(float* input, GPU* gpu)
 {
 	float* output = gpu->vector_matrix_multiplication(input, weightsMatrix, inputNeurons, neurons);
+	//UTILISE THE ACTIVATION METHOD
 
 	return output;
 }

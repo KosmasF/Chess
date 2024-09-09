@@ -6,6 +6,9 @@ NeuralNetwork::NeuralNetwork(int* layerSize, int layerNum, float (*activationMet
 {
 	gpu = _gpu;
 
+	ActivationMethods = (float(*)(float))malloc(layerNum - 1 * sizeof((float(*)(float))));
+	memcpy(ActivationMethods, activationMethods, layerNum - 1 * sizeof((float(*)(float))));
+
 	LayerSize = (int*)malloc(layerNum*sizeof(int));
 	memcpy(LayerSize, layerSize, layerNum * sizeof(int));
 	LayerNum = layerNum;
@@ -23,7 +26,7 @@ NeuralNetwork::NeuralNetwork(int* layerSize, int layerNum, float (*activationMet
 
 	for (int layer = 1; layer < layerNum; layer++)
 	{
-		layers[layer - 1] = new Layer(LayerSize[layer], LayerSize[layer - 1], weights + weight_buffer, None);
+		layers[layer - 1] = new Layer(LayerSize[layer], LayerSize[layer - 1], weights + weight_buffer, *(activationMethods[layer - 1]));
 		layers[layer - 1]->SetWeights(normalizeOutput);
 
 		for (int i = 0; i < layerSize[layer]; i++)
@@ -99,6 +102,7 @@ NeuralNetwork::~NeuralNetwork()
 	free(weights);
 	free(weights_buffer_lookup_table);
 #endif
+	free(ActivationMethods);
 }
 
 float* NeuralNetwork::Generate(float* input, bool freeInput)
@@ -147,10 +151,10 @@ void* NeuralNetwork::Data()
 		int LayerNum;    Size = 4 bytes
 		int* LayerSize;   Size = LayerNum * 4 bytes
 		float* weights;   Size = NeuronDataSize
-	
+		float(*ActivationMethods[])(float); Size = LayerNum * sizeof(int))
 	*/
 
-	size_t size = sizeof(int) + (LayerNum * sizeof(int)) + (GetNumberOfWeights() * sizeof(float));
+	size_t size = sizeof(int) + (LayerNum * sizeof(int)) + (GetNumberOfWeights() * sizeof(float)) + (LayerNum * sizeof(ActivationMethodsEnum));
 
 	void* output = malloc(size + sizeof(int));//The + is the size
 
@@ -162,12 +166,21 @@ void* NeuralNetwork::Data()
 	output = (int*)output + 1;
 
 	int* LayerNumPos = (int*)output;
+	*LayerNumPos = LayerNum;
 
 	int* LayerSizePos = (int*)output + 1;
+	memcpy(LayerSizePos, LayerSize, LayerNum * sizeof(int));
 
 	void* WeightDataPos = (int*)output + 1 + LayerNum;
 	memcpy(WeightDataPos, weights, GetNumberOfWeights() * sizeof(float));
 	
+	void* ActivationMethodsPos = (char*)output + (LayerNum * sizeof(int)) + (GetNumberOfWeights() * sizeof(float));
+	for(int layer = 1; layer > LayerNum; layer++)
+	{
+		float(*CurrentActMethod)(float) = ActivationMethods[layer - 1];
+		ActivationMethodsEnum num = GetActMethodEnum(CurrentActMethod);
+		((ActivationMethodsEnum*)ActivationMethodsPos)[layer - 1] = num;
+	}
 
 	//free(output);
 
