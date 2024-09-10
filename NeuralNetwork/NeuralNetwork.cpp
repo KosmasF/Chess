@@ -6,8 +6,8 @@ NeuralNetwork::NeuralNetwork(int* layerSize, int layerNum, float (*activationMet
 {
 	gpu = _gpu;
 
-	ActivationMethods = (float(*)(float))malloc(layerNum - 1 * sizeof((float(*)(float))));
-	memcpy(ActivationMethods, activationMethods, layerNum - 1 * sizeof((float(*)(float))));
+	ActivationMethods = (float(**)(float))malloc((layerNum - 1) * sizeof(ActFuntionsType));
+	memcpy(ActivationMethods, activationMethods, (layerNum - 1) * sizeof(ActFuntionsType));
 
 	LayerSize = (int*)malloc(layerNum*sizeof(int));
 	memcpy(LayerSize, layerSize, layerNum * sizeof(int));
@@ -75,7 +75,7 @@ NeuralNetwork::NeuralNetwork(const char* path, GPU* _gpu)
 
 	for (int layer = 1; layer < LayerNum; layer++)
 	{
-		layers[layer - 1] = new Layer(LayerSize[layer], LayerSize[layer - 1], weights + weight_buffer, None);
+		layers[layer - 1] = new Layer(LayerSize[layer], LayerSize[layer - 1], weights + weight_buffer, &None);
 		layers[layer - 1]->SetWeights(false);
 
 		for (int i = 0; i < LayerSize[layer]; i++)
@@ -154,7 +154,7 @@ void* NeuralNetwork::Data()
 		float(*ActivationMethods[])(float); Size = LayerNum * sizeof(int))
 	*/
 
-	size_t size = sizeof(int) + (LayerNum * sizeof(int)) + (GetNumberOfWeights() * sizeof(float)) + (LayerNum * sizeof(ActivationMethodsEnum));
+	size_t size = sizeof(int) + (LayerNum * sizeof(int)) + (GetNumberOfWeights() * sizeof(float)) + ((LayerNum - 1) * sizeof(ActivationMethodsEnum));
 
 	void* output = malloc(size + sizeof(int));//The + is the size
 
@@ -175,10 +175,9 @@ void* NeuralNetwork::Data()
 	memcpy(WeightDataPos, weights, GetNumberOfWeights() * sizeof(float));
 	
 	void* ActivationMethodsPos = (char*)output + (LayerNum * sizeof(int)) + (GetNumberOfWeights() * sizeof(float));
-	for(int layer = 1; layer > LayerNum; layer++)
+	for(int layer = 1; layer < LayerNum; layer++)
 	{
-		float(*CurrentActMethod)(float) = ActivationMethods[layer - 1];
-		ActivationMethodsEnum num = GetActMethodEnum(CurrentActMethod);
+		ActivationMethodsEnum num = GetActMethodEnum(ActivationMethods[layer - 1]);
 		((ActivationMethodsEnum*)ActivationMethodsPos)[layer - 1] = num;
 	}
 
@@ -188,6 +187,95 @@ void* NeuralNetwork::Data()
 	*((int*)output) = size + sizeof(int);
 
 	return output; //It is your responsibility now! :)
+}
+
+void* NeuralNetwork::covnertFormat(void* old_data)
+{
+
+	//OLD
+	int old_size = ((int*)old_data)[0];
+	old_data = (int*)old_data + 1;
+	int* old_LayerNumPos = (int*)old_data;
+	int* old_LayerSizePos = (int*)old_data + 1;
+	void* old_NeuronDataPos = (int*)old_data + 1 + *old_LayerNumPos;
+
+	int old_NeuronNum = 0;
+	for (int layer = 1; layer < *old_LayerNumPos; layer++)
+	{
+		old_NeuronNum += old_LayerSizePos[layer];
+	}
+
+	void* currentNeuronReading = old_NeuronDataPos;
+
+	//NEW
+	int numberOfWeights = 0;
+	for (int layer = 1; layer < *old_LayerNumPos; layer++)
+	{
+		numberOfWeights += old_LayerSizePos[layer]*old_LayerSizePos[layer-1];
+	}
+
+	size_t size = sizeof(int) + (*old_LayerNumPos * sizeof(int)) + (numberOfWeights * sizeof(float)) + (*old_LayerNumPos * sizeof(ActivationMethodsEnum));
+	
+	void* output = malloc(size + sizeof(int));//The + is the size
+
+	if (output == nullptr)
+		return nullptr;
+	output = (int*)output + 1;
+
+	int* LayerNumPos = (int*)output;
+	int* LayerSizePos = (int*)output + 1;
+	void* WeightDataPos = (int*)output + 1 + *old_LayerNumPos;
+	void* ActivationMethodsPos = (char*)output + (*old_LayerNumPos * sizeof(int)) + (numberOfWeights * sizeof(float));
+
+
+	//MOVE DATA
+	*LayerNumPos = *old_LayerNumPos;
+	memcpy(LayerSizePos, old_LayerSizePos, *old_LayerNumPos * sizeof(int));
+	float* WeightDataPosBuffer = (float*)ActivationMethodsPos;
+	ActivationMethodsEnum* ActivationMethodsPosBuffer = (ActivationMethodsEnum*)ActivationMethodsPos;
+	int currentLayer = 0;
+	int currentLayerRemainder = LayerSizePos[currentLayer];
+
+	for (int i = 0; i < old_NeuronNum; i++)
+	{	
+		int* numWeightsPos = (int*)currentNeuronReading;
+
+		float* weightsPos = (float*)((int*)currentNeuronReading + 1);
+		size_t weights_size = *numWeightsPos;
+		memcpy(WeightDataPosBuffer, weightsPos, weights_size * sizeof(float));
+		WeightDataPosBuffer+=weights_size;
+
+		float* biasPos = (float*)((char*)currentNeuronReading + sizeof(int) + (*numWeightsPos * sizeof(float)));
+		//On ver 2 there is no bias
+
+		char* ActivationMethodPos = (char*)currentNeuronReading + sizeof(int) + (*numWeightsPos * sizeof(float)) + sizeof(float);
+
+
+		currentLayerRemainder--;
+		if(currentLayerRemainder == 0)
+		{
+			currentLayer++;
+			currentLayerRemainder = LayerSizePos[currentLayer];
+
+			ActivationMethodsEnum curr_enum;
+			if (*ActivationMethodPos == 'S')
+				curr_enum = e_Sigmoid;
+			else if (*ActivationMethodPos == 'n')
+				curr_enum = e_NonNegativeLimitedLinear;
+			else
+				curr_enum = e_None;
+
+			*ActivationMethodsPosBuffer = curr_enum;
+			ActivationMethodsPosBuffer++;
+		}
+
+		currentNeuronReading += (sizeof(int) + (*numWeightsPos * sizeof(float)) + sizeof(float) + sizeof(char));
+	}
+
+
+	output = (int*)output - 1;
+	*((int*)output) = size + sizeof(int);
+	return output;
 }
 
 void NeuralNetwork::Load(void* data)
@@ -320,11 +408,11 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 {
 	if (LayerOfNeuron(neuron) == LayerNum - 1)
 	{
-		if (layers[LayerOfNeuron(neuron)]->ActivationMethod == None)
+		if (*(layers[LayerOfNeuron(neuron)]->ActivationMethod) == None)
 		{
 			return (activations[neuron+LayerSize[0]] - predictedOutput[neuron-StartingIndexOfLayer(LayerNum-1)]);
 		}
-		else if (layers[LayerOfNeuron(neuron)]->ActivationMethod == Sigmoid)
+		else if (*(layers[LayerOfNeuron(neuron)]->ActivationMethod) == Sigmoid)
 		{
 			return (activations[neuron + LayerSize[0]] - predictedOutput[neuron - StartingIndexOfLayer(LayerNum - 1)]) * 2 * activations[neuron + LayerSize[0]] * (1 - activations[neuron + LayerSize[0]]);
 		}
@@ -336,7 +424,7 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 	else
 	{
 		//return 0.0f;//TEMP
-		if (layers[LayerOfNeuron(neuron)]->ActivationMethod == Sigmoid)
+		if (*(layers[LayerOfNeuron(neuron)]->ActivationMethod) == Sigmoid)
 		{
 			float forwardNeuronsDerivative = 0;
 			for (int i = StartingIndexOfLayer(LayerOfNeuron(neuron) + 1); i < StartingIndexOfLayer(LayerOfNeuron(neuron) + 1) + (LayerSize[LayerOfNeuron(neuron) + 1]); i++)
@@ -346,7 +434,7 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 
 			return forwardNeuronsDerivative * 2 * activations[neuron+LayerSize[0]] * (1 - activations[neuron+LayerSize[0]]);
 		}
-		else if (layers[LayerOfNeuron(neuron)]->ActivationMethod == None)
+		else if (*(layers[LayerOfNeuron(neuron)]->ActivationMethod) == None)
 		{
 			float forwardNeuronsDerivative = 0;
 			for (int i = StartingIndexOfLayer(LayerOfNeuron(neuron) + 1); i < StartingIndexOfLayer(LayerOfNeuron(neuron) + 1) + (LayerSize[LayerOfNeuron(neuron) + 1]); i++)
@@ -373,13 +461,13 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 	//}
 	if (LayerOfNeuron(neuron) == LayerNum - 1)
 	{
-		if (layers[LayerOfNeuron(neuron)]->ActivationMethod == None)
+		if (*(layers[LayerOfNeuron(neuron)]->ActivationMethod) == None)
 		{
 			if (forwardNeuronsDerivatives[neuron] == 0)
 				forwardNeuronsDerivatives[neuron] = (activations[neuron + LayerSize[0]] - predictedOutput[neuron - StartingIndexOfLayer(LayerNum - 1)]);
 			return forwardNeuronsDerivatives[neuron];
 		}
-		else if (layers[LayerOfNeuron(neuron)]->ActivationMethod == Sigmoid)
+		else if (*(layers[LayerOfNeuron(neuron)]->ActivationMethod) == Sigmoid)
 		{
 			if (forwardNeuronsDerivatives[neuron] == 0)
 				forwardNeuronsDerivatives[neuron] = (activations[neuron + LayerSize[0]] - predictedOutput[neuron - StartingIndexOfLayer(LayerNum - 1)]) * 2 * activations[neuron + LayerSize[0]] * (1 - activations[neuron + LayerSize[0]]);
@@ -395,7 +483,7 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 	else
 	{
 		//return 0.0f;//TEMP
-		if (layers[LayerOfNeuron(neuron)]->ActivationMethod == Sigmoid)
+		if (*(layers[LayerOfNeuron(neuron)]->ActivationMethod) == Sigmoid)
 		{
 			if (forwardNeuronsDerivatives[neuron] == 0)
 			{
@@ -409,7 +497,7 @@ float NeuralNetwork::PartialDerivativeOfErrorFunction(int neuron, float* activat
 
 			return forwardNeuronsDerivatives[neuron];
 		}
-		else if (layers[LayerOfNeuron(neuron)]->ActivationMethod == None)
+		else if (*(layers[LayerOfNeuron(neuron)]->ActivationMethod) == None)
 		{
 			if (forwardNeuronsDerivatives[neuron] == 0)
 			{
@@ -531,12 +619,68 @@ void NeuralNetwork::Save(const char* path)
 	free(data);
 }
 
+const char* NeuralNetwork::CheckFileType(const char* path)
+{
+	int seperatorPos;
+	for(int i = strlen(path); i > 0; i--)
+		if(path[i] == '.')
+		{
+			seperatorPos = i;
+			break;
+		}
+
+	if(strcmp(path + seperatorPos, ".nn") == 0)//OLD FORMAT
+	{
+		char* new_filename = (char*)malloc((strlen(path) - strlen(".nn") + strlen(".nn2")) * sizeof(char));
+		memcpy(new_filename, path, (strlen(path) - strlen(".nn")) * sizeof(char));
+
+		memcpy(new_filename + (strlen(path) - strlen(".nn")), ".nn2", strlen(".nn2") * sizeof(char));
+
+		if( !(access(new_filename, F_OK) == 0))
+		{
+			FILE* new_file = fopen(new_filename, "wb");
+			FILE* old_file = fopen(path, "rb");
+
+			int* size = (int*)malloc(sizeof(int));
+			fread(size, sizeof(int), 1, old_file);
+			void* old_data = malloc(*size);
+			fseek(old_file, 0 , SEEK_SET);
+			fread(old_data, *size, 1, old_file);
+
+			void* new_data = covnertFormat(old_data);
+			int new_data_size = ((int*)new_data)[0];
+			fwrite(new_data, new_data_size, 1, new_file);
+
+			std::cout << "Converted file: " << path << "to new format: " << new_filename << " with a old size of: " << *size << " bytes, and a new size of: " << new_data_size << " bytes." << std::endl;
+
+			fclose(new_file);
+			fclose(old_file);
+			free(new_data);
+			free(old_data);
+			free(size);
+		}
+		else
+		{
+			std::cout << "New file: " << new_filename << " already exists, stop using old file: " << path << "." << std::endl;
+		}
+		return new_filename;
+	}
+	else if(strcmp(path + seperatorPos, ".nn2") == 0)
+		return path;
+	else
+		printf("Invalid format, returning nullptr!!!\n");
+
+	return nullptr;
+}
+
 void NeuralNetwork::LoadFromDisk(const char* path)
 {
+	path = CheckFileType(path);
+
 	FILE* file = fopen(path, "rb");
-	int* size = new int;
+	int* size = (int*)malloc(sizeof(int));
 	fread(size, sizeof(int), 1, file);
-	std::cout << "Loaded file: "<< path << " with size of: " << *size << " bytes" << std::endl;
+	std::cout << "Loaded file: "<< path << " with size of: " << *size << " bytes." << std::endl;
 	void* data = malloc(*size);
 
 	if (data == nullptr)
@@ -548,11 +692,13 @@ void NeuralNetwork::LoadFromDisk(const char* path)
 	Load(data);
 	fclose(file);
 	free(data);
-	delete size;
+	free(size);
 }
 
 void* NeuralNetwork::FromDiskData(const char* path)
 {
+	path = CheckFileType(path);
+
 	FILE* file = fopen(path, "rb");
 	int* size = new int;
 	fread(size, sizeof(int), 1, file);

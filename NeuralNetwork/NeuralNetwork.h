@@ -11,7 +11,9 @@
 #include <limits>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
+typedef float (*ActFuntionsType)(float);
 
 class NeuralNetwork
 {
@@ -21,7 +23,7 @@ public://PRIVATE
 	int LayerNum;
 	int NeuronNum;
 	GPU* gpu;
-	float(*ActivationMethods[])(float);
+	float(**ActivationMethods)(float);
 
 #ifdef _UNIFIED_WEIGTS_ARRAY
 	float* weights;
@@ -83,5 +85,9 @@ public:
 	float GetLoss(float* output, float* predictedOutput);
 
 	float* AverageWeightVector(float** vectors, int num);
+
+	void* covnertFormat(void* old_data);
+
+	const char* CheckFileType(const char* path);
 };
 

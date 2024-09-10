@@ -54,7 +54,6 @@ int main(int argc, char** argv)
 
     if (graphical)
     {
-
         Game* game = new Game(argc,argv);
 
         while (!WindowShouldClose())

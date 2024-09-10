@@ -44,20 +44,13 @@ float None(float input)
 	return input;
 }
 
-enum ActivationMethodsEnum
+float Smoothened(float input)
 {
-	e_reLU,
-	e_liL,
-	e_Sigmoid,
-	e_FastSigmoid,
-	e_NonNegativeLinear,
-	e_NonNegativeLimitedLinear,
-	e_None,
-	e_Smoothened,
-	e_invalid
-};
+	return 0;
+	//NOT YET MADE
+}
 
-ActivationMethods GetActMethodEnum(float(*ActMethod)(float))
+enum ActivationMethodsEnum GetActMethodEnum(float(*ActMethod)(float))
 {
 	if(ActMethod == reLU)
 		return e_reLU;
@@ -65,7 +58,7 @@ ActivationMethods GetActMethodEnum(float(*ActMethod)(float))
 		return e_liL;
 	else if(ActMethod == Sigmoid)
 		return e_Sigmoid;
-	else if(ActMethod == FastSigmoid)
+	else if(ActMethod == (float(*)(float))FastSigmoid)
 		return e_FastSigmoid;
 	else if(ActMethod == NonNegativeLinear)
 		return e_NonNegativeLinear;

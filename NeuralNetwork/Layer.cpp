@@ -19,7 +19,7 @@ void Layer::SetWeights(bool normalizeOutput)
 
 }
 
-Layer::Layer(int numNeurons, int numInputNeurons, float* weightsPTR, float (**ActMethod)(float))
+Layer::Layer(int numNeurons, int numInputNeurons, float* weightsPTR, float (*ActMethod)(float))
 {
 	inputNeurons = numInputNeurons;
 	neurons = numNeurons;

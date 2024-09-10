@@ -21,6 +21,17 @@ float None(float input);
 
 float Smoothened(float input);
 
-enum ActivationMethods;
+enum ActivationMethodsEnum
+{
+	e_reLU,
+	e_liL,
+	e_Sigmoid,
+	e_FastSigmoid,
+	e_NonNegativeLinear,
+	e_NonNegativeLimitedLinear,
+	e_None,
+	e_Smoothened,
+	e_invalid
+};
 
-ActivationMethods GetActMethodEnum(float(*ActMethod)(float));
+ActivationMethodsEnum GetActMethodEnum(float(*ActMethod)(float));

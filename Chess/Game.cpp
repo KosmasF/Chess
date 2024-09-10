@@ -64,6 +64,8 @@ Game::Game(int argc , char** argv)
 
     gameFile = OpenGameFile(gameFilePath, 1);
 
+    evaluator.Data();
+
 }
 
 Game::~Game()
