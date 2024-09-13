@@ -44,47 +44,12 @@ NeuralNetwork::NeuralNetwork(const char* path, GPU* _gpu)
 { 
 	gpu =  _gpu;
 
-	LayerNum = 0;
-	NeuronNum = 0;
-
-	layers = nullptr;
-	LayerSize = nullptr;
 	void* data = FromDiskData(path);
 	void* LoadData = data;
 
 	int size = ((int*)data)[0];
 	data = (int*)data + 1;
 	size -= 4;
-
-	int* LayerNumPos = (int*)data;
-	LayerNum = *LayerNumPos;
-	LayerSize = (int*)malloc(*LayerNumPos*sizeof(int));
-
-	int* LayerSizePos = (int*)data + 1;
-	memcpy(LayerSize, LayerSizePos, sizeof(int) * LayerNum);
-
-	NeuronNum = RetNeuronNum();
-	layers = new Layer * [LayerNum - 1];
-
-#ifdef _UNIFIED_WEIGTS_ARRAY
-	weights = (float*)malloc(GetNumberOfWeights() * sizeof(float));
-	int weight_buffer = 0;
-	weights_buffer_lookup_table = (int*)malloc(NeuronNum * sizeof(int));
-	int idx = 0;
-#endif
-
-	for (int layer = 1; layer < LayerNum; layer++)
-	{
-		layers[layer - 1] = new Layer(LayerSize[layer], LayerSize[layer - 1], weights + weight_buffer, &None);
-		layers[layer - 1]->SetWeights(false);
-
-		for (int i = 0; i < LayerSize[layer]; i++)
-		{
-			weights_buffer_lookup_table[idx] = weight_buffer;
-			weight_buffer += LayerSize[layer - 1];
-			idx++;
-		}
-	}
 
 	Load(LoadData);
 	free(LoadData);
@@ -174,7 +139,7 @@ void* NeuralNetwork::Data()
 	void* WeightDataPos = (int*)output + 1 + LayerNum;
 	memcpy(WeightDataPos, weights, GetNumberOfWeights() * sizeof(float));
 	
-	void* ActivationMethodsPos = (char*)output + (LayerNum * sizeof(int)) + (GetNumberOfWeights() * sizeof(float));
+	void* ActivationMethodsPos = (char*)output + sizeof(int) + (LayerNum * sizeof(int)) + (GetNumberOfWeights() * sizeof(float));
 	for(int layer = 1; layer < LayerNum; layer++)
 	{
 		ActivationMethodsEnum num = GetActMethodEnum(ActivationMethods[layer - 1]);
@@ -214,7 +179,7 @@ void* NeuralNetwork::covnertFormat(void* old_data)
 		numberOfWeights += old_LayerSizePos[layer]*old_LayerSizePos[layer-1];
 	}
 
-	size_t size = sizeof(int) + (*old_LayerNumPos * sizeof(int)) + (numberOfWeights * sizeof(float)) + (*old_LayerNumPos * sizeof(ActivationMethodsEnum));
+	size_t size = sizeof(int) + (*old_LayerNumPos * sizeof(int)) + (numberOfWeights * sizeof(float)) + ((*old_LayerNumPos - 1) * sizeof(ActivationMethodsEnum));
 	
 	void* output = malloc(size + sizeof(int));//The + is the size
 
@@ -225,16 +190,19 @@ void* NeuralNetwork::covnertFormat(void* old_data)
 	int* LayerNumPos = (int*)output;
 	int* LayerSizePos = (int*)output + 1;
 	void* WeightDataPos = (int*)output + 1 + *old_LayerNumPos;
-	void* ActivationMethodsPos = (char*)output + (*old_LayerNumPos * sizeof(int)) + (numberOfWeights * sizeof(float));
+	void* ActivationMethodsPos = (char*)output + sizeof(int) + (*old_LayerNumPos * sizeof(int)) + (numberOfWeights * sizeof(float));
+	int a = sizeof(int) + (*old_LayerNumPos * sizeof(int)) + (numberOfWeights * sizeof(float));
 
 
 	//MOVE DATA
 	*LayerNumPos = *old_LayerNumPos;
 	memcpy(LayerSizePos, old_LayerSizePos, *old_LayerNumPos * sizeof(int));
-	float* WeightDataPosBuffer = (float*)ActivationMethodsPos;
+	float* WeightDataPosBuffer = (float*)WeightDataPos;
 	ActivationMethodsEnum* ActivationMethodsPosBuffer = (ActivationMethodsEnum*)ActivationMethodsPos;
 	int currentLayer = 0;
-	int currentLayerRemainder = LayerSizePos[currentLayer];
+	int currentLayerRemainder = LayerSizePos[currentLayer + 1];
+
+	//ABOVE CODE IS CORRECT 100%
 
 	for (int i = 0; i < old_NeuronNum; i++)
 	{	
@@ -255,11 +223,13 @@ void* NeuralNetwork::covnertFormat(void* old_data)
 		if(currentLayerRemainder == 0)
 		{
 			currentLayer++;
-			currentLayerRemainder = LayerSizePos[currentLayer];
+			currentLayerRemainder = LayerSizePos[currentLayer + 1];
 
 			ActivationMethodsEnum curr_enum;
 			if (*ActivationMethodPos == 'S')
+			{
 				curr_enum = e_Sigmoid;
+			}
 			else if (*ActivationMethodPos == 'n')
 				curr_enum = e_NonNegativeLimitedLinear;
 			else
@@ -296,14 +266,55 @@ void NeuralNetwork::Load(void* data)
 	LayerNum = *LayerNumPos;
 
 	int* LayerSizePos = (int*)data + 1;
+	if(LayerSize != nullptr)
+		free(LayerSize);
+	LayerSize = (int*)malloc(LayerNum*sizeof(int));
 	memcpy(LayerSize, LayerSizePos, sizeof(int) * LayerNum);
 
+	NeuronNum = RetNeuronNum();
+
+
 	void* WeightsDataPos = (int*)data + 1 + LayerNum;
+	if(weights != nullptr)
+		free(weights);
+	weights = (float*)malloc(GetNumberOfWeights() * sizeof(float));
+	int weight_buffer = 0;
+	if(weights_buffer_lookup_table != nullptr)
+		free(weights_buffer_lookup_table);
+	weights_buffer_lookup_table = (int*)malloc(NeuronNum * sizeof(int));
+	int idx = 0;
+	memcpy(weights, WeightsDataPos, GetNumberOfWeights() * sizeof(float));
 	//TODO: make this
 
 	SetNeuronNum();
 
-	memcpy(weights, WeightsDataPos, GetNumberOfWeights() * sizeof(float));
+	ActivationMethodsEnum* ActivationMethodsPos = (ActivationMethodsEnum*)((char*)data + sizeof(int) + (LayerNum * sizeof(int)) + (GetNumberOfWeights() * sizeof(float)));
+
+	ActivationMethods = (float(**)(float))malloc((LayerNum - 1) * sizeof(ActFuntionsType));
+	for(int i = 0; i < LayerNum - 1; i++)
+	{
+		if(ActivationMethodsPos[i] == e_None)
+			ActivationMethods[i] == None;
+		else if(ActivationMethodsPos[i] == e_Sigmoid)
+			ActivationMethods[i] == Sigmoid;
+
+		else
+			throw;
+	}
+
+	layers = new Layer*[LayerNum - 1];
+
+	for (int layer = 1; layer < LayerNum; layer++)
+	{
+		layers[layer - 1] = new Layer(LayerSize[layer], LayerSize[layer - 1], weights + weight_buffer, *(ActivationMethods[layer - 1]));
+
+		for (int i = 0; i < LayerSize[layer]; i++)
+		{
+			weights_buffer_lookup_table[idx] = weight_buffer;
+			weight_buffer += LayerSize[layer - 1];
+			idx++;
+		}
+	}
 }
 
 int NeuralNetwork::GetNeuronDataSize(void* data)
@@ -651,7 +662,7 @@ const char* NeuralNetwork::CheckFileType(const char* path)
 			int new_data_size = ((int*)new_data)[0];
 			fwrite(new_data, new_data_size, 1, new_file);
 
-			std::cout << "Converted file: " << path << "to new format: " << new_filename << " with a old size of: " << *size << " bytes, and a new size of: " << new_data_size << " bytes." << std::endl;
+			std::cout << "Converted file: " << path << " to new format: " << new_filename << " with a old size of: " << *size << " bytes, and a new size of: " << new_data_size << " bytes." << std::endl;
 
 			fclose(new_file);
 			fclose(old_file);
