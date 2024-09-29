@@ -13,7 +13,7 @@ __kernel void vec_mat_mul(
     float result = 0;
     for(int i = 0; i < size; i++)
     {
-        result += vec[k] * mat[(i * n) + k];
+        result += vec[i] * mat[(i * n) + k];
     }   
 
     out[k] = result;

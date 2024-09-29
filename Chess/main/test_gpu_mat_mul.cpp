@@ -5,13 +5,15 @@
 GPU gpu;
 
 
+//This test was completed, but the function was ultimately changed!
+
 int main()
 {
     float vector[100];
     float matrix[100 * 100];
     for (int i = 0; i < 100; i++)
     {
-        vector[i] = 1;
+        vector[i] = i;
     }
     for (int i = 0; i < 100; i++)
     {
