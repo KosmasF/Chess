@@ -55,6 +55,17 @@ struct BranchEvaluationData
 
 extern GPU gpu;
 
+enum EvalutorType
+{
+    STOCKFISH,
+    NEURALNETWORK
+};
+
+struct EvalutionType
+{
+    EvalutorType type;
+    void* pos;
+};
 
 class Game
 {
@@ -101,7 +112,7 @@ private:
 
     static const int defaultBranchSize = 5;
 
-    BranchEvaluationData<defaultBranchSize> BranchEval(const char* position);
+    BranchEvaluationData<defaultBranchSize> BranchEval(EvalutionType evaluator);
 
     BranchEvaluationData<defaultBranchSize> dataToDraw = BranchEvaluationData<defaultBranchSize>();
 

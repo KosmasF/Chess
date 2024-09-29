@@ -232,15 +232,15 @@ void Game::Update()
                 }
                 else
                 {
-                    const char* fen = GetFen(Pieces,allowCastling,movementLog->lastMoveIndex);
                     //float currentEval = stockfish.getEval(fen);
 
                     int maxEvalDiff = -( - 154 - 154);
                     int bestMoveIndex;
 
 
-                    BranchEvaluationData<defaultBranchSize> data = BranchEval(fen);
-                    delete[] fen;
+                    EvalutionType eval_type = {NEURALNETWORK, &evaluator};
+                    BranchEvaluationData<defaultBranchSize> data = BranchEval(eval_type);
+                    
 
                     //char* movementNotation = board->MovementNotation(Pieces, bestMove[1], bestMove[0], allowCastling);
                     //movementLog->AddMove(movementNotation);
@@ -507,9 +507,24 @@ void Game::Randomize(int seed)
     
 }
 
-BranchEvaluationData<Game::defaultBranchSize> Game::BranchEval(const char* position)
+BranchEvaluationData<Game::defaultBranchSize> Game::BranchEval(EvalutionType evaluator)
 {
-    float eval = stockfish.getEval(position);
+    float eval;
+    if(evaluator.type == STOCKFISH)
+    {
+        const char* fen = GetFen(Pieces,allowCastling,movementLog->lastMoveIndex);
+        eval = ((Stockfish*)(evaluator.pos))->getEval(fen);
+        delete[] fen;
+    }
+    else if(evaluator.type == NEURALNETWORK)
+    {
+        float* status = NonGraphicalBoard::Status(true, pieces, WhitePawn, BlackPawn, WhiteBishop, BlackBishop, WhiteKnight, BlackKnight, WhiteRook, BlackRook, WhiteQueen, BlackQueen, WhiteKing, BlackKing);
+        float* nnEvalPointer = ((NeuralNetwork*)evaluator.pos)->Generate(status);
+        eval = *nnEvalPointer;
+        delete[] nnEvalPointer;
+    }
+    else
+        eval = 0;
     float currentEval = eval;
 
     float maxEvalDiff[defaultBranchSize];
@@ -546,9 +561,24 @@ BranchEvaluationData<Game::defaultBranchSize> Game::BranchEval(const char* posit
 
                     board->MakeMove(From, To, PiecesArray(tempBoard, board->totalNumSquares), castling, BlackDefaultPromotionPiece, BlackDefaultPromotionPiece, nullptr, true, board->CollectedPiece, Board::WhiteEnPassant, Board::BlackEnPassant);
 
-                    const char* fen = GetFen(PiecesArray(tempBoard, board->totalNumSquares), castling,movementLog->lastMoveIndex);
-                    float posEval = stockfish.getEval(fen);
-                    delete[] fen;
+                    float posEval;
+                    if(evaluator.type == STOCKFISH)
+                    {
+                        const char* fen = GetFen(PiecesArray(tempBoard, board->totalNumSquares), castling,movementLog->lastMoveIndex);
+                        posEval = stockfish.getEval(fen);
+                        delete[] fen;
+                    }
+                    else if(evaluator.type == NEURALNETWORK)
+                    {
+                        float* status = NonGraphicalBoard::Status(true, tempBoard, WhitePawn, BlackPawn, WhiteBishop, BlackBishop, WhiteKnight, BlackKnight, WhiteRook, BlackRook, WhiteQueen, BlackQueen, WhiteKing, BlackKing);
+                        float* nnEvalPointer = ((NeuralNetwork*)evaluator.pos)->Generate(status);
+                        posEval = *nnEvalPointer;
+                        delete[] nnEvalPointer;                       
+                    }
+                    else
+                    {
+                        posEval = 0;
+                    }
 
                     for (int i = 0; i < defaultBranchSize; i++)
                     {
