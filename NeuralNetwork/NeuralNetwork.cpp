@@ -640,14 +640,18 @@ const char* NeuralNetwork::CheckFileType(const char* path)
 			break;
 		}
 
-	if(strcmp(path + seperatorPos, ".nn") == 0)//OLD FORMAT
+	const char* type = path + seperatorPos;
+	int ret = strcmp(type, ".nn");
+	if(ret == 0)//OLD FORMAT
 	{
 		char* new_filename = (char*)malloc((strlen(path) - strlen(".nn") + strlen(".nn2")) * sizeof(char));
 		memcpy(new_filename, path, (strlen(path) - strlen(".nn")) * sizeof(char));
 
 		memcpy(new_filename + (strlen(path) - strlen(".nn")), ".nn2", strlen(".nn2") * sizeof(char));
 
-		if( !(access(new_filename, F_OK) == 0))
+		int result = access(new_filename, F_OK);
+		printf("%i\n", errno);
+		if(!((result) == 0))
 		{
 			FILE* new_file = fopen(new_filename, "wb");
 			FILE* old_file = fopen(path, "rb");

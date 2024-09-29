@@ -48,6 +48,7 @@ GPU gpu = GPU();
 int main(int argc, char** argv)
 {
 
+    printf("Using default MainFile!\n");
 #ifdef INTERNAL_SERVER
     std::thread stockfishThread(LaunchStockfish);
 #endif

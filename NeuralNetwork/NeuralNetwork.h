@@ -15,19 +15,23 @@
 
 typedef float (*ActFuntionsType)(float);
 
+#include <errno.h>
+
+//extern int errno;
+
 class NeuralNetwork
 {
 public://PRIVATE
-	Layer** layers;// IMPORTANT!!! : Input layer is ignored, BUT in layer counter it is!!!
-	int* LayerSize;
-	int LayerNum;
-	int NeuronNum;
-	GPU* gpu;
-	float(**ActivationMethods)(float);
+	Layer** layers = nullptr;// IMPORTANT!!! : Input layer is ignored, BUT in layer counter it is!!!
+	int* LayerSize = nullptr;
+	int LayerNum = 0;
+	int NeuronNum = 0;
+	GPU* gpu = nullptr;
+	float(**ActivationMethods)(float) = nullptr;
 
 #ifdef _UNIFIED_WEIGTS_ARRAY
-	float* weights;
-	int* weights_buffer_lookup_table;
+	float* weights = nullptr;
+	int* weights_buffer_lookup_table = nullptr;
 
 #endif _UNIFIED_WEIGTS_ARRAY
 
