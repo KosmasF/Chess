@@ -23,7 +23,7 @@ float* BoardCalculations::FindMoveProbabilities(Piece** pieces, bool* allowCastl
 					continue;
 				}
 			}
-			output[MoveToIndex(Location, Destination)] = -10000.f;
+			output[MoveToIndex(Location, Destination)] = -1.f;
 		}
 	}
 

@@ -19,7 +19,7 @@ int main()
     const int batchSize = 1;
     const int batches = 100;
 
-    int networkSizes[] = { 64,  64*64  ,64 * 64};
+    int networkSizes[] = { 64,  64 * 64 * 16 ,64 * 64};
     float (*activationMethods[])(float) = {None,None};
 
     //NeuralNetwork nn = NeuralNetwork("networks/testedNonRandom3LayersBIG.nn");
@@ -30,7 +30,12 @@ int main()
     //const char* path = "networks/testEvaluatorNonRandomWeights.nn";
     //nn.LoadFromDisk(path);
 
-    const float mutationRate = 0.0001f;
+    int sum = 1;
+    for(int i = 1; i < sizeof(networkSizes) / sizeof(int); i++)
+        sum *= networkSizes[i];
+    //sum *= sizeof(networkSizes) / sizeof(int);
+    const float mutationRate = 0.01f * (1.f / sum);
+    printf("Dynamic mutation Rate: %.15f\n", mutationRate);
 
     std::thread batchThreads[batchSize];
 
@@ -88,12 +93,12 @@ int main()
         iterations++;
     }
     
+    Shutdown:
 
     printf("Closing...\n");
     nn.Save("../networks/testn1.nn2");
     printf("Training started in %i and ended, duration: %f\n",(int)startTime, (float)(time(NULL) - startTime));
         
-    Shutdown:
     return 0;
 }
 
