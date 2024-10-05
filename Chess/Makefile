@@ -38,4 +38,4 @@ $(OBJECTS) : %.o : %.cpp
 	$(CC) $(INC) $(CFLAGS) -c $^ -o $@
 
 clean:
-	rm -f *o $(EXECUTABLE)
+	rm -f *o $(EXECUTABLE) main/*o

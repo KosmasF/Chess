@@ -7,7 +7,7 @@
 
 namespace Batch
 {
-    float calcBatch(NonGraphicalBoard* board, SocketConnection* stockfish, NeuralNetwork* nn, float mutationRate, float** batchGenerationGradientDescent, int batch
+    float calcBatch(NonGraphicalBoard* board, NeuralNetwork* nn, float mutationRate, float** batchGenerationGradientDescent, int batch
 #ifdef ReadFile
         , std::fstream* gameFile, int* fails
 
@@ -16,7 +16,54 @@ namespace Batch
     {
 #ifndef ReadFile
         //--------RANDOMIZATION---------
-        board->Randomize(rand(), false);
+        //board->Randomize(rand(), false);
+       // board->PrintStatus(true);
+        {
+            float* status = board->Status((board->whitePlays));
+            float* out = nn->Generate(status, false);
+            float* expected = BoardCalculations::FindMoveProbabilities(board->pieces, board->allowCastling,status);
+
+            //float* generationStepVector = nn->BackPropagate(expected, board->Status(!(board->whitePlays)), mutationRate);
+            float* parallelVector = gpu->BackPropagate(nn->GetAllActivations(board->Status((board->whitePlays))), expected, nn->LayerSize, nn->LayerNum, mutationRate, nn->GetNumberOfWeights(), nn->weights, nn->weights_buffer_lookup_table);
+            
+            
+           /* int win = 0;
+            int losses = 0;
+            int soft_losses = 0;
+            for (int i = 0; i < nn->GetNumberOfWeights(); i++)
+            {
+                if (generationStepVector[i] == parallelVector[i])
+                {
+                    win++;
+                }
+                else
+                {
+                    soft_losses++;
+                    if (abs(generationStepVector[i] - parallelVector[i]) > 1)
+                    {
+                        std::cout << parallelVector[i] << " | " << generationStepVector[i] << std::endl;
+                        losses++;
+                    }
+                }
+            }
+
+            printf("Wins: %d, Losses: %d, Soft Losses: %d\n", win, losses, soft_losses);*/
+            
+            batchGenerationGradientDescent[batch] = parallelVector;//generationStepVector
+            float* NNoutput = nn->Generate(status);
+            float loss = nn->GetLoss(NNoutput, expected);
+
+            free(NNoutput);
+            free(expected);
+            //free(parallelVector);
+
+            return loss;
+
+        }
+        abort:
+            batchGenerationGradientDescent[batch] = nn->EmptyGradient();
+
+        return 1;
 #else
         //--------FILE DATABASE--------
         std::string sa;

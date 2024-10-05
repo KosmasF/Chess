@@ -39,7 +39,7 @@ void LaunchStockfish()
 }
 
 
-#define ReadFile
+//#define ReadFile
 
 #include "Batch.h"
 

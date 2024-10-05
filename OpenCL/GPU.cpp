@@ -383,6 +383,7 @@ float* GPU::AvgVector(float** vectors,const float numVectors, float vectorLength
 float* GPU::BackPropagate(const float* activations, const float* expectedOutput, const int* LayerSize, const int LayerNum, const float mutationRate, const int weightsNum, const float* weights, const int* weights_buffer_lookup_table)
 {
     float* data = (float*)malloc(sizeof(float) * weightsNum);
+    //data[0] = 100.f;
     if (data == nullptr)
         return nullptr;
 
@@ -607,14 +608,14 @@ void GPU::VectorIncrement(float* A, const float* B, const int size)
     cl_mem B_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, size * sizeof(float), nullptr, &ret);
     cl_mem C_buffer = clCreateBuffer(kernelData.context, CL_MEM_WRITE_ONLY, size * sizeof(float), nullptr, &ret);
 
-    clEnqueueWriteBuffer(kernelData.command_queue, A_buffer, CL_TRUE, 0, size * sizeof(float), A, 0, nullptr, nullptr);
-    clEnqueueWriteBuffer(kernelData.command_queue, B_buffer, CL_TRUE, 0, size * sizeof(float), B, 0, nullptr, nullptr);
+    ret = clEnqueueWriteBuffer(kernelData.command_queue, A_buffer, CL_TRUE, 0, size * sizeof(float), A, 0, nullptr, nullptr);
+    ret = clEnqueueWriteBuffer(kernelData.command_queue, B_buffer, CL_TRUE, 0, size * sizeof(float), B, 0, nullptr, nullptr);
 
     cl_kernel kernel = clCreateKernel(program, "vec_add", &ret);
 
-    clSetKernelArg(kernel, 0, sizeof(cl_mem), A_buffer);
-    clSetKernelArg(kernel, 0, sizeof(cl_mem), B_buffer);
-    clSetKernelArg(kernel, 0, sizeof(cl_mem), C_buffer);
+    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &A_buffer);
+    ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), &B_buffer);
+    ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), &C_buffer);
 
     const int dimensions = 1;
     size_t global_work_size[] = { size };
@@ -624,7 +625,7 @@ void GPU::VectorIncrement(float* A, const float* B, const int size)
 
     ret = clFinish(kernelData.command_queue);
 
-    clEnqueueReadBuffer(kernelData.command_queue, C_buffer, CL_TRUE, 0, size * sizeof(float), A, 0, nullptr, nullptr);
+    ret = clEnqueueReadBuffer(kernelData.command_queue, C_buffer, CL_TRUE, 0, size * sizeof(float), A, 0, nullptr, nullptr);
  
     ret = clReleaseKernel(kernel);
     ret = clRetainProgram(program);

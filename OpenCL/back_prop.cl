@@ -138,6 +138,8 @@ __kernel void back_prob_hidden_layer(
 
     int I = i + StartingIndexOfLayerIncludingInputLayer(layer, LayerSize);
     int J = j + StartingIndexOfLayerIncludingInputLayer(layer-1, LayerSize);
+	//if(layer == 1 && i == 0 )//&& j < 100)
+	//printf("%i. %f   %f    %f   %f\n", GetIndexOfWeight(J , I, LayerSize, LayerNum), activations[J] , forwardNeuronsDerivatives[I - LayerSize[0]] , (-mutationRate) , activations[J] * forwardNeuronsDerivatives[I - LayerSize[0]] * (-mutationRate));
     data[GetIndexOfWeight(J , I, LayerSize, LayerNum)] = activations[J] * forwardNeuronsDerivatives[I - LayerSize[0]] * (-mutationRate);
 
 }

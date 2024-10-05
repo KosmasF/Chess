@@ -3,7 +3,7 @@
 
 extern GPU gpu;
 
-NeuralNetwork BoardCalculations::evaluator = NeuralNetwork("../networks/nnRe-evalInMasterGamesErrorCorrection.nn", &gpu);
+NeuralNetwork BoardCalculations::evaluator = NeuralNetwork("../networks/testedNonRandom3LayersBIG.nn", &gpu);
 
 float* BoardCalculations::FindMoveProbabilities(Piece** pieces, bool* allowCastling, float* boardStatus)
 {
@@ -20,9 +20,10 @@ float* BoardCalculations::FindMoveProbabilities(Piece** pieces, bool* allowCastl
 					float* eval = evaluator.Generate(boardStatus, false);
 					output[MoveToIndex(Location, Destination)] = Sigmoid(eval[0]);
 					delete[] eval;
+					continue;
 				}
 			}
-			output[MoveToIndex(Location, Destination)] = -1;
+			output[MoveToIndex(Location, Destination)] = -10000.f;
 		}
 	}
 
