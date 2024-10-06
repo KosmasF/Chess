@@ -214,7 +214,7 @@ size_t GPU::GetMaxLocalWorkSize()
 
 const char* GPU::avgVectorResizable(int numVectors)
 {
-    const int maxSize = 1000;
+    const int maxSize = 10000;
     char* result = (char*)malloc(maxSize * sizeof(char));
     int buffer = 0;
 
