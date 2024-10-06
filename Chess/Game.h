@@ -67,6 +67,20 @@ struct EvalutionType
     void* pos;
 };
 
+struct EvaluationData
+{
+    ;;
+};
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+//  In order to make static destructor, we need a instance counter  // 
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+
+int gameInstances;
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+
+
 class Game
 {
 private:
@@ -78,18 +92,18 @@ private:
 
     Sprites* sprites;
 
-    Pawn* WhitePawn;
-    Pawn* BlackPawn;
-    Bishop* WhiteBishop;
-    Bishop* BlackBishop;
-    Knight* WhiteKnight;
-    Knight* BlackKnight;
-    Rook* WhiteRook;
-    Rook* BlackRook;
-    Queen* WhiteQueen;
-    Queen* BlackQueen;
-    King* WhiteKing;
-    King* BlackKing;
+    static Pawn* WhitePawn;
+    static Pawn* BlackPawn;
+    static Bishop* WhiteBishop;
+    static Bishop* BlackBishop;
+    static Knight* WhiteKnight;
+    static Knight* BlackKnight;
+    static Rook* WhiteRook;
+    static Rook* BlackRook;
+    static Queen* WhiteQueen;
+    static Queen* BlackQueen;
+    static King* WhiteKing;
+    static King* BlackKing;
 
     Piece* WhiteDefaultPromotionPiece;
     Piece* BlackDefaultPromotionPiece;
@@ -113,6 +127,8 @@ private:
     static const int defaultBranchSize = 5;
 
     BranchEvaluationData<defaultBranchSize> BranchEval(EvalutionType evaluator);
+    static int GetPosEval(EvalutionType evaluator, Piece** pieces, bool* allowCastling, int lastMoveIndex);
+    EvaluationData Eval(uint depth);
 
     BranchEvaluationData<defaultBranchSize> dataToDraw = BranchEvaluationData<defaultBranchSize>();
 

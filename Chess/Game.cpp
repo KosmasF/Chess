@@ -1,6 +1,19 @@
 #include "Game.h"
 #include "ActivationMethods.h"
 
+Pawn*   Game::WhitePawn = new Pawn(WHITE);
+Pawn*   Game::BlackPawn = new Pawn(BLACK);
+Bishop* Game::WhiteBishop = new Bishop(WHITE);
+Bishop* Game::BlackBishop = new Bishop(BLACK);
+Knight* Game::WhiteKnight = new Knight(WHITE);
+Knight* Game::BlackKnight = new Knight(BLACK);
+Rook*   Game::WhiteRook = new Rook(WHITE);
+Rook*   Game::BlackRook = new Rook(BLACK);
+Queen*  Game::WhiteQueen = new Queen(WHITE);
+Queen*  Game::BlackQueen = new Queen(BLACK);
+King*   Game::WhiteKing = new King(WHITE);
+King*   Game::BlackKing = new King(BLACK);
+
 Game::Game(int argc , char** argv)
 {
     //throw;
@@ -21,20 +34,6 @@ Game::Game(int argc , char** argv)
     movementLog = new MovementLog(LogSize, screenHeight);
 
     sprites = new Sprites(spritesheetPath, board);
-
-    WhitePawn = new Pawn(WHITE);
-    BlackPawn = new Pawn(BLACK);
-    WhiteBishop = new Bishop(WHITE);
-    BlackBishop = new Bishop(BLACK);
-    WhiteKnight = new Knight(WHITE);
-    BlackKnight = new Knight(BLACK);
-    WhiteRook = new Rook(WHITE);
-    BlackRook = new Rook(BLACK);
-    WhiteQueen = new Queen(WHITE);
-    BlackQueen = new Queen(BLACK);
-    WhiteKing = new King(WHITE);
-    BlackKing = new King(BLACK);
-
 
     WhiteDefaultPromotionPiece = WhiteQueen;
     BlackDefaultPromotionPiece = BlackQueen;
@@ -66,28 +65,35 @@ Game::Game(int argc , char** argv)
 
     evaluator.Data();
 
+
+    //We have an other game instance running!
+    ++gameInstances;
 }
 
 Game::~Game()
 {
+    --gameInstances;
     delete board;
     delete BLACK_board;
     delete Board::WhiteEnPassant;//Static variable
     delete Board::BlackEnPassant;//Static variable
     delete movementLog;
     delete sprites;
-    delete WhitePawn;
-    delete BlackPawn;
-    delete WhiteBishop;
-    delete BlackBishop;
-    delete WhiteKnight;
-    delete BlackKnight;
-    delete WhiteRook;
-    delete BlackRook;
-    delete WhiteQueen;
-    delete BlackQueen;
-    delete WhiteKing;
-    delete BlackKing;
+    if(gameInstances == 0)
+    {    
+        delete WhitePawn;
+        delete BlackPawn;
+        delete WhiteBishop;
+        delete BlackBishop;
+        delete WhiteKnight;
+        delete BlackKnight;
+        delete WhiteRook;
+        delete BlackRook;
+        delete WhiteQueen;
+        delete BlackQueen;
+        delete WhiteKing;
+        delete BlackKing;
+    }
     CloseWindow();
     gameFile->close();
     delete gameFile;
@@ -612,6 +618,34 @@ BranchEvaluationData<Game::defaultBranchSize> Game::BranchEval(EvalutionType eva
     return data;
 }
 
+EvaluationData Game::Eval(uint depth)
+{
+    return EvaluationData();
+}
+
+int Game::GetPosEval(EvalutionType evaluator, Piece** pieces, bool* allowCastling, int lastMoveIndex)
+{
+    //Wee in the Game namespace
+    float eval;
+    if(evaluator.type == STOCKFISH)
+    {
+        const char* fen = GetFen(PiecesArray(pieces, 64),allowCastling,lastMoveIndex);
+        eval = ((Stockfish*)(evaluator.pos))->getEval(fen);
+        delete[] fen;
+    }
+    else if(evaluator.type == NEURALNETWORK)
+    {
+        float* status = NonGraphicalBoard::Status(true, pieces, WhitePawn, BlackPawn, WhiteBishop, BlackBishop, WhiteKnight, BlackKnight, WhiteRook, BlackRook, WhiteQueen, BlackQueen, WhiteKing, BlackKing);
+        float* nnEvalPointer = ((NeuralNetwork*)evaluator.pos)->Generate(status);
+        eval = *nnEvalPointer;
+        delete[] nnEvalPointer;
+    }
+    else
+        eval = 0;
+
+    return eval;
+}
+
 void Game::DrawBar(float num, int offset)
 {
     float originalEval = num;
@@ -691,4 +725,3 @@ std::fstream* Game::OpenGameFile(const char* path, int gameIndex)
     }
     return file;
 }
-
