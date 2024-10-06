@@ -14,6 +14,9 @@ Queen*  Game::BlackQueen = new Queen(BLACK);
 King*   Game::WhiteKing = new King(WHITE);
 King*   Game::BlackKing = new King(BLACK);
 
+Piece*  Game::WhiteDefaultPromotionPiece = Game::WhiteQueen;
+Piece*  Game::BlackDefaultPromotionPiece = Game::BlackQueen;
+
 Game::Game(int argc , char** argv)
 {
     //throw;
@@ -34,9 +37,6 @@ Game::Game(int argc , char** argv)
     movementLog = new MovementLog(LogSize, screenHeight);
 
     sprites = new Sprites(spritesheetPath, board);
-
-    WhiteDefaultPromotionPiece = WhiteQueen;
-    BlackDefaultPromotionPiece = BlackQueen;
 
     allowCastling[0] = true;
     allowCastling[1] = true;
@@ -245,7 +245,7 @@ void Game::Update()
 
 
                     EvalutionType eval_type = {NEURALNETWORK, &evaluator};
-                    BranchEvaluationData<defaultBranchSize> data = BranchEval(eval_type);
+                    BranchEvaluationData<defaultBranchSize> data = BranchEval(eval_type, pieces, allowCastling, movementLog->lastMoveIndex);
                     
 
                     //char* movementNotation = board->MovementNotation(Pieces, bestMove[1], bestMove[0], allowCastling);
@@ -263,7 +263,7 @@ void Game::Update()
                     }
                     dataToDraw = data;
                     
-                    board->MakeMove(data.bestMoves[bestMoveIndex][0], data.bestMoves[bestMoveIndex][1], Pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog, false, board->CollectedPiece, Board::WhiteEnPassant, Board::BlackEnPassant);
+                    board->MakeMove(data.bestMoves[bestMoveIndex][0], data.bestMoves[bestMoveIndex][1], Pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog, false, &(board->CollectedPiece), Board::WhiteEnPassant, Board::BlackEnPassant);
                 }
             }
 
@@ -304,7 +304,7 @@ void Game::Update()
         char move[10];
         std::cin >> move;
         Position id = Board::TranslateMove(move, pieces, movementLog->WhitePlays());
-        board->MakeMove(id.x, id.y, Pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog, false, board->CollectedPiece, Board::WhiteEnPassant, Board::BlackEnPassant);
+        board->MakeMove(id.x, id.y, Pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog, false, &(board->CollectedPiece), Board::WhiteEnPassant, Board::BlackEnPassant);
     }
     if (IsKeyPressed(KEY_M))
     {
@@ -325,7 +325,7 @@ void Game::Update()
                 Position id = Board::TranslateMove(sa.c_str(), pieces, movementLog->WhitePlays());
                 if (!(id.x == -1 && id.y == -1))
                 {
-                    board->MakeMove(id.x, id.y, Pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog, false, board->CollectedPiece, Board::WhiteEnPassant, Board::BlackEnPassant);
+                    board->MakeMove(id.x, id.y, Pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog, false, &(board->CollectedPiece), Board::WhiteEnPassant, Board::BlackEnPassant);
                 }
             }
         }
@@ -513,25 +513,9 @@ void Game::Randomize(int seed)
     
 }
 
-BranchEvaluationData<Game::defaultBranchSize> Game::BranchEval(EvalutionType evaluator)
+BranchEvaluationData<Game::defaultBranchSize> Game::BranchEval(EvalutionType evaluator, Piece** pieces, bool* allowCastling, int lastMoveIndex)
 {
-    float eval;
-    if(evaluator.type == STOCKFISH)
-    {
-        const char* fen = GetFen(Pieces,allowCastling,movementLog->lastMoveIndex);
-        eval = ((Stockfish*)(evaluator.pos))->getEval(fen);
-        delete[] fen;
-    }
-    else if(evaluator.type == NEURALNETWORK)
-    {
-        float* status = NonGraphicalBoard::Status(true, pieces, WhitePawn, BlackPawn, WhiteBishop, BlackBishop, WhiteKnight, BlackKnight, WhiteRook, BlackRook, WhiteQueen, BlackQueen, WhiteKing, BlackKing);
-        float* nnEvalPointer = ((NeuralNetwork*)evaluator.pos)->Generate(status);
-        eval = *nnEvalPointer;
-        delete[] nnEvalPointer;
-    }
-    else
-        eval = 0;
-    float currentEval = eval;
+    float currentEval = GetPosEval(evaluator, pieces, allowCastling, lastMoveIndex);
 
     float maxEvalDiff[defaultBranchSize];
     for (int i = 0; i < defaultBranchSize; i++)
@@ -541,21 +525,21 @@ BranchEvaluationData<Game::defaultBranchSize> Game::BranchEval(EvalutionType eva
 
     int bestMoves[defaultBranchSize][2] = { -1,-1 };
 
-    for (int From = 0; From < board->totalNumSquares; From++)
+    for (int From = 0; From < Board::totalNumSquares; From++)
     {
-        for (int To = 0; To < board->totalNumSquares; To++)
+        for (int To = 0; To < Board::totalNumSquares; To++)
         {
             if (pieces[From] != nullptr)
             {
-                if (pieces[From]->IsLegal(pieces, From, To, board, allowCastling) && !(pieces[From]->IsWhite()))
+                if (pieces[From]->IsLegal(pieces, From, To, nullptr, allowCastling) && !(pieces[From]->IsWhite()))
                 {
-                    Piece** tempBoard = (Piece**)malloc(sizeof(Piece*) * board->totalNumSquares);
+                    Piece** tempBoard = (Piece**)malloc(sizeof(Piece*) * Board::totalNumSquares);
                     if (tempBoard == nullptr)
                     {
                         free(tempBoard);
                         return BranchEvaluationData<defaultBranchSize>();
                     }
-                    memcpy(tempBoard, pieces, sizeof(Piece*) * board->totalNumSquares);
+                    memcpy(tempBoard, pieces, sizeof(Piece*) * Board::totalNumSquares);
                     bool* castling = (bool*)malloc(sizeof(bool) * 4);
                     if (castling == nullptr)
                     {
@@ -565,26 +549,9 @@ BranchEvaluationData<Game::defaultBranchSize> Game::BranchEval(EvalutionType eva
                     }
                     memcpy(castling, allowCastling, sizeof(bool) * 4);
 
-                    board->MakeMove(From, To, PiecesArray(tempBoard, board->totalNumSquares), castling, BlackDefaultPromotionPiece, BlackDefaultPromotionPiece, nullptr, true, board->CollectedPiece, Board::WhiteEnPassant, Board::BlackEnPassant);
+                    Board::MakeMove(From, To, PiecesArray(tempBoard, Board::totalNumSquares), castling, BlackDefaultPromotionPiece, BlackDefaultPromotionPiece, nullptr, true, nullptr, Board::WhiteEnPassant, Board::BlackEnPassant);
 
-                    float posEval;
-                    if(evaluator.type == STOCKFISH)
-                    {
-                        const char* fen = GetFen(PiecesArray(tempBoard, board->totalNumSquares), castling,movementLog->lastMoveIndex);
-                        posEval = stockfish.getEval(fen);
-                        delete[] fen;
-                    }
-                    else if(evaluator.type == NEURALNETWORK)
-                    {
-                        float* status = NonGraphicalBoard::Status(true, tempBoard, WhitePawn, BlackPawn, WhiteBishop, BlackBishop, WhiteKnight, BlackKnight, WhiteRook, BlackRook, WhiteQueen, BlackQueen, WhiteKing, BlackKing);
-                        float* nnEvalPointer = ((NeuralNetwork*)evaluator.pos)->Generate(status);
-                        posEval = *nnEvalPointer;
-                        delete[] nnEvalPointer;                       
-                    }
-                    else
-                    {
-                        posEval = 0;
-                    }
+                    float posEval =  GetPosEval(evaluator, tempBoard, castling, lastMoveIndex);
 
                     for (int i = 0; i < defaultBranchSize; i++)
                     {
@@ -623,13 +590,13 @@ EvaluationData Game::Eval(uint depth)
     return EvaluationData();
 }
 
-int Game::GetPosEval(EvalutionType evaluator, Piece** pieces, bool* allowCastling, int lastMoveIndex)
+float Game::GetPosEval(EvalutionType evaluator, Piece** pieces, bool* allowCastling, int lastMoveIndex)
 {
     //Wee in the Game namespace
     float eval;
     if(evaluator.type == STOCKFISH)
     {
-        const char* fen = GetFen(PiecesArray(pieces, 64),allowCastling,lastMoveIndex);
+        const char* fen = GetFen(PiecesArray(pieces, Board::totalNumSquares),allowCastling,lastMoveIndex);
         eval = ((Stockfish*)(evaluator.pos))->getEval(fen);
         delete[] fen;
     }

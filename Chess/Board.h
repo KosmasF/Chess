@@ -32,7 +32,7 @@ public:
 
 	void DrawMove(int From, int To);
 
-	static bool MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, void* WhiteDefaultPromotionPiece, void* BlackDefaultPromotionPiece, MovementLog* movementLog, bool disableLogging, int& CollectedPiece, Piece* WhiteEnPassant, Piece* BlackEnPassant);
+	static bool MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, void* WhiteDefaultPromotionPiece, void* BlackDefaultPromotionPiece, MovementLog* movementLog, bool disableLogging, int* CollectedPiece, Piece* WhiteEnPassant, Piece* BlackEnPassant);
 
 	static Position TranslateMove(const char* move, Piece** pieces, bool whitePlays);
 

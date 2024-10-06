@@ -63,7 +63,7 @@ void Board::DrawMove(int From, int To)
 	DrawTriangle({ (float)endPos.x,(float)endPos.y }, LowerPoint, UpperPoint, ORANGE);
 }
 
-bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, void* WhiteDefaultPromotionPiece, void* BlackDefaultPromotionPiece, MovementLog* movementLog, bool disableLogging, int& GlobalCollectedPiece, Piece* WhiteEnPassant, Piece* BlackEnPassant)
+bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, void* WhiteDefaultPromotionPiece, void* BlackDefaultPromotionPiece, MovementLog* movementLog, bool disableLogging, int* GlobalCollectedPiece, Piece* WhiteEnPassant, Piece* BlackEnPassant)
 {
 	int idx = To;
 	int CollectedPiece = From;
@@ -246,8 +246,8 @@ bool Board::MakeMove(int From, int To, PiecesArray pieces, bool* allowCastling, 
 			std::cout << std::endl;
 		}
 
-
-		GlobalCollectedPiece = -1;
+		if(GlobalCollectedPiece != nullptr)
+			*GlobalCollectedPiece = -1;
 
 		return true;
 	}
@@ -409,7 +409,7 @@ void Board::CheckInput(PiecesArray pieces , void* WhiteDefaultPromotionPiece, vo
 
 			if (CollectedPiece != -1)
 			{
-				if (MakeMove(CollectedPiece, idx, pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog, false, CollectedPiece, WhiteEnPassant, BlackEnPassant))
+				if (MakeMove(CollectedPiece, idx, pieces, allowCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, movementLog, false, &CollectedPiece, WhiteEnPassant, BlackEnPassant))
 					return;
 			}
 			if (pieces[idx] != nullptr)
