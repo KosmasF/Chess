@@ -16,7 +16,7 @@ namespace Batch
     {
 #ifndef ReadFile
         //--------RANDOMIZATION---------
-        //board->Randomize(rand(), false);
+        board->Randomize(rand(), false);
        // board->PrintStatus(true);
         {
             float* status = board->Status((board->whitePlays));

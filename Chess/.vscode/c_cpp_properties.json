@@ -5,7 +5,9 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "/home/Kosmas/Documents/Chess/NeuralNetwork",
-                "/home/Kosmas/Documents/Chess/OpenCL"
+                "/home/Kosmas/Documents/Chess/OpenCL",
+                "/home/Kosmas/Documents/Chess/Chess",
+                "${workspaceFolder}"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/g++",

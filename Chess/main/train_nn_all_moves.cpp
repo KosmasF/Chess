@@ -16,11 +16,11 @@ int main()
 
     printf("Setup\n");
 
-    const int batchSize = 1;
-    const int batches = 100;
+    const int batchSize = 1;//Max is 26 rn
+    const int batches = 10000;
 
-    int networkSizes[] = { 64,  64 * 64 * 16 ,64 * 64};
-    float (*activationMethods[])(float) = {None,None};
+    int networkSizes[] = { 64, 64 * 64 * 64, 64 * 64 ,64 * 64};
+    float (*activationMethods[])(float) = {None,None,None};
 
     //NeuralNetwork nn = NeuralNetwork("networks/testedNonRandom3LayersBIG.nn");
     NeuralNetwork nn = NeuralNetwork(networkSizes, sizeof(networkSizes) / sizeof(int) , activationMethods, true, &gpu);
@@ -30,12 +30,12 @@ int main()
     //const char* path = "networks/testEvaluatorNonRandomWeights.nn";
     //nn.LoadFromDisk(path);
 
-    int sum = 1;
+    long int sum = 1;
     for(int i = 1; i < sizeof(networkSizes) / sizeof(int); i++)
         sum *= networkSizes[i];
     //sum *= sizeof(networkSizes) / sizeof(int);
-    const float mutationRate = 0.01f * (1.f / sum);
-    printf("Dynamic mutation Rate: %.15f\n", mutationRate);
+    const float mutationRate = 0.01f * (1.f / sum) * ( 1.f / pow(10, sizeof(networkSizes) / sizeof(int)));
+    printf("Dynamic mutation Rate: %.20f %ld\n", mutationRate, sum);
 
     std::thread batchThreads[batchSize];
 
