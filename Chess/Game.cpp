@@ -585,9 +585,93 @@ BranchEvaluationData<Game::defaultBranchSize> Game::BranchEval(EvalutionType eva
     return data;
 }
 
-EvaluationData Game::Eval(uint depth)
+template <uint depth>
+EvaluationData<depth> Game::Eval(EvalutionType evaluator, const Piece** const pieces, const bool* const allowCastling, int lastMoveIndex)
 {
-    return EvaluationData();
+    Piece** evalPieces = (Piece**)malloc(Board::totalNumSquares * sizeof(Piece*));
+    memcpy(evalPieces, pieces, Board::totalNumSquares * sizeof(Piece*));
+
+    bool* evalCastling = (bool*)malloc(4 * sizeof(bool));
+    memcpy(evalCastling, allowCastling, 4 * sizeof(bool));
+
+    BranchEvaluationData<defaultBranchSize> branchEval = BranchEval(evaluator, evalPieces, evalCastling, lastMoveIndex);
+    BranchOutputEvaluation<defaultBranchSize> previousBranchEval;
+    for(int currentDepth = 1; currentDepth < depth; currentDepth++)
+    {
+        BranchEvaluationData<defaultBranchSize * defaultBranchSize> branchEvalTransition(lastMoveIndex + currentDepth);
+        for(int i = 0; i < defaultBranchSize; i++)
+        {
+            Piece** branchPieces = (Piece**)malloc(Board::totalNumSquares * sizeof(Piece*));
+            memcpy(branchPieces, evalPieces, Board::totalNumSquares * sizeof(Piece*));
+
+            bool* branchCastling = (bool*)malloc(4 * sizeof(bool));
+            memcpy(branchCastling, evalCastling, 4 * sizeof(bool));
+
+            bool success;
+            if(currentDepth == 1)
+                success = Board::MakeMove(branchEval.bestMoves[i][0], branchEval.bestMoves[i][1], PiecesArray(branchPieces, Board::totalNumSquares), branchCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, nullptr, true, nullptr, Board::WhiteEnPassant, Board::BlackEnPassant);
+            else
+                success = Board::MakeMove(previousBranchEval.moves[i][0], previousBranchEval.moves[i][1], PiecesArray(branchPieces, Board::totalNumSquares), branchCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, nullptr, true, nullptr, Board::WhiteEnPassant, Board::BlackEnPassant);
+            if(!success)
+                return;
+
+
+            BranchEvaluationData<defaultBranchSize> currentBranchEval = BranchEval(evaluator, branchPieces, branchCastling, lastMoveIndex + currentDepth);
+
+            for(int branchItem = 0; branchItem < defaultBranchSize; branchItem++)
+            {
+                branchEvalTransition.evals[(i * defaultBranchSize) + branchItem] = currentBranchEval.evals[branchItem];
+                branchEvalTransition.bestMoves[(i * defaultBranchSize) + branchItem][0] = currentBranchEval.bestMoves[branchItem][0];
+                branchEvalTransition.bestMoves[(i * defaultBranchSize) + branchItem][1] = currentBranchEval.bestMoves[branchItem][1];
+            }
+
+            free(branchPieces);
+            free(branchCastling);
+        }
+
+        BranchOutputEvaluation<defaultBranchSize> output;
+        float bestEvals[defaultBranchSize];
+        for(int i = 0; i < defaultBranchSize;i++)
+        {
+            bestEvals[i] = lastMoveIndex % 2 == 0 ? -153 : 153;
+        }
+        for(int branch; branch < defaultBranchSize; branch++)
+        {
+            for(int branchItem = 0; branchItem < defaultBranchSize; branch++)
+            {
+                for(int i = 0; i < defaultBranchSize; i++)
+                {
+                    if( lastMoveIndex % 2 == 0)//White plays
+                    {
+                        if(branchEvalTransition.evals[(branch * defaultBranchSize) + branchItem] > bestEvals[branchItem])
+                        {
+                            bestEvals[i] = branchEvalTransition.evals[(branch * defaultBranchSize) + branchItem];
+                            output.moves[i][0] = branchEvalTransition.bestMoves[(branch * defaultBranchSize) + branchItem][0];
+                            output.moves[i][1] = branchEvalTransition.bestMoves[(branch * defaultBranchSize) + branchItem][1];
+                            output.branchID[i] = branch;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        if(branchEvalTransition.evals[(branch * defaultBranchSize) + branchItem] < bestEvals[branchItem])
+                        {
+                            bestEvals[i] = branchEvalTransition.evals[(branch * defaultBranchSize) + branchItem];
+                            output.moves[i][0] = branchEvalTransition.bestMoves[(branch * defaultBranchSize) + branchItem][0];
+                            output.moves[i][1] = branchEvalTransition.bestMoves[(branch * defaultBranchSize) + branchItem][1];
+                            output.branchID[i] = branch;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        previousBranchEval = output;
+        //output has the data;
+    }
+
+    free(evalPieces);
+    free(evalCastling);
 }
 
 float Game::GetPosEval(EvalutionType evaluator, Piece** pieces, bool* allowCastling, int lastMoveIndex)

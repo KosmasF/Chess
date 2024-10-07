@@ -43,11 +43,11 @@ struct BranchEvaluationData
 {
     int bestMoves[size][2];
     float evals[size];
-    BranchEvaluationData()
+    BranchEvaluationData(int lastMoveIndex = 1)
     {
         for (int i = 0; i < size; i++)
         {
-            bestMoves[i][0] = bestMoves[i][1] = -1;
+            bestMoves[i][0] = bestMoves[i][1] = lastMoveIndex % 2 == 0 ? -153 : 153;
             evals[i] = 0;
         }
     }
@@ -67,9 +67,18 @@ struct EvalutionType
     void* pos;
 };
 
+template<int size>
+struct BranchOutputEvaluation
+{
+    int branchID[size];
+    int moves[size][2];
+};
+
+template<int depth>
 struct EvaluationData
 {
-    ;;
+    int moves[depth][2];
+    float evaluation;
 };
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -128,7 +137,9 @@ private:
 
     static BranchEvaluationData<defaultBranchSize> BranchEval(EvalutionType evaluator, Piece** pieces, bool* allowCastling, int lastMoveIndex);
     static float GetPosEval(EvalutionType evaluator, Piece** pieces, bool* allowCastling, int lastMoveIndex);
-    EvaluationData Eval(uint depth);
+
+    template <uint depth>
+    static EvaluationData<depth> Eval(EvalutionType evaluator, const Piece** const pieces, const bool* const allowCastling, int lastMoveIndex);
 
     BranchEvaluationData<defaultBranchSize> dataToDraw = BranchEvaluationData<defaultBranchSize>();
 
