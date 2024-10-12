@@ -81,6 +81,32 @@ struct EvaluationData
     float evaluation;
 };
 
+struct Move
+{
+    int From;
+    int To;
+    int& operator[](int i)
+    {
+        if(i == 0)
+            return From;
+        else if(i == 1)
+            return To;
+    }
+};
+
+struct HeapMovementData
+{
+    Move* moves;
+    HeapMovementData(uint depth)
+    {
+        moves = (Move *)malloc(sizeof(Move) * depth);
+    }
+    ~HeapMovementData()
+    {
+        free(moves);
+    }
+};
+
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 //  In order to make static destructor, we need a instance counter  // 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -140,6 +166,8 @@ private:
 
     template <uint depth>
     static EvaluationData<depth> Eval(EvalutionType evaluator, const Piece** const pieces, const bool* const allowCastling, int lastMoveIndex);
+
+    static HeapMovementData GetTreeMoves(BranchEvaluationData<defaultBranchSize> base, BranchOutputEvaluation<defaultBranchSize>* phases, int idx, uint depth);
 
     BranchEvaluationData<defaultBranchSize> dataToDraw = BranchEvaluationData<defaultBranchSize>();
 

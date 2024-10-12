@@ -240,13 +240,13 @@ void Game::Update()
                 {
                     //float currentEval = stockfish.getEval(fen);
 
-                    int maxEvalDiff = -( - 154 - 154);
-                    int bestMoveIndex;
+                    //int maxEvalDiff = -( - 154 - 154);
+                    //int bestMoveIndex;
 
 
                     EvalutionType eval_type = {NEURALNETWORK, &evaluator};
                     //BranchEvaluationData<defaultBranchSize> data = BranchEval(eval_type, pieces, allowCastling, movementLog->lastMoveIndex);
-                    EvaluationData eval = Eval<3>(eval_type,(const Piece** const) pieces, allowCastling, movementLog->lastMoveIndex);
+                    EvaluationData eval = Eval<10>(eval_type,(const Piece** const) pieces, allowCastling, movementLog->lastMoveIndex);
                     
 
                     //char* movementNotation = board->MovementNotation(Pieces, bestMove[1], bestMove[0], allowCastling);
@@ -641,6 +641,15 @@ EvaluationData<depth> Game::Eval(EvalutionType evaluator, const Piece** const pi
             }
             else
             {
+                HeapMovementData movesToDo = GetTreeMoves(branchEval, branchEvals, i, currentDepth);
+                for(int move = 0; move < currentDepth; move++)
+                {
+                    success *= Board::MakeMove(movesToDo.moves[move][0], movesToDo.moves[move][1], PiecesArray(branchPieces, Board::totalNumSquares), branchCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, nullptr, true, nullptr, Board::WhiteEnPassant, Board::BlackEnPassant);
+                }
+            if(!success)
+                throw;
+
+                /*
                 //FIX THIS
                 //currebnt depth 1 is taken care here!!!
                 success *= Board::MakeMove(branchEval.bestMoves[branchEvals[currentDepth - 2].branchID[i]][0], branchEval.bestMoves[branchEvals[currentDepth - 2].branchID[i]][1], PiecesArray(branchPieces, Board::totalNumSquares), branchCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, nullptr, true, nullptr, Board::WhiteEnPassant, Board::BlackEnPassant);
@@ -649,6 +658,7 @@ EvaluationData<depth> Game::Eval(EvalutionType evaluator, const Piece** const pi
                     success *= Board::MakeMove(branchEvals[currentDepth - 1 - idx].moves[branchEvals[currentDepth - idx].branchID[idx - 1]][0], branchEvals[currentDepth - 1 - idx].moves[branchEvals[currentDepth - idx].branchID[idx - 1]][1], PiecesArray(branchPieces, Board::totalNumSquares), branchCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, nullptr, true, nullptr, Board::WhiteEnPassant, Board::BlackEnPassant);
                 }
                 //success = Board::MakeMove(previousBranchEval.moves[i][0], previousBranchEval.moves[i][1], PiecesArray(branchPieces, Board::totalNumSquares), branchCastling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, nullptr, true, nullptr, Board::WhiteEnPassant, Board::BlackEnPassant);
+                */
             }
             if(!success)
                 throw;
@@ -722,9 +732,10 @@ EvaluationData<depth> Game::Eval(EvalutionType evaluator, const Piece** const pi
 
 
 
-    int max, idx_max;
+    float max; 
+    int idx_max;
     max = lastEvals[0];
-    idx_max = 0;
+    idx_max = 0.f;
     for(int i = 1; i < defaultBranchSize; i++)
     {
         if( (lastMoveIndex + (depth - 1)) % 2 == 0)//White plays
@@ -757,6 +768,30 @@ EvaluationData<depth> Game::Eval(EvalutionType evaluator, const Piece** const pi
     }
     result.moves[0][0] = branchEval.bestMoves[branch][0];
     result.moves[0][1] = branchEval.bestMoves[branch][1];
+
+    //HeapMovementData result2 = GetTreeMoves(branchEval, branchEvals, idx_max, depth);
+
+    return result;
+}
+
+HeapMovementData Game::GetTreeMoves(BranchEvaluationData<defaultBranchSize> base, BranchOutputEvaluation<defaultBranchSize> *phases, int idx, uint depth)
+{
+    HeapMovementData result(depth);
+
+    result.moves[depth - 1].From = phases[depth - 1 - 1].moves[idx][0];
+    result.moves[depth - 1].To = phases[depth - 1 - 1].moves[idx][1];
+
+    int branch = phases[depth - 1 - 1].branchID[idx];
+    for(int currentDepth = depth - 2; currentDepth > 0; currentDepth--)
+    {
+        result.moves[currentDepth].From = phases[currentDepth - 1].moves[branch][0];
+        result.moves[currentDepth].To = phases[currentDepth - 1].moves[branch][1];
+        if(currentDepth != 0)
+            branch = phases[currentDepth - 1].branchID[branch];
+    }
+
+    result.moves[0].From = base.bestMoves[branch][0];
+    result.moves[0].To = base.bestMoves[branch][1];
 
     return result;
 }
