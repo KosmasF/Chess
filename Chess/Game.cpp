@@ -246,7 +246,7 @@ void Game::Update()
 
                     EvalutionType eval_type = {NEURALNETWORK, &evaluator};
                     //BranchEvaluationData<defaultBranchSize> data = BranchEval(eval_type, pieces, allowCastling, movementLog->lastMoveIndex);
-                    EvaluationData eval = Eval<10>(eval_type,(const Piece** const) pieces, allowCastling, movementLog->lastMoveIndex);
+                    //EvaluationData eval = Eval<10>(eval_type,(const Piece** const) pieces, allowCastling, movementLog->lastMoveIndex);
                     
 
                     //char* movementNotation = board->MovementNotation(Pieces, bestMove[1], bestMove[0], allowCastling);
@@ -519,14 +519,14 @@ void Game::Randomize(int seed)
     
 }
 
-BranchEvaluationData<Game::defaultBranchSize> Game::BranchEval(EvalutionType evaluator, Piece** pieces, bool* allowCastling, int lastMoveIndex)
+BranchEvaluationData<Game::defaultBranchSize> Game::BranchEval(EvalutionType evaluator, Piece** pieces, bool* allowCastling, int lastMoveIndex, bool bestMove)
 {
     float currentEval = GetPosEval(evaluator, pieces, allowCastling, lastMoveIndex);
 
     float maxPosEval[defaultBranchSize];
     for (int i = 0; i < defaultBranchSize; i++)
     {
-       maxPosEval[i] = lastMoveIndex % 2 == 0 ? -153 : 153;
+       maxPosEval[i] = !(lastMoveIndex % 2 == 0 ^ bestMove) ? -153 : 153;
     }
 
     int bestMoves[defaultBranchSize][2] = { -1,-1 };
@@ -565,7 +565,7 @@ BranchEvaluationData<Game::defaultBranchSize> Game::BranchEval(EvalutionType eva
 
                     for (int i = 0; i < defaultBranchSize; i++)
                     {
-                        if(lastMoveIndex % 2 == 0)//White plays
+                        if(!(lastMoveIndex % 2 == 0 ^ bestMove))//White plays
                         {
                             if (posEval > maxPosEval[i])// - 11 --(+)10 = -1
                             {
@@ -610,7 +610,7 @@ BranchEvaluationData<Game::defaultBranchSize> Game::BranchEval(EvalutionType eva
 }
 
 template <uint depth>
-EvaluationData<depth> Game::Eval(EvalutionType evaluator, const Piece** const pieces, const bool* const allowCastling, int lastMoveIndex)
+EvaluationData<depth> Game::OptimalEval(EvalutionType evaluator, const Piece** const pieces, const bool* const allowCastling, int lastMoveIndex)
 {
     Piece** evalPieces = (Piece**)malloc(Board::totalNumSquares * sizeof(Piece*));
     memcpy(evalPieces, pieces, Board::totalNumSquares * sizeof(Piece*));
@@ -772,6 +772,93 @@ EvaluationData<depth> Game::Eval(EvalutionType evaluator, const Piece** const pi
     //HeapMovementData result2 = GetTreeMoves(branchEval, branchEvals, idx_max, depth);
 
     return result;
+}
+
+
+HeapMovementData Game::Eval(EvalutionType evaluator, Piece** pieces, bool* allowCastling, int lastMoveIndex, uint depth, HeapMovementData* data, int currentDepth)
+{
+    //Moddify dirent input from call;
+    if(currentDepth == -1)
+    {
+        currentDepth = depth - depth;
+    }
+
+    //bool white = lastMoveIndex % 2 == 0;
+
+    BranchEvaluationData eval = BranchEval(evaluator, pieces, allowCastling, lastMoveIndex);//Take the first eval
+
+
+    BranchOutputEvaluation<defaultBranchSize> branchEvals[depth - 1];
+    
+    {//Branch with least offers for oppent
+        BranchEvaluationData<defaultBranchSize * defaultBranchSize> evals;
+        for(int move = 0; move < defaultBranchSize; move++)//Take the 
+        {
+            Piece** branch_pieces = (Piece**)malloc(Board::totalNumSquares * sizeof(Piece*));
+            memcpy(branch_pieces, pieces, Board::totalNumSquares * sizeof(Piece*));
+
+            bool* brach_allow_casling = (bool*)malloc(4 * sizeof(bool));
+            memcpy(brach_allow_casling, allowCastling, 4 * sizeof(bool));
+
+            HeapMovementData moves = GetTreeMoves(eval, nullptr, move, currentDepth);
+            for(int i = 0; i < moves.move_depth; i++)
+            {
+                Board::MakeMove(moves.moves[i].From, moves.moves[i].To, PiecesArray(branch_pieces, Board::totalNumSquares), brach_allow_casling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, nullptr, true, nullptr, Board::WhiteEnPassant, Board::BlackEnPassant);
+            }
+            BranchEvaluationData current_branch_eval = BranchEval(evaluator, branch_pieces, brach_allow_casling, lastMoveIndex + 1);
+
+            for(int branchItem = 0; branchItem < defaultBranchSize; branchItem++)
+            {
+                evals.evals[(move * defaultBranchSize) + branchItem] = current_branch_eval.evals[branchItem];
+                evals.bestMoves[(move * defaultBranchSize) + branchItem][0] = current_branch_eval.bestMoves[branchItem][0];
+                evals.bestMoves[(move * defaultBranchSize) + branchItem][1] = current_branch_eval.bestMoves[branchItem][1];
+            }
+        }
+        BranchOutputEvaluation previous_branch_eval = GetBestMoves(evals, lastMoveIndex + 1, false);
+        branchEvals[currentDepth] = previous_branch_eval;
+    }
+}
+
+BranchOutputEvaluation<Game::defaultBranchSize> Game::GetBestMoves(BranchEvaluationData<defaultBranchSize * defaultBranchSize> moves, int lastMoveIndex, bool best)
+{
+    BranchOutputEvaluation<defaultBranchSize> output;
+    float bestEvals[defaultBranchSize];
+    for(int i = 0; i < defaultBranchSize;i++)
+    {
+        bestEvals[i] = !(lastMoveIndex % 2 == 0 ^ best) ? -153 : 153;
+    }
+    for(int branch = 0; branch < defaultBranchSize; branch++)
+    {
+        for(int branchItem = 0; branchItem < defaultBranchSize; branchItem++)
+        {
+            for(int i = 0; i < defaultBranchSize; i++)
+            {
+                if(!(lastMoveIndex % 2 == 0 ^ best))//White plays
+                {
+                    if(moves.evals[(branch * defaultBranchSize) + branchItem] > bestEvals[i])
+                    {
+                        bestEvals[i] = moves.evals[(branch * defaultBranchSize) + branchItem];
+                        output.moves[i][0] = moves.bestMoves[(branch * defaultBranchSize) + branchItem][0];
+                        output.moves[i][1] = moves.bestMoves[(branch * defaultBranchSize) + branchItem][1];
+                        output.branchID[i] = branch;
+                        break;
+                    }
+                }
+                else
+                {
+                    if(moves.evals[(branch * defaultBranchSize) + branchItem] < bestEvals[i])
+                    {
+                        bestEvals[i] = moves.evals[(branch * defaultBranchSize) + branchItem];
+                        output.moves[i][0] = moves.bestMoves[(branch * defaultBranchSize) + branchItem][0];
+                        output.moves[i][1] = moves.bestMoves[(branch * defaultBranchSize) + branchItem][1];
+                        output.branchID[i] = branch;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    return output;
 }
 
 HeapMovementData Game::GetTreeMoves(BranchEvaluationData<defaultBranchSize> base, BranchOutputEvaluation<defaultBranchSize> *phases, int idx, uint depth)

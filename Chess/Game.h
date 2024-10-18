@@ -100,11 +100,24 @@ struct HeapMovementData
     HeapMovementData(uint depth)
     {
         moves = (Move *)malloc(sizeof(Move) * depth);
+        branch = (int *)malloc(sizeof(int) * depth);
+        move_depth = depth;
     }
     ~HeapMovementData()
     {
         free(moves);
     }
+    HeapMovementData(HeapMovementData& other)//copy contuctor
+    {
+        move_depth = other.move_depth;
+        branch = other.branch;
+        moves = (Move*)malloc(sizeof(Move*) * move_depth);
+        memcpy(moves, other.moves, sizeof(Move*) * move_depth);
+        branch = (int *)malloc(sizeof(int) * move_depth);
+        memcpy(branch, other.branch, sizeof(int) * move_depth);
+    }
+    uint move_depth;
+    int* branch;
 };
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -161,13 +174,18 @@ private:
 
     static const int defaultBranchSize = 5;
 
-    static BranchEvaluationData<defaultBranchSize> BranchEval(EvalutionType evaluator, Piece** pieces, bool* allowCastling, int lastMoveIndex);
+    static BranchEvaluationData<defaultBranchSize> BranchEval(EvalutionType evaluator, Piece** pieces, bool* allowCastling, int lastMoveIndex, bool bestMove = true);
     static float GetPosEval(EvalutionType evaluator, Piece** pieces, bool* allowCastling, int lastMoveIndex);
 
     template <uint depth>
-    static EvaluationData<depth> Eval(EvalutionType evaluator, const Piece** const pieces, const bool* const allowCastling, int lastMoveIndex);
+    static EvaluationData<depth> OptimalEval(EvalutionType evaluator, const Piece** const pieces, const bool* const allowCastling, int lastMoveIndex);
 
     static HeapMovementData GetTreeMoves(BranchEvaluationData<defaultBranchSize> base, BranchOutputEvaluation<defaultBranchSize>* phases, int idx, uint depth);
+    static HeapMovementData GetTreeMoves(HeapMovementData phases, int idx, uint depth);
+
+    static HeapMovementData Eval(EvalutionType evaluator, Piece** pieces, bool* allowCastling, int lastMoveIndex, uint depth, HeapMovementData* data = nullptr, int currentDepth = -1);
+
+    static BranchOutputEvaluation<defaultBranchSize> GetBestMoves(BranchEvaluationData<defaultBranchSize * defaultBranchSize> moves, int lastMoveIndex ,bool best = true);
 
     BranchEvaluationData<defaultBranchSize> dataToDraw = BranchEvaluationData<defaultBranchSize>();
 
