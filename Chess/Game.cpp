@@ -247,6 +247,7 @@ void Game::Update()
                     EvalutionType eval_type = {NEURALNETWORK, &evaluator};
                     //BranchEvaluationData<defaultBranchSize> data = BranchEval(eval_type, pieces, allowCastling, movementLog->lastMoveIndex);
                     //EvaluationData eval = Eval<10>(eval_type,(const Piece** const) pieces, allowCastling, movementLog->lastMoveIndex);
+                    HeapMovementData eval = Eval(eval_type, pieces, allowCastling, movementLog->lastMoveIndex, 7);
                     
 
                     //char* movementNotation = board->MovementNotation(Pieces, bestMove[1], bestMove[0], allowCastling);
@@ -775,23 +776,22 @@ EvaluationData<depth> Game::OptimalEval(EvalutionType evaluator, const Piece** c
 }
 
 
-HeapMovementData Game::Eval(EvalutionType evaluator, Piece** pieces, bool* allowCastling, int lastMoveIndex, uint depth, HeapMovementData* data, int currentDepth)
+HeapMovementData Game::Eval(EvalutionType evaluator, Piece** pieces, bool* allowCastling, int lastMoveIndex, uint depth)
 {
     //Moddify dirent input from call;
-    if(currentDepth == -1)
-    {
-        currentDepth = depth - depth;
-    }
 
     //bool white = lastMoveIndex % 2 == 0;
 
     BranchEvaluationData eval = BranchEval(evaluator, pieces, allowCastling, lastMoveIndex);//Take the first eval
-
+    eval.print(pieces, allowCastling);
 
     BranchOutputEvaluation<defaultBranchSize> branchEvals[depth - 1];
+
+
+    BranchEvaluationData<defaultBranchSize * defaultBranchSize> evals;//Techically it should be inside the for loop but, anyways...
     
+    for(int currentDepth = 1; currentDepth < depth; currentDepth++)
     {//Branch with least offers for oppent
-        BranchEvaluationData<defaultBranchSize * defaultBranchSize> evals;
         for(int move = 0; move < defaultBranchSize; move++)//Take the 
         {
             Piece** branch_pieces = (Piece**)malloc(Board::totalNumSquares * sizeof(Piece*));
@@ -800,12 +800,13 @@ HeapMovementData Game::Eval(EvalutionType evaluator, Piece** pieces, bool* allow
             bool* brach_allow_casling = (bool*)malloc(4 * sizeof(bool));
             memcpy(brach_allow_casling, allowCastling, 4 * sizeof(bool));
 
-            HeapMovementData moves = GetTreeMoves(eval, nullptr, move, currentDepth);
+            HeapMovementData moves = GetTreeMoves(eval, branchEvals, move, currentDepth);
             for(int i = 0; i < moves.move_depth; i++)
             {
                 Board::MakeMove(moves.moves[i].From, moves.moves[i].To, PiecesArray(branch_pieces, Board::totalNumSquares), brach_allow_casling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, nullptr, true, nullptr, Board::WhiteEnPassant, Board::BlackEnPassant);
             }
-            BranchEvaluationData current_branch_eval = BranchEval(evaluator, branch_pieces, brach_allow_casling, lastMoveIndex + 1);
+            BranchEvaluationData current_branch_eval = BranchEval(evaluator, branch_pieces, brach_allow_casling, lastMoveIndex + currentDepth);
+            current_branch_eval.print(branch_pieces, brach_allow_casling);
 
             for(int branchItem = 0; branchItem < defaultBranchSize; branchItem++)
             {
@@ -814,9 +815,38 @@ HeapMovementData Game::Eval(EvalutionType evaluator, Piece** pieces, bool* allow
                 evals.bestMoves[(move * defaultBranchSize) + branchItem][1] = current_branch_eval.bestMoves[branchItem][1];
             }
         }
-        BranchOutputEvaluation previous_branch_eval = GetBestMoves(evals, lastMoveIndex + 1, false);
-        branchEvals[currentDepth] = previous_branch_eval;
+        BranchOutputEvaluation previous_branch_eval = GetBestMoves(evals, lastMoveIndex + currentDepth, currentDepth % 2 == 0);
+        branchEvals[currentDepth - 1] = previous_branch_eval;
     }
+
+    float* lastEvals = GetBestMoveEvals(evals, lastMoveIndex + depth - 1, (depth - 1) & 2 == 0);
+    float max; 
+    int idx_max;
+    max = lastEvals[0];
+    idx_max = 0.f;
+    for(int i = 1; i < defaultBranchSize; i++)
+    {
+        if( (lastMoveIndex + (depth - 1)) % 2 == 0)//White plays
+        {
+            if(lastEvals[i] > max)
+            {
+                idx_max = i;
+                max = lastEvals[i];
+            }
+        }
+        else
+        {
+            if(lastEvals[i] < max)
+            {
+                idx_max = i;
+                max = lastEvals[i];
+            }
+        }
+    }
+
+    HeapMovementData result = GetTreeMoves(eval, branchEvals, idx_max,depth);
+
+    return result;
 }
 
 BranchOutputEvaluation<Game::defaultBranchSize> Game::GetBestMoves(BranchEvaluationData<defaultBranchSize * defaultBranchSize> moves, int lastMoveIndex, bool best)
@@ -861,14 +891,64 @@ BranchOutputEvaluation<Game::defaultBranchSize> Game::GetBestMoves(BranchEvaluat
     return output;
 }
 
+float *Game::GetBestMoveEvals(BranchEvaluationData<defaultBranchSize * defaultBranchSize> moves, int lastMoveIndex, bool best)//Copied code from above function
+{
+    BranchOutputEvaluation<defaultBranchSize> output;
+    float* bestEvals = (float*)malloc(sizeof(float) * defaultBranchSize);
+    for(int i = 0; i < defaultBranchSize;i++)
+    {
+        bestEvals[i] = !(lastMoveIndex % 2 == 0 ^ best) ? -153 : 153;
+    }
+    for(int branch = 0; branch < defaultBranchSize; branch++)
+    {
+        for(int branchItem = 0; branchItem < defaultBranchSize; branchItem++)
+        {
+            for(int i = 0; i < defaultBranchSize; i++)
+            {
+                if(!(lastMoveIndex % 2 == 0 ^ best))//White plays
+                {
+                    if(moves.evals[(branch * defaultBranchSize) + branchItem] > bestEvals[i])
+                    {
+                        bestEvals[i] = moves.evals[(branch * defaultBranchSize) + branchItem];
+                        output.moves[i][0] = moves.bestMoves[(branch * defaultBranchSize) + branchItem][0];
+                        output.moves[i][1] = moves.bestMoves[(branch * defaultBranchSize) + branchItem][1];
+                        output.branchID[i] = branch;
+                        break;
+                    }
+                }
+                else
+                {
+                    if(moves.evals[(branch * defaultBranchSize) + branchItem] < bestEvals[i])
+                    {
+                        bestEvals[i] = moves.evals[(branch * defaultBranchSize) + branchItem];
+                        output.moves[i][0] = moves.bestMoves[(branch * defaultBranchSize) + branchItem][0];
+                        output.moves[i][1] = moves.bestMoves[(branch * defaultBranchSize) + branchItem][1];
+                        output.branchID[i] = branch;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    return bestEvals;
+}
+
 HeapMovementData Game::GetTreeMoves(BranchEvaluationData<defaultBranchSize> base, BranchOutputEvaluation<defaultBranchSize> *phases, int idx, uint depth)
 {
     HeapMovementData result(depth);
+    int branch;
+    if(depth > 1)
+    {
+        result.moves[depth - 1].From = phases[depth - 1 - 1].moves[idx][0];
+        result.moves[depth - 1].To = phases[depth - 1 - 1].moves[idx][1];
+    
 
-    result.moves[depth - 1].From = phases[depth - 1 - 1].moves[idx][0];
-    result.moves[depth - 1].To = phases[depth - 1 - 1].moves[idx][1];
-
-    int branch = phases[depth - 1 - 1].branchID[idx];
+        branch = phases[depth - 1 - 1].branchID[idx];
+    }
+    else
+    {
+        branch = idx;
+    }
     for(int currentDepth = depth - 2; currentDepth > 0; currentDepth--)
     {
         result.moves[currentDepth].From = phases[currentDepth - 1].moves[branch][0];

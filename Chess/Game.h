@@ -51,6 +51,14 @@ struct BranchEvaluationData
             evals[i] = 0;
         }
     }
+    void print(Piece** pieces, bool* allowCastling)
+    {
+        for(int i = 0; i < size; i++)
+        {
+            printf("| Move: %s ,Eval: %f |", Board::MovementNotation(PiecesArray(pieces, Board::totalNumSquares), bestMoves[i][1], bestMoves[i][0], allowCastling), evals[i]);
+        }
+        printf("\n");
+    }
 };
 
 extern GPU gpu;
@@ -72,8 +80,19 @@ struct BranchOutputEvaluation
 {
     int branchID[size];
     int moves[size][2];
+
+    void print(Piece** pieces, bool* allowCastling)
+    {
+        for(int i = 0; i < size; i++)
+        {
+            printf("| Move: %s ,Branch: %d |", Board::MovementNotation(PiecesArray(pieces, Board::totalNumSquares), moves[i][1], moves[i][0], allowCastling), branchID[i]);
+        }
+        printf("\n");
+    }
 };
 
+
+//Rarely needed
 template<int depth>
 struct EvaluationData
 {
@@ -181,11 +200,11 @@ private:
     static EvaluationData<depth> OptimalEval(EvalutionType evaluator, const Piece** const pieces, const bool* const allowCastling, int lastMoveIndex);
 
     static HeapMovementData GetTreeMoves(BranchEvaluationData<defaultBranchSize> base, BranchOutputEvaluation<defaultBranchSize>* phases, int idx, uint depth);
-    static HeapMovementData GetTreeMoves(HeapMovementData phases, int idx, uint depth);
 
-    static HeapMovementData Eval(EvalutionType evaluator, Piece** pieces, bool* allowCastling, int lastMoveIndex, uint depth, HeapMovementData* data = nullptr, int currentDepth = -1);
+    static HeapMovementData Eval(EvalutionType evaluator, Piece** pieces, bool* allowCastling, int lastMoveIndex, uint depth);
 
     static BranchOutputEvaluation<defaultBranchSize> GetBestMoves(BranchEvaluationData<defaultBranchSize * defaultBranchSize> moves, int lastMoveIndex ,bool best = true);
+    static float* GetBestMoveEvals(BranchEvaluationData<defaultBranchSize * defaultBranchSize> moves, int lastMoveIndex ,bool best = true);
 
     BranchEvaluationData<defaultBranchSize> dataToDraw = BranchEvaluationData<defaultBranchSize>();
 
