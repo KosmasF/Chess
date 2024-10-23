@@ -783,6 +783,7 @@ HeapMovementData Game::Eval(EvalutionType evaluator, Piece** pieces, bool* allow
     //bool white = lastMoveIndex % 2 == 0;
 
     BranchEvaluationData eval = BranchEval(evaluator, pieces, allowCastling, lastMoveIndex);//Take the first eval
+    printf("\nMainEval:\n");
     eval.print(pieces, allowCastling);
 
     BranchOutputEvaluation<defaultBranchSize> branchEvals[depth - 1];
@@ -792,6 +793,7 @@ HeapMovementData Game::Eval(EvalutionType evaluator, Piece** pieces, bool* allow
     
     for(int currentDepth = 1; currentDepth < depth; currentDepth++)
     {//Branch with least offers for oppent
+        printf("\nBranch of %s :\n", ((lastMoveIndex + currentDepth) % 2 )== 0 ? "White" : "Black");
         for(int move = 0; move < defaultBranchSize; move++)//Take the 
         {
             Piece** branch_pieces = (Piece**)malloc(Board::totalNumSquares * sizeof(Piece*));
@@ -814,9 +816,34 @@ HeapMovementData Game::Eval(EvalutionType evaluator, Piece** pieces, bool* allow
                 evals.bestMoves[(move * defaultBranchSize) + branchItem][0] = current_branch_eval.bestMoves[branchItem][0];
                 evals.bestMoves[(move * defaultBranchSize) + branchItem][1] = current_branch_eval.bestMoves[branchItem][1];
             }
+
+            free(branch_pieces);
+            free(brach_allow_casling);
         }
         BranchOutputEvaluation previous_branch_eval = GetBestMoves(evals, lastMoveIndex + currentDepth, currentDepth % 2 == 0);
         branchEvals[currentDepth - 1] = previous_branch_eval;
+
+        printf("\nSelected:\n");
+        for(int move = 0; move < defaultBranchSize; move++)
+        {
+            Piece** branch_pieces = (Piece**)malloc(Board::totalNumSquares * sizeof(Piece*));
+            memcpy(branch_pieces, pieces, Board::totalNumSquares * sizeof(Piece*));
+
+            bool* brach_allow_casling = (bool*)malloc(4 * sizeof(bool));
+            memcpy(brach_allow_casling, allowCastling, 4 * sizeof(bool));
+
+            HeapMovementData moves = GetTreeMoves(eval, branchEvals, move, currentDepth);
+            for(int i = 0; i < moves.move_depth; i++)
+            {
+                Board::MakeMove(moves.moves[i].From, moves.moves[i].To, PiecesArray(branch_pieces, Board::totalNumSquares), brach_allow_casling, WhiteDefaultPromotionPiece, BlackDefaultPromotionPiece, nullptr, true, nullptr, Board::WhiteEnPassant, Board::BlackEnPassant);
+            }
+            previous_branch_eval.print(branch_pieces, brach_allow_casling, move);
+
+
+            free(branch_pieces);
+            free(brach_allow_casling);
+        }
+        printf("\n");
     }
 
     float* lastEvals = GetBestMoveEvals(evals, lastMoveIndex + depth - 1, (depth - 1) & 2 == 0);

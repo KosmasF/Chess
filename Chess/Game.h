@@ -89,6 +89,10 @@ struct BranchOutputEvaluation
         }
         printf("\n");
     }
+    void print(Piece** pieces, bool* allowCastling, int move)
+    {
+        printf("| Move: %s ,Branch: %d |", Board::MovementNotation(PiecesArray(pieces, Board::totalNumSquares), moves[move][1], moves[move][0], allowCastling), branchID[move]);
+    } 
 };
 
 

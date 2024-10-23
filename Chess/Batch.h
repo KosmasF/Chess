@@ -7,7 +7,7 @@
 
 namespace Batch
 {
-    float calcBatch(NonGraphicalBoard* board, NeuralNetwork* nn, float mutationRate, float** batchGenerationGradientDescent, int batch
+    inline float calcBatch(NonGraphicalBoard* board, NeuralNetwork* nn, float mutationRate, float** batchGenerationGradientDescent, int batch
 #ifdef ReadFile
         , std::fstream* gameFile, int* fails
 
@@ -160,4 +160,6 @@ namespace Batch
 
         #endif
     }
+
+    float calcVowelBranch(NeuralNetwork* nn, float mutationRate, float** batchGenerationGradientDescent, int batch   ,GPU* gpu);
 }

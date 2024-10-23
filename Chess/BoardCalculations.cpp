@@ -3,7 +3,7 @@
 
 extern GPU gpu;
 
-NeuralNetwork BoardCalculations::evaluator = NeuralNetwork("../networks/testedNonRandom3LayersBIG.nn", &gpu);
+inline NeuralNetwork BoardCalculations::evaluator = NeuralNetwork("../networks/testedNonRandom3LayersBIG.nn", &gpu);
 
 float* BoardCalculations::FindMoveProbabilities(Piece** pieces, bool* allowCastling, float* boardStatus)
 {
