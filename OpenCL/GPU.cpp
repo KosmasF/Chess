@@ -224,10 +224,11 @@ const char* GPU::avgVectorResizable(int numVectors)
 
     for (int i = 0; i < numVectors; i++)
     {
-        const char* string = "__global const float* vec1,";
+        const char* string = "__global const float* vecxx,";
         char* vectorArguments = (char*)malloc(strlen(string));
         memcpy(vectorArguments, string, strlen(string));
-        vectorArguments[25] = i + 65;
+        vectorArguments[25] = ((i/10) % 10) + 65;
+        vectorArguments[26] = (i % 10) + 65;
         memcpy(result + buffer, vectorArguments, strlen(string));
         buffer += strlen(string);
         free(vectorArguments);
@@ -239,10 +240,11 @@ const char* GPU::avgVectorResizable(int numVectors)
 
     for (int i = 0; i < numVectors; i++)
     {
-        const char* string = "vec1[idx]";
+        const char* string = "vecxx[idx]";
         char* vectorArguments = (char*)malloc(strlen(string));
         memcpy(vectorArguments, string, strlen(string));
-        vectorArguments[3] = i + 65;
+        vectorArguments[3] = ((i/10) % 10) + 65;
+        vectorArguments[4] = (i % 10) + 65;
         memcpy(result + buffer, vectorArguments, strlen(string));
         buffer += strlen(string);
         free(vectorArguments);
@@ -272,6 +274,7 @@ const char* GPU::avgVectorResizable(int numVectors)
     result[buffer] = 0;
     buffer++;
 
+    //printf("%s\n", result);
     return result;
 }
 
@@ -341,8 +344,14 @@ float* GPU::AvgVector(float** vectors,const float numVectors, float vectorLength
     ret = clGetDeviceInfo(kernelData.device_id, CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(size_t) * maxDimensions, max_work_sizes, NULL);
     size_t max_work_size = max_work_sizes[0];
     cl_int dimensions = 1;
-    size_t local_item_size[] = { max_work_size };
     size_t global_item_size[] = {vectorLength};
+
+    size_t local_size = max_work_size;
+    while(global_item_size[0] % local_size != 0)
+    {
+        local_size--;
+    }    
+    size_t local_item_size[] = { local_size};
     free(max_work_sizes);
 
 
@@ -619,7 +628,13 @@ void GPU::VectorIncrement(float* A, const float* B, const int size)
 
     const int dimensions = 1;
     size_t global_work_size[] = { size };
-    size_t local_work_size[] = { GetMaxLocalWorkSize() };
+
+    size_t local_size = GetMaxLocalWorkSize();
+    while(global_work_size[0] % local_size != 0)
+    {
+        local_size--;
+    }    
+    size_t local_work_size[] = { local_size};
 
     ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, 0, global_work_size, local_work_size, 0, nullptr, nullptr);
 

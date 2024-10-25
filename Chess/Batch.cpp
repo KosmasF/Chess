@@ -6,7 +6,7 @@ float Batch::calcVowelBranch(NeuralNetwork *nn, float mutationRate, float **batc
     float** vowelVectors = new float*[NUM_VOWELS];
     for(int vowel = 0; vowel < NUM_VOWELS; vowel++)
     {
-        float** vectors = (float**)malloc(sizeof(float*) * (vowels[vowel].sound.header->DataSize / 4410));
+        float** vectors = (float**)malloc(sizeof(float*) * (vowels[vowel].sound.header->DataSize / 4410) * 8);
         for(int i = 0; i < vowels[vowel].sound.header->DataSize; i+=4410)
         {
             int idx = i / 4410;
@@ -23,8 +23,9 @@ float Batch::calcVowelBranch(NeuralNetwork *nn, float mutationRate, float **batc
                 1
             };
 
-            float* StepGradient = gpu->BackPropagate(nn->GetAllActivations(status), expected, nn->LayerSize, nn->LayerNum, mutationRate, nn->GetNumberOfWeights(), nn->weights, nn->weights_buffer_lookup_table);
-
+            float* StepGradient;
+            StepGradient = gpu->BackPropagate(nn->GetAllActivations(status), expected, nn->LayerSize, nn->LayerNum, mutationRate, nn->GetNumberOfWeights(), nn->weights, nn->weights_buffer_lookup_table);
+            //StepGradient = gpu->BackPropagate(nn->GetAllActivations(status), expected, nn->LayerSize, nn->LayerNum, mutationRate, nn->GetNumberOfWeights(), nn->weights, nn->weights_buffer_lookup_table);
             vectors[idx] = StepGradient;//generationStepVector
             //free(parallelVector);
         }
@@ -35,7 +36,7 @@ float Batch::calcVowelBranch(NeuralNetwork *nn, float mutationRate, float **batc
         vowelVectors[vowel] = averageVector;
         free(vectors);
         vectors = nullptr;
-        printf("Ended calculating vowel: %d\n", vowel);
+        //printf("Ended calculating vowel: %d\n", vowel);
     }
 
     float* average = gpu->AvgVector(vowelVectors, NUM_VOWELS, nn->GetNumberOfWeights());
@@ -47,13 +48,13 @@ float Batch::calcVowelBranch(NeuralNetwork *nn, float mutationRate, float **batc
 
     float* status = (float*)malloc(4410 * sizeof(float));
     for(int w = 0; w < 4410; w++)
-        status[w] = vowels[0].sound.buffer[w + 0];
+        status[w] = vowels[30].sound.buffer[w + 1000];
 
     float* NNoutput = nn->Generate(status);
     float expected[4] = {
-        vowels[0].backness,
-        vowels[0].height,
-        vowels[0].roundness,
+        vowels[30].backness,
+        vowels[30].height,
+        vowels[30].roundness,
         1
     };
     float loss = nn->GetLoss(NNoutput, expected);
