@@ -6,7 +6,7 @@
 void Layer::SetWeights(bool normalizeOutput)
 {
 	size_t num = neurons * inputNeurons;
-	if (normalizeOutput)
+	if (!normalizeOutput)
 	{
 		float n = 1;
 		std::fill(weightsMatrix, weightsMatrix + num, n);
