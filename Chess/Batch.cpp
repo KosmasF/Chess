@@ -6,12 +6,12 @@ float Batch::calcVowelBranch(NeuralNetwork *nn, float mutationRate, float **batc
     float** vowelVectors = new float*[NUM_VOWELS];
     for(int vowel = 0; vowel < NUM_VOWELS; vowel++)
     {
-        float** vectors = (float**)malloc(sizeof(float*) * (vowels[vowel].sound.header->DataSize / 4410) * 8);
-        for(int i = 0; i < vowels[vowel].sound.header->DataSize; i+=4410)
+        float** vectors = (float**)malloc(sizeof(float*) * (vowels[vowel].sound.header->DataSize / EVAL_DURATION) * 8);
+        for(int i = 0; i < vowels[vowel].sound.header->DataSize; i+=EVAL_DURATION)
         {
-            int idx = i / 4410;
-            float* status = (float*)malloc(4410 * sizeof(float));//It is ffeed in get allctivatiopns
-            for(int w = 0; w < 4410; w++)
+            int idx = i / EVAL_DURATION;
+            float* status = (float*)malloc(EVAL_DURATION * sizeof(float));//It is ffeed in get allctivatiopns
+            for(int w = 0; w < EVAL_DURATION; w++)
                 status[w] = vowels[vowel].sound.buffer[w + i];
             
 
@@ -29,14 +29,14 @@ float Batch::calcVowelBranch(NeuralNetwork *nn, float mutationRate, float **batc
             vectors[idx] = StepGradient;//generationStepVector
             //free(parallelVector);
         }
-        float* averageVector = gpu->AvgVector(vectors, vowels[vowel].sound.header->DataSize / 4410, nn->GetNumberOfWeights());
-        for (int i = 0; i < vowels[vowel].sound.header->DataSize / 4410; i++)
+        float* averageVector = gpu->AvgVector(vectors, vowels[vowel].sound.header->DataSize / EVAL_DURATION, nn->GetNumberOfWeights());
+        for (int i = 0; i < vowels[vowel].sound.header->DataSize / EVAL_DURATION; i++)
             free(vectors[i]);
 
         vowelVectors[vowel] = averageVector;
         free(vectors);
         vectors = nullptr;
-        //printf("Ended calculating vowel: %d\n", vowel);
+        printf("Ended calculating vowel: %d\n", vowel);
     }
 
     float* average = gpu->AvgVector(vowelVectors, NUM_VOWELS, nn->GetNumberOfWeights());
@@ -46,8 +46,8 @@ float Batch::calcVowelBranch(NeuralNetwork *nn, float mutationRate, float **batc
 
     batchGenerationGradientDescent[batch] = average;
 
-    float* status = (float*)malloc(4410 * sizeof(float));
-    for(int w = 0; w < 4410; w++)
+    float* status = (float*)malloc(EVAL_DURATION * sizeof(float));
+    for(int w = 0; w < EVAL_DURATION; w++)
         status[w] = vowels[30].sound.buffer[w + 1000];
 
     float* NNoutput = nn->Generate(status);

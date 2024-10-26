@@ -17,19 +17,20 @@ int main()
 
     printf("Setup\n");
 
-    const int batchSize = 1;//Max is 26 rn
+    const int batchSize = 1;//Max is 99 rn
     const int batches = 10000;
 
-    int networkSizes[] = {4410 , 100 ,4};
-    float (*activationMethods[])(float) = {None,None};
+    int networkSizes[] = {EVAL_DURATION , 256 ,4};
+    float (*activationMethods[])(float) = {None, None, None, None, None};
 
     NeuralNetwork nn = NeuralNetwork(networkSizes, sizeof(networkSizes) / sizeof(int) , activationMethods, true, &gpu);
 
     long int sum = 1;
     for(int i = 1; i < sizeof(networkSizes) / sizeof(int); i++)
         sum *= networkSizes[i];
-    float mutationRate = 0.1f * (1.f / sum) * ( 1.f / pow(10, sizeof(networkSizes)) / sizeof(int)); //* (1.f / (sizeof(networkSizes)) / sizeof(int));
-    printf("Dynamic mutation Rate: %.20f %ld\n", mutationRate, sum);
+    float mutationRate = 0.1f * (1.f / sum) * ( 1.f / pow(10, (sizeof(networkSizes)) / sizeof(int))); //* (1.f / (sizeof(networkSizes)) / sizeof(int));
+    //mutationRate= abs(mutationRate);
+    printf("Dynamic mutation Rate: %.40f %ld\n", mutationRate, sum);
 
     printf("Training...\n");
 
@@ -73,7 +74,7 @@ int main()
     Shutdown:
 
     printf("Closing...\n");
-    nn.Save("../networks/vowe2.nn2");
+    nn.Save("../networks/vowe3.nn2");
     printf("Training started in %i and ended, duration: %f\n",(int)startTime, (float)(time(NULL) - startTime));
 
     FreeVowels();
