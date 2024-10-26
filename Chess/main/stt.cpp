@@ -28,7 +28,7 @@ int main()
     long int sum = 1;
     for(int i = 1; i < sizeof(networkSizes) / sizeof(int); i++)
         sum *= networkSizes[i];
-    float mutationRate = 0.1f * (1.f / sum) * ( 1.f / pow(10, (sizeof(networkSizes)) / sizeof(int))); //* (1.f / (sizeof(networkSizes)) / sizeof(int));
+    float mutationRate = 0.5f * (1.f / sum);// * ( 1.f / pow(10, (sizeof(networkSizes)) / sizeof(int))); //* (1.f / (sizeof(networkSizes)) / sizeof(int));
     //mutationRate= abs(mutationRate);
     printf("Dynamic mutation Rate: %.40f %ld\n", mutationRate, sum);
 

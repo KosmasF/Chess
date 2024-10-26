@@ -7,12 +7,13 @@ float Batch::calcVowelBranch(NeuralNetwork *nn, float mutationRate, float **batc
     for(int vowel = 0; vowel < NUM_VOWELS; vowel++)
     {
         float** vectors = (float**)malloc(sizeof(float*) * (vowels[vowel].sound.header->DataSize / EVAL_DURATION) * 8);
+         vowels[vowel].sound.header->DataSize = 1 * EVAL_DURATION;//REMOVE THIS LINE, ONLY FOR TESTING
         for(int i = 0; i < vowels[vowel].sound.header->DataSize; i+=EVAL_DURATION)
         {
             int idx = i / EVAL_DURATION;
             float* status = (float*)malloc(EVAL_DURATION * sizeof(float));//It is ffeed in get allctivatiopns
             for(int w = 0; w < EVAL_DURATION; w++)
-                status[w] = vowels[vowel].sound.buffer[w + i];
+                status[w] = vowels[vowel].sound.buffer[w + 1000];
             
 
             //float* out = nn->Generate(status, false);
@@ -36,7 +37,7 @@ float Batch::calcVowelBranch(NeuralNetwork *nn, float mutationRate, float **batc
         vowelVectors[vowel] = averageVector;
         free(vectors);
         vectors = nullptr;
-        printf("Ended calculating vowel: %d\n", vowel);
+        //printf("Ended calculating vowel: %d\n", vowel);
     }
 
     float* average = gpu->AvgVector(vowelVectors, NUM_VOWELS, nn->GetNumberOfWeights());
@@ -48,7 +49,10 @@ float Batch::calcVowelBranch(NeuralNetwork *nn, float mutationRate, float **batc
 
     float* status = (float*)malloc(EVAL_DURATION * sizeof(float));
     for(int w = 0; w < EVAL_DURATION; w++)
+    {
         status[w] = vowels[30].sound.buffer[w + 1000];
+       // printf("%f\n", status[w]);
+    }
 
     float* NNoutput = nn->Generate(status);
     float expected[4] = {

@@ -116,7 +116,7 @@ __kernel void back_prob_last_layer(
 
     int I = i + StartingIndexOfLayerIncludingInputLayer(layer, LayerSize);
     int J = j + StartingIndexOfLayerIncludingInputLayer(layer-1, LayerSize);
-    data[GetIndexOfWeight(J , I, LayerSize, LayerNum)] = activations[J] * PartialDerivativeOfErrorFunctionLastLayer(I - LayerSize[0], activations, expectedOutput, forwardNeuronsDerivatives, LayerSize, LayerNum, weights, weights_buffer_lookup_table) * (-mutationRate);
+    data[GetIndexOfWeight(J , I, LayerSize, LayerNum)] = activations[J] * PartialDerivativeOfErrorFunctionLastLayer(I - LayerSize[0], activations, expectedOutput, forwardNeuronsDerivatives, LayerSize, LayerNum, weights, weights_buffer_lookup_table) * (-mutationRate) * ((float)LayerSize[layer] / (float)LayerSize[layer - 1]) * (1.f / (LayerSize[layer] * LayerSize[layer - 1]));
 
 }
 
@@ -138,9 +138,14 @@ __kernel void back_prob_hidden_layer(
 
     int I = i + StartingIndexOfLayerIncludingInputLayer(layer, LayerSize);
     int J = j + StartingIndexOfLayerIncludingInputLayer(layer-1, LayerSize);
+
+	//int inp_layer_size = LayerSize[layer - 1];
+	//int out_layer_size = LayerSize[layer];
+	//float ratio =  (float)out_layer_size / (float)inp_layer_size;
+
 	//if(layer == 1 && i == 0 )//&& j < 100)
 	//printf("%i. %f   %f    %f   %f\n", GetIndexOfWeight(J , I, LayerSize, LayerNum), activations[J] , forwardNeuronsDerivatives[I - LayerSize[0]] , (-mutationRate) , activations[J] * forwardNeuronsDerivatives[I - LayerSize[0]] * (-mutationRate));
-    data[GetIndexOfWeight(J , I, LayerSize, LayerNum)] = activations[J] * forwardNeuronsDerivatives[I - LayerSize[0]] * (-mutationRate);
+    data[GetIndexOfWeight(J , I, LayerSize, LayerNum)] = activations[J] * forwardNeuronsDerivatives[I - LayerSize[0]] * (-mutationRate) * ((float)LayerSize[layer] / (float)LayerSize[layer - 1]) * (1.f / (LayerSize[layer] * LayerSize[layer - 1]));
 
 }
 
