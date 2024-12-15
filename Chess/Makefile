@@ -17,7 +17,7 @@ OBJECTS := $(filter-out main.cpp main.o, $(OBJECTS))
 OBJECTS += $(MAIN)
 
 LDFLAGS = -L. -L/home/Kosmas/OpenCL-SDK-main/install/lib/ -L../NeuralNetwork -L../OpenCL
-LDLIBS =  -lOpenCL -lraylib -lGL -lm -lpthread -ldl -lrt -l:libNeuralNetwork.o -l:libgpu.o -lasound
+LDLIBS =  -lOpenCL -lraylib -lGL -lm -lpthread -ldl -lrt -l:libNeuralNetwork.o -l:libgpu.o -lasound ../DFT/dft.o
 INC = -I../OpenCL -I../NeuralNetwork -I/usr/include/ -I.. -I.
 
 EXECUTABLE = Chess

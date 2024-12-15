@@ -6,7 +6,7 @@ SOURCES = $(wildcard *.cpp)
 OBJECTS = $(patsubst %.cpp,%.o,$(SOURCES))
 
 LDFLAGS = -relocatable
-INC = -I/usr/include
+INC = -I/usr/include -I../NeuralNetwork
 
 LIBRARY = libgpu.o
 

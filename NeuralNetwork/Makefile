@@ -7,7 +7,7 @@ SOURCES = $(wildcard *.cpp)
 OBJECTS = $(patsubst %.cpp,%.o,$(SOURCES))
 
 LDFLAGS = -relocatable
-INC = -I../OpenCL
+INC = -I../OpenCL -I.
 
 LIBRARY = libNeuralNetwork.o
 

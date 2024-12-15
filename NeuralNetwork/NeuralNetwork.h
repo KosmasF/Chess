@@ -33,7 +33,7 @@ public://PRIVATE
 	float* weights = nullptr;
 	int* weights_buffer_lookup_table = nullptr;
 
-#endif _UNIFIED_WEIGTS_ARRAY
+#endif //_UNIFIED_WEIGTS_ARRAY
 
 
 
@@ -57,16 +57,17 @@ public://PRIVATE
 
 public:
 	float* GetAllActivations(float* input);
-	int GetNumberOfWeights();
+	int GetNumberOfWeights() const;
 	NeuralNetwork(int* layerSize, int layerNum, float (*activationMethods[])(float), bool normalizeOutput, GPU* _gpu);
 
 	NeuralNetwork(const char* path, GPU* _gpu);
+	NeuralNetwork(const NeuralNetwork& other);
 
 	~NeuralNetwork();
 
 	float* Generate(float* input, bool freeInput = true);
 
-	void* Data();
+	void* Data() const;
 
 	void Load(void* data);
 

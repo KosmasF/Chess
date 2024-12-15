@@ -9,6 +9,8 @@
 #include <string>
 #include <cmath>
 
+#include "ActivationMethods.h"
+
 #ifdef _MSVC_LANG //Check if we are using c++ with visual studio
 #pragma warning (disable : 4996)
 #endif //_MSVC_LANG
@@ -48,6 +50,7 @@ public:
     float* GetHiddenLayerForwardNeuronDerivative(const float* forwardNeuronDerivatives, const int* LayerSize, const float* weights, const int* weights_buffer_lookup_table, int layer);
     void SetHiddenLayerForwardNeuronDerivative(float* forwardNeuronDerivatives, const int* LayerSize, const float* weights, const int* weights_buffer_lookup_table, int layer);
     void VectorIncrement(float* A, const float* B, const int size);
+    void ApplyActivationMethod(float* input, int length, ActivationMethodsEnum activationMethod);
 
 #ifdef __OPENCL_CL_H // If we have opecl included in inside the .lib
 private:

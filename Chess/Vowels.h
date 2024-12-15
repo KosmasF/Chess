@@ -4,9 +4,9 @@
 #include <string.h>
 
 
-#define EVAL_DURATION 512
+#define EVAL_DURATION 128
 
-#define NUM_VOWELS 70
+#define NUM_VOWELS 10
 #define BACKNESS_ACCURANCY 10
 #define HEIGHT_ACCURANCY 7
 #define ROUNDNESS_ACCURANCY 2

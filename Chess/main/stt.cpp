@@ -20,7 +20,7 @@ int main()
     const int batchSize = 1;//Max is 99 rn
     const int batches = 10000;
 
-    int networkSizes[] = {EVAL_DURATION , 256 ,4};
+    int networkSizes[] = {10 * KHZ , 1024 , 512,4};
     float (*activationMethods[])(float) = {None, None, None, None, None};
 
     NeuralNetwork nn = NeuralNetwork(networkSizes, sizeof(networkSizes) / sizeof(int) , activationMethods, true, &gpu);
@@ -28,7 +28,7 @@ int main()
     long int sum = 1;
     for(int i = 1; i < sizeof(networkSizes) / sizeof(int); i++)
         sum *= networkSizes[i];
-    float mutationRate = 0.5f * (1.f / sum);// * ( 1.f / pow(10, (sizeof(networkSizes)) / sizeof(int))); //* (1.f / (sizeof(networkSizes)) / sizeof(int));
+    float mutationRate = 1;// * ( 1.f / pow(10, (sizeof(networkSizes)) / sizeof(int))); //* (1.f / (sizeof(networkSizes)) / sizeof(int));
     //mutationRate= abs(mutationRate);
     printf("Dynamic mutation Rate: %.40f %ld\n", mutationRate, sum);
 
@@ -45,7 +45,7 @@ int main()
         for (int batch = 0; batch < batchSize; batch++)
         {
 
-            loss = Batch::calcVowelBranch(&nn, mutationRate, batchGenerationGradientDescent, batch, &gpu);
+            loss = Batch::calcVowelBranchTransformed(&nn, mutationRate, batchGenerationGradientDescent, batch, &gpu);
         }
         
         float* batchGradientDescent = gpu.AvgVector(batchGenerationGradientDescent, batchSize, nn.GetNumberOfWeights());

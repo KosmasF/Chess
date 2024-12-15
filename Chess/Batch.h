@@ -4,6 +4,13 @@
 #include "NeuralNetwork.h"
 #include "BoardCalculations.h"
 
+namespace DFT
+{
+    extern "C"
+    {
+        #include "../DFT/dft.h"
+    }
+}
 
 namespace Batch
 {
@@ -162,4 +169,5 @@ namespace Batch
     }
 
     float calcVowelBranch(NeuralNetwork* nn, float mutationRate, float** batchGenerationGradientDescent, int batch   ,GPU* gpu);
+    float calcVowelBranchTransformed(NeuralNetwork* nn, float mutationRate, float** batchGenerationGradientDescent, int batch   ,GPU* gpu);
 }

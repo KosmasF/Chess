@@ -154,7 +154,6 @@ cl_program GPU::BuildFromFile(const char* path, const char* args)
     size_t size = file.size;
 
     cl_program program = clCreateProgramWithSource(kernelData.context, 1, &(file.src), & (size), &ret);
-
     // Build and compile the OpenCL kernel program
     //std::string build_option = "-DTILE_SIZE=" + std::to_string(TILE_SIZE);
     ret = clBuildProgram(program, 1, &kernelData.device_id, args, NULL, NULL);
@@ -284,7 +283,10 @@ float* GPU::AvgVector(float** vectors,const float numVectors, float vectorLength
     cl_int outputSize = vectorLength * sizeof(float);
 
     float* output = (float*)malloc(outputSize);
-    memset(output, 0, vectorLength * sizeof(float));
+    for(int i = 0; i < vectorLength; i++)
+        output[i] = 0;
+
+    // memset(output, 0, vectorLength * sizeof(float));
 
     /*float* vectorsUnited = (float*)malloc(inputSize);
     for (int i = 0; i < numVectors; i++)
@@ -408,7 +410,9 @@ float* GPU::BackPropagate(const float* activations, const float* expectedOutput,
 
 
     float* forwardNeuronsDerivatives = (float*)malloc((NeuronNum) * sizeof(float));
-    memset(forwardNeuronsDerivatives, 0, (NeuronNum) * sizeof(float));
+    for(int i = 0; i < NeuronNum; i++)
+        forwardNeuronsDerivatives[i] = 0;
+    // memset(forwardNeuronsDerivatives, 0, (NeuronNum) * sizeof(float));
 
 
 
@@ -643,8 +647,75 @@ void GPU::VectorIncrement(float* A, const float* B, const int size)
     ret = clEnqueueReadBuffer(kernelData.command_queue, C_buffer, CL_TRUE, 0, size * sizeof(float), A, 0, nullptr, nullptr);
  
     ret = clReleaseKernel(kernel);
-    ret = clRetainProgram(program);
+    ret = clReleaseProgram(program);
     ret = clReleaseMemObject(A_buffer);
     ret = clReleaseMemObject(B_buffer);
     ret = clReleaseMemObject(C_buffer);
+}
+
+void GPU::ApplyActivationMethod(float *input, int length, ActivationMethodsEnum activationMethod)
+{
+    const char* method;
+    switch (activationMethod)
+    {
+        case e_reLU:
+            break;
+        case e_liL:
+            break;
+        case e_Sigmoid:
+            method = "sigmoid";
+            break;
+        case e_Sigmoid_sym:
+            method = "sigmoid_sym";
+            break;
+        case e_FastSigmoid:
+            break;
+        case e_NonNegativeLinear:
+            break;
+        case e_NonNegativeLimitedLinear:
+            break;
+        case e_None:
+            return;
+        case e_Smoothened:
+            break;
+        case e_invalid:
+            break;
+        method = nullptr;
+        break;
+    }
+
+    cl_int ret;
+    cl_program program = BuildFromFile("../OpenCL/activation_methods.cl", "");
+
+    cl_mem input_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, length * sizeof(float), nullptr, &ret);
+    cl_mem output_buffer = clCreateBuffer(kernelData.context, CL_MEM_WRITE_ONLY, length * sizeof(float), nullptr, &ret);
+
+    ret = clEnqueueWriteBuffer(kernelData.command_queue, input_buffer, CL_TRUE, 0, length * sizeof(float), input, 0, nullptr, nullptr);
+
+
+    cl_kernel kernel = clCreateKernel(program, method, &ret);
+
+    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &input_buffer);
+    ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), &output_buffer);
+
+    const int dimentions = 1;
+    size_t global_work_size[] = {length};
+
+    size_t local_size = GetMaxLocalWorkSize();
+    while(global_work_size[0] % local_size != 0)
+    {
+        local_size--;
+    }    
+    size_t local_work_size[] = { local_size};
+
+    ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimentions, 0, global_work_size, local_work_size, 0, nullptr, nullptr);
+
+    ret = clFinish(kernelData.command_queue);
+
+    ret = clEnqueueReadBuffer(kernelData.command_queue, output_buffer, CL_TRUE, 0, length * sizeof(float), input, 0, nullptr, nullptr);
+
+    ret = clReleaseKernel(kernel);
+    ret = clReleaseProgram(program);
+    ret = clReleaseMemObject(input_buffer);
+    ret = clReleaseMemObject(output_buffer);
 }

@@ -32,5 +32,7 @@ float* Layer::Generate(float* input, GPU* gpu)
 	float* output = gpu->vector_matrix_multiplication(input, weightsMatrix, inputNeurons, neurons);
 	//UTILISE THE ACTIVATION METHOD
 
+	gpu->ApplyActivationMethod(output, neurons, GetActMethodEnum(ActivationMethod));
+
 	return output;
 }

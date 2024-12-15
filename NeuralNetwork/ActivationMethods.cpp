@@ -56,6 +56,8 @@ enum ActivationMethodsEnum GetActMethodEnum(float(*ActMethod)(float))
 		return e_reLU;
 	else if(ActMethod == liL)
 		return e_liL;
+	else if(ActMethod == SigmoidSym)
+		return e_Sigmoid_sym;
 	else if(ActMethod == Sigmoid)
 		return e_Sigmoid;
 	else if(ActMethod == (float(*)(float))FastSigmoid)

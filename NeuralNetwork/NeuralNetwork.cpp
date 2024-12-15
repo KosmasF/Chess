@@ -55,6 +55,14 @@ NeuralNetwork::NeuralNetwork(const char* path, GPU* _gpu)
 	free(LoadData);
 }
 
+NeuralNetwork::NeuralNetwork(const NeuralNetwork &other)
+{
+	gpu = other.gpu;
+
+	void* data = other.Data();
+	Load(data);
+	free(data);
+}
 NeuralNetwork::~NeuralNetwork()
 {
 	for (int i = 0; i < LayerNum - 1; i++)
@@ -84,7 +92,7 @@ float* NeuralNetwork::Generate(float* input, bool freeInput)
 		}
 		else
 		{
-			delete[] input;
+			free(input);
 		}
 
 		input = layerOutput;
@@ -109,7 +117,7 @@ int NeuralNetwork::GetIndexOfNeuronByIndex(int idx)
 	return result + idx;
 }
 
-void* NeuralNetwork::Data()
+void* NeuralNetwork::Data() const
 {
 	/*
 	We need to store:
@@ -228,7 +236,7 @@ void* NeuralNetwork::covnertFormat(void* old_data)
 			ActivationMethodsEnum curr_enum;
 			if (*ActivationMethodPos == 'S')
 			{
-				curr_enum = e_Sigmoid;
+				curr_enum = e_Sigmoid_sym;
 			}
 			else if (*ActivationMethodPos == 'n')
 				curr_enum = e_NonNegativeLimitedLinear;
@@ -239,7 +247,7 @@ void* NeuralNetwork::covnertFormat(void* old_data)
 			ActivationMethodsPosBuffer++;
 		}
 
-		currentNeuronReading += (sizeof(int) + (*numWeightsPos * sizeof(float)) + sizeof(float) + sizeof(char));
+		currentNeuronReading = (char*)currentNeuronReading + ((sizeof(int) + (*numWeightsPos * sizeof(float)) + sizeof(float) + sizeof(char)));
 	}
 
 
@@ -294,9 +302,11 @@ void NeuralNetwork::Load(void* data)
 	for(int i = 0; i < LayerNum - 1; i++)
 	{
 		if(ActivationMethodsPos[i] == e_None)
-			ActivationMethods[i] == None;
+			ActivationMethods[i] = None;// F the double equal
 		else if(ActivationMethodsPos[i] == e_Sigmoid)
-			ActivationMethods[i] == Sigmoid;
+			ActivationMethods[i] = Sigmoid;
+		else if(ActivationMethodsPos[i] == e_Sigmoid_sym)
+			ActivationMethods[i] = SigmoidSym;
 
 		else
 			throw;
@@ -322,7 +332,7 @@ int NeuralNetwork::GetNeuronDataSize(void* data)
 	return sizeof(int) + ((*(int*)data) * sizeof(float)) + sizeof(float) + sizeof(char);
 }
 
-int NeuralNetwork::GetNumberOfWeights()
+int NeuralNetwork::GetNumberOfWeights() const
 {
 	int result = 0;
 	for (int layer = 1; layer < LayerNum; layer++)
