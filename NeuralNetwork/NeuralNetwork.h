@@ -79,6 +79,7 @@ public:
 
 	void SetNeuronNum();
 
+	void PrintArchitecture();
 	//void Mutate(float mutationRate); *DEPRECATED*
 
 	float* BackPropagate(float* expectedOutput, float* input, float mutationRate);

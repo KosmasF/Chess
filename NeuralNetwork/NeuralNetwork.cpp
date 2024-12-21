@@ -751,6 +751,18 @@ void NeuralNetwork::SetNeuronNum()
 	}
 }
 
+void NeuralNetwork::PrintArchitecture()
+{
+	printf("Layers: %i\n", LayerNum);
+	printf("------------------------------------------------------------\n");
+	printf("	Input Layer Neurons: %i\n", LayerSize[0]);
+	for(int i = 1; i < LayerNum; i++)
+	{
+		printf("	Layer %i, Neurons: %i, Activation Method: %s\n", i, LayerSize[i], layers[i - 1]->ActivationMethod == Sigmoid ? "Sigmoid" : "None");
+	}
+	printf("------------------------------------------------------------\n");
+}
+
 /*  DEPRECATED
 void NeuralNetwork::Mutate(float mutationRate)
 {

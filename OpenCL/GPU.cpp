@@ -13,11 +13,12 @@ GPU::GPU()
 	printf("GPU SETTING UP!!!\n");
 
 
-
+    Setup_vector_matrix_multiplication();
 }
 
 GPU::~GPU()
 {
+    Destroy_vector_matrix_multiplication();
     cl_uint ret;
     ret = clReleaseCommandQueue(kernelData.command_queue);
     ret = clReleaseContext(kernelData.context);
@@ -530,13 +531,25 @@ float* GPU::BackPropagate(const float* activations, const float* expectedOutput,
     return data;
 }
 
+void GPU::Setup_vector_matrix_multiplication()
+{
+    cl_int ret;
+
+    vector_matrix_multiplication_data.program = BuildFromFile("../OpenCL/vec_mat_mul.cl", "");
+    vector_matrix_multiplication_data.kernel = clCreateKernel(vector_matrix_multiplication_data.program, "vec_mat_mul", &ret);
+}
+
+void GPU::Destroy_vector_matrix_multiplication()
+{
+    cl_int ret;
+    ret = clReleaseKernel(vector_matrix_multiplication_data.kernel);
+    ret = clReleaseProgram(vector_matrix_multiplication_data.program);
+}
+
 float* GPU::vector_matrix_multiplication(const float* vector, const float* matrix, const int vec_width, const int matrix_width)
 {
-    float* output = (float*)malloc(matrix_width * sizeof(float));
-
-    cl_program program = BuildFromFile("../OpenCL/vec_mat_mul.cl", "");
-
     cl_int ret;
+    float* output = (float*)malloc(matrix_width * sizeof(float));
 
     cl_mem vector_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, vec_width * sizeof(float), nullptr, &ret);
     cl_mem matrix_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, vec_width * matrix_width * sizeof(float), nullptr, &ret);
@@ -545,26 +558,24 @@ float* GPU::vector_matrix_multiplication(const float* vector, const float* matri
     ret = clEnqueueWriteBuffer(kernelData.command_queue, vector_buffer, CL_TRUE, 0, vec_width * sizeof(float), vector, NULL, nullptr, nullptr);
     ret = clEnqueueWriteBuffer(kernelData.command_queue, matrix_buffer, CL_TRUE, 0, vec_width * matrix_width * sizeof(float), matrix, NULL, nullptr, nullptr);
 
-    cl_kernel kernel = clCreateKernel(program, "vec_mat_mul", &ret);
-
-    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &vector_buffer);
-    ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), &matrix_buffer);
-    ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), &output_buffer);
-    ret = clSetKernelArg(kernel, 3, sizeof(int), &vec_width);
+    ret = clSetKernelArg(vector_matrix_multiplication_data.kernel, 0, sizeof(cl_mem), &vector_buffer);
+    ret = clSetKernelArg(vector_matrix_multiplication_data.kernel, 1, sizeof(cl_mem), &matrix_buffer);
+    ret = clSetKernelArg(vector_matrix_multiplication_data.kernel, 2, sizeof(cl_mem), &output_buffer);
+    ret = clSetKernelArg(vector_matrix_multiplication_data.kernel, 3, sizeof(int), &vec_width);
 
     int dimensions = 1;
     size_t global_work_size[] = { matrix_width };
     size_t max_local_work_size = GetMaxLocalWorkSize();
     size_t local_work_size[] = { max_local_work_size > global_work_size[0] ? matrix_width : max_local_work_size};
 
-    ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, 0, global_work_size, local_work_size, 0, nullptr, nullptr);
+    // ret = clFinish(kernelData.command_queue);
+
+    ret = clEnqueueNDRangeKernel(kernelData.command_queue, vector_matrix_multiplication_data.kernel, dimensions, 0, global_work_size, local_work_size, 0, nullptr, nullptr);
 
     ret = clFinish(kernelData.command_queue);
 
     ret = clEnqueueReadBuffer(kernelData.command_queue, output_buffer, CL_TRUE, 0, matrix_width * sizeof(float), output, 0, nullptr, nullptr);
 
-    ret = clReleaseKernel(kernel);
-    ret = clReleaseProgram(program);
     ret = clReleaseMemObject(vector_buffer);
     ret = clReleaseMemObject(matrix_buffer);
     ret = clReleaseMemObject(output_buffer);

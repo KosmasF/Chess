@@ -27,6 +27,13 @@ struct KernelData {
     cl_command_queue command_queue;
     cl_uint selected_platform_index;
 };
+
+struct Vector_matrix_multiplication_data
+{
+    cl_kernel kernel;
+    cl_program program;
+};
+Vector_matrix_multiplication_data vector_matrix_multiplication_data;
 #else
 struct KernelData {
     long long device_id;
@@ -47,6 +54,9 @@ public:
     float* BackPropagate(const float* activations, const float* expectedOutput, const int* LayerSize, const int LayerNum, const float mutationRate, const int weightsNum, const float* weights, const int* weights_buffer_lookup_table);
     //In this function the matrix gets flipped to suit my needs, ne careful!
     float* vector_matrix_multiplication(const float* vector, const float* matrix, const int vec_width, const int matrix_width);
+    void Setup_vector_matrix_multiplication();
+    void Destroy_vector_matrix_multiplication();
+
     float* GetHiddenLayerForwardNeuronDerivative(const float* forwardNeuronDerivatives, const int* LayerSize, const float* weights, const int* weights_buffer_lookup_table, int layer);
     void SetHiddenLayerForwardNeuronDerivative(float* forwardNeuronDerivatives, const int* LayerSize, const float* weights, const int* weights_buffer_lookup_table, int layer);
     void VectorIncrement(float* A, const float* B, const int size);
