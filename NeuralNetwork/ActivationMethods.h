@@ -13,7 +13,12 @@ inline float Sigmoid(float input) {
 	return (1 / (1 + (exp(-input))));
 }
 
-float FastSigmoid(float input,int smooth = 1);
+inline float InverseSigmoid(float input)
+{
+	return log(input) - log(1 - input);
+}
+
+float FastSigmoid(float input,float smooth = 1);
 
 float FastSigmoid(float input);
 

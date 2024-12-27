@@ -53,6 +53,22 @@ NeuralNetwork::NeuralNetwork(const char* path, GPU* _gpu)
 
 	Load(LoadData);
 	free(LoadData);
+
+	//Weights buffer lookup table initialization
+	#ifdef _UNIFIED_WEIGTS_ARRAY
+	weights_buffer_lookup_table = (int*)malloc(NeuronNum * sizeof(int));
+	int idx = 0;
+	int weight_buffer = 0;
+	for (int layer = 1; layer < LayerNum; layer++)
+	{
+		for (int i = 0; i < LayerSize[layer]; i++)
+		{
+			weights_buffer_lookup_table[idx] = weight_buffer;
+			weight_buffer += LayerSize[layer - 1];
+			idx++;
+		}
+	}
+	#endif
 }
 
 NeuralNetwork::NeuralNetwork(const NeuralNetwork &other)
@@ -62,6 +78,23 @@ NeuralNetwork::NeuralNetwork(const NeuralNetwork &other)
 	void* data = other.Data();
 	Load(data);
 	free(data);
+
+	//Weights buffer lookup table initialization
+	SetNeuronNum();
+	#ifdef _UNIFIED_WEIGTS_ARRAY
+	weights_buffer_lookup_table = (int*)malloc(NeuronNum * sizeof(int));
+	int idx = 0;
+	int weight_buffer = 0;
+	for (int layer = 1; layer < LayerNum; layer++)
+	{
+		for (int i = 0; i < LayerSize[layer]; i++)
+		{
+			weights_buffer_lookup_table[idx] = weight_buffer;
+			weight_buffer += LayerSize[layer - 1];
+			idx++;
+		}
+	}
+	#endif
 }
 NeuralNetwork::~NeuralNetwork()
 {
@@ -397,7 +430,7 @@ int NeuralNetwork::LayerOfNeuronIncludingInputLayer(int neuron)
 	return -1;
 }
 
-float* NeuralNetwork::GetAllActivations(float* input)
+float* NeuralNetwork::GetAllActivations(float* input, bool freeInput)
 {
 	float* result = (float*)malloc(sizeof(float) * (NeuronNum+LayerSize[0]));
 	if (result == nullptr) return nullptr;
@@ -416,7 +449,10 @@ float* NeuralNetwork::GetAllActivations(float* input)
 		memcpy(result + resultBuffer, layerOutput, LayerSize[layer] * sizeof(float));
 		resultBuffer += LayerSize[layer];
 
-		free(input);
+		if(!freeInput && layer == 1)
+			;
+		else
+			free(input);
 		input = layerOutput;
 	}
 

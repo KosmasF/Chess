@@ -111,7 +111,7 @@ KernelData GPU::Setup()
     cl_uint ret_num_devices;
     
     //Get number of platforms
-    cl_int ret = clGetPlatformIDs(0, NULL, &ret_num_platforms);
+    cl_int ret = clGetPlatformIDs(0, nullptr, &ret_num_platforms);
 
 
     cl_platform_id* platform_id = new cl_platform_id[ret_num_platforms]; //List of platforms

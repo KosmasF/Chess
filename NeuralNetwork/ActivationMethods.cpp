@@ -17,7 +17,7 @@ float liL(float input)
 }
 
 
-float FastSigmoid(float input,int smooth)
+float FastSigmoid(float input, float smooth)
 {
 	return  input / (smooth + fabs(input));
 }

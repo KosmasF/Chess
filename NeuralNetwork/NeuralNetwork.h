@@ -56,7 +56,7 @@ public://PRIVATE
 
 
 public:
-	float* GetAllActivations(float* input);
+	float* GetAllActivations(float* input, bool freeInput = true);
 	int GetNumberOfWeights() const;
 	NeuralNetwork(int* layerSize, int layerNum, float (*activationMethods[])(float), bool normalizeOutput, GPU* _gpu);
 
