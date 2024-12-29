@@ -5,26 +5,27 @@
 #include "GPU.h"
 #include "raylib.h"
 
-
 GPU::GPU()
 {
     //--------------------------------Setup---------------------------------------------
+    pthread_mutex_init(&mutex, NULL);
     kernelData = Setup();
 	printf("GPU SETTING UP!!!\n");
 
 
-    Setup_vector_matrix_multiplication();
+    // Setup_vector_matrix_multiplication();
 }
 
 GPU::~GPU()
 {
-    Destroy_vector_matrix_multiplication();
+    // Destroy_vector_matrix_multiplication();
     cl_uint ret;
     ret = clReleaseCommandQueue(kernelData.command_queue);
     ret = clReleaseContext(kernelData.context);
+    ret = pthread_mutex_destroy(&mutex);
 }
 
-cl_uint GPU::GetPlatformIndex(cl_platform_id* platforms) {
+cl_uint GPU::GetPlatformIndex(cl_platform_id* platforms, cl_uint ret_num_platforms) {
 
     char* required_platform_subname = (char*)malloc(strlen("Graphics") + 1);
     cl_uint selected_platform_index = 3; //Start at max
@@ -41,7 +42,7 @@ cl_uint GPU::GetPlatformIndex(cl_platform_id* platforms) {
     err = clGetPlatformInfo(platforms[i], CL_PLATFORM_NAME, 0, nullptr, &platform_name_length);
     if (err != CL_SUCCESS) {
         // Handle error
-        std::cerr << "Error getting platform name length: " << err << std::endl;
+        fprintf(stderr, "Error getting platform name length: %u\n", err);// << std::endl;
         return -1;
     }
 
@@ -104,11 +105,12 @@ KernelData GPU::Setup()
 {
     cl_device_type platformType = CL_DEVICE_TYPE_GPU;
 
-    std::cout << "Platform " << platformType << std::endl;//" Matrix size " << SIZE << "x" << SIZE << " Tile size " << TILE_SIZE << std::endl;
+    printf("Platform: %lu\n", platformType);// << std::endl;//" Matrix size " << SIZE << "x" << SIZE << " Tile size " << TILE_SIZE << std::endl;
 
     //Init variables
     cl_device_id device_id = NULL;
     cl_uint ret_num_devices;
+    cl_uint ret_num_platforms = 0;
     
     //Get number of platforms
     cl_int ret = clGetPlatformIDs(0, nullptr, &ret_num_platforms);
@@ -116,21 +118,21 @@ KernelData GPU::Setup()
 
     cl_platform_id* platform_id = new cl_platform_id[ret_num_platforms]; //List of platforms
 
-    std::cout << "clGetPlatformIDs " << ret_num_platforms << std::endl;
+    printf("Num platforms: %u\n", ret_num_platforms);// << std::endl;
 
     // Get platform and device information
     ret = clGetPlatformIDs(ret_num_platforms, platform_id, 0); //Returns the list of platforms found. Minimum of arg1 and arg3.
 
-    std::cout << "clGetPlatformIDs List Ret = " << ret << std::endl;
+    // std::cout << "clGetPlatformIDs List Ret = " << ret << std::endl;
 
     cl_uint selected_platform_index = 0;//GetPlatformIndex(platform_id);
 
-    std::cout << "getPlatformIndex " << selected_platform_index << std::endl;
+    printf("Selected Platform: %u\n", selected_platform_index);// << std::endl;
 
     cl_platform_id platformCPU = platform_id[selected_platform_index];
 
     ret = clGetDeviceIDs(platformCPU, platformType, 1, &device_id, &ret_num_devices); //Returns the devices found
-    std::cout << "clGetDeviceIDs " << ret << std::endl;
+    // std::cout << "clGetDeviceIDs " << ret << std::endl;
     // Create an OpenCL context
     //An OpenCL context is created with one or more devices. Contexts are used by the OpenCL runtime for managing objects such as command-queues, memory, program and kernel objects and for executing kernels on one or more devices specified in the context.
     cl_context context = clCreateContext(NULL, 1, &device_id, NULL, NULL, &ret);
@@ -416,7 +418,7 @@ float* GPU::BackPropagate(const float* activations, const float* expectedOutput,
     // memset(forwardNeuronsDerivatives, 0, (NeuronNum) * sizeof(float));
 
 
-
+    pthread_mutex_lock(&mutex);
 
     cl_program program = BuildFromFile("../OpenCL/back_prop.cl", "-cl-std=CL2.0");
 
@@ -489,7 +491,9 @@ float* GPU::BackPropagate(const float* activations, const float* expectedOutput,
 
             ret = clEnqueueReadBuffer(kernelData.command_queue, forward_neuron_derivatives_buffer, CL_TRUE, 0, NeuronNum * sizeof(float), forwardNeuronsDerivatives, 0, nullptr, nullptr);
 
+            pthread_mutex_unlock(&mutex);
             SetHiddenLayerForwardNeuronDerivative(forwardNeuronsDerivatives, LayerSize, weights, weights_buffer_lookup_table, layer);
+            pthread_mutex_lock(&mutex);
 
             ret = clEnqueueWriteBuffer(kernelData.command_queue, forward_neuron_derivatives_buffer, CL_TRUE, 0, NeuronNum * sizeof(float), forwardNeuronsDerivatives, 0, nullptr, nullptr);
         }
@@ -526,30 +530,36 @@ float* GPU::BackPropagate(const float* activations, const float* expectedOutput,
     ret = clReleaseMemObject(forward_neuron_derivatives_buffer);
     ret = clReleaseMemObject(data_buffer);
 
+    pthread_mutex_unlock(&mutex);
+
     free(forwardNeuronsDerivatives);
     free((void*)activations);
     return data;
 }
 
-void GPU::Setup_vector_matrix_multiplication()
-{
-    cl_int ret;
+// void GPU::Setup_vector_matrix_multiplication()
+// {
+//     cl_int ret;
 
-    vector_matrix_multiplication_data.program = BuildFromFile("../OpenCL/vec_mat_mul.cl", "");
-    vector_matrix_multiplication_data.kernel = clCreateKernel(vector_matrix_multiplication_data.program, "vec_mat_mul", &ret);
-}
+//     vector_matrix_multiplication_data.program = BuildFromFile("../OpenCL/vec_mat_mul.cl", "");
+//     vector_matrix_multiplication_data.kernel = clCreateKernel(vector_matrix_multiplication_data.program, "vec_mat_mul", &ret);
+// }
 
-void GPU::Destroy_vector_matrix_multiplication()
-{
-    cl_int ret;
-    ret = clReleaseKernel(vector_matrix_multiplication_data.kernel);
-    ret = clReleaseProgram(vector_matrix_multiplication_data.program);
-}
+// void GPU::Destroy_vector_matrix_multiplication()
+// {
+//     cl_int ret;
+//     ret = clReleaseKernel(vector_matrix_multiplication_data.kernel);
+//     ret = clReleaseProgram(vector_matrix_multiplication_data.program);
+// }
 
 float* GPU::vector_matrix_multiplication(const float* vector, const float* matrix, const int vec_width, const int matrix_width)
 {
     cl_int ret;
     float* output = (float*)malloc(matrix_width * sizeof(float));
+    pthread_mutex_lock(&mutex);
+
+    cl_program program = BuildFromFile("../OpenCL/vec_mat_mul.cl", "");
+    cl_kernel kernel = clCreateKernel(program, "vec_mat_mul", &ret);
 
     cl_mem vector_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, vec_width * sizeof(float), nullptr, &ret);
     cl_mem matrix_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, vec_width * matrix_width * sizeof(float), nullptr, &ret);
@@ -558,10 +568,10 @@ float* GPU::vector_matrix_multiplication(const float* vector, const float* matri
     ret = clEnqueueWriteBuffer(kernelData.command_queue, vector_buffer, CL_TRUE, 0, vec_width * sizeof(float), vector, NULL, nullptr, nullptr);
     ret = clEnqueueWriteBuffer(kernelData.command_queue, matrix_buffer, CL_TRUE, 0, vec_width * matrix_width * sizeof(float), matrix, NULL, nullptr, nullptr);
 
-    ret = clSetKernelArg(vector_matrix_multiplication_data.kernel, 0, sizeof(cl_mem), &vector_buffer);
-    ret = clSetKernelArg(vector_matrix_multiplication_data.kernel, 1, sizeof(cl_mem), &matrix_buffer);
-    ret = clSetKernelArg(vector_matrix_multiplication_data.kernel, 2, sizeof(cl_mem), &output_buffer);
-    ret = clSetKernelArg(vector_matrix_multiplication_data.kernel, 3, sizeof(int), &vec_width);
+    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &vector_buffer);
+    ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), &matrix_buffer);
+    ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), &output_buffer);
+    ret = clSetKernelArg(kernel, 3, sizeof(int), &vec_width);
 
     int dimensions = 1;
     size_t global_work_size[] = { matrix_width };
@@ -570,7 +580,7 @@ float* GPU::vector_matrix_multiplication(const float* vector, const float* matri
 
     // ret = clFinish(kernelData.command_queue);
 
-    ret = clEnqueueNDRangeKernel(kernelData.command_queue, vector_matrix_multiplication_data.kernel, dimensions, 0, global_work_size, local_work_size, 0, nullptr, nullptr);
+    ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, 0, global_work_size, local_work_size, 0, nullptr, nullptr);
 
     ret = clFinish(kernelData.command_queue);
 
@@ -579,6 +589,9 @@ float* GPU::vector_matrix_multiplication(const float* vector, const float* matri
     ret = clReleaseMemObject(vector_buffer);
     ret = clReleaseMemObject(matrix_buffer);
     ret = clReleaseMemObject(output_buffer);
+    ret = clReleaseKernel(kernel);
+    ret = clReleaseProgram(program);
+    pthread_mutex_unlock(&mutex);
 
     return output;
 }
