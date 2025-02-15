@@ -1,18 +1,16 @@
-
 CC = g++
-CL = ld
-CFLAGS = -g -fPIC
+CFLAGS = -g -fPIC -Wall -O0
 
 SOURCES = $(wildcard *.cpp)
 OBJECTS = $(patsubst %.cpp,%.o,$(SOURCES))
 
-LDFLAGS = -relocatable
+LDFLAGS = -shared
 INC = -I../OpenCL -I.
 
-LIBRARY = libNeuralNetwork.o
+LIBRARY = libNeuralNetwork.so
 
 $(LIBRARY) : $(OBJECTS)
-	$(CL) $(LDFLAGS) -o $(LIBRARY) $(LDLIBS) $(OBJECTS)
+	$(CC) $(LDFLAGS) -o $(LIBRARY) $(OBJECTS)
 
 $(OBJECTS) : %.o : %.cpp
 	$(CC) $(INC) $(CFLAGS) -c $^ -o $@

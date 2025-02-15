@@ -559,7 +559,7 @@ float* GPU::vector_matrix_multiplication(const float* vector, const float* matri
     pthread_mutex_lock(&mutex);
 
     cl_program program = BuildFromFile("../OpenCL/vec_mat_mul.cl", "");
-    cl_kernel kernel = clCreateKernel(program, "vec_mat_mul", &ret);
+    cl_kernel kernel = clCreateKernel(program, "transposed_matrix_times_column_vector", &ret);
 
     cl_mem vector_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, vec_width * sizeof(float), nullptr, &ret);
     cl_mem matrix_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, vec_width * matrix_width * sizeof(float), nullptr, &ret);
@@ -576,7 +576,11 @@ float* GPU::vector_matrix_multiplication(const float* vector, const float* matri
     int dimensions = 1;
     size_t global_work_size[] = { matrix_width };
     size_t max_local_work_size = GetMaxLocalWorkSize();
-    size_t local_work_size[] = { max_local_work_size > global_work_size[0] ? matrix_width : max_local_work_size};
+    while(global_work_size[0] % max_local_work_size != 0)
+    {
+        max_local_work_size--;
+    }    
+    size_t local_work_size[] = { max_local_work_size};
 
     // ret = clFinish(kernelData.command_queue);
 
@@ -742,4 +746,295 @@ void GPU::ApplyActivationMethod(float *input, int length, ActivationMethodsEnum 
     ret = clReleaseProgram(program);
     ret = clReleaseMemObject(input_buffer);
     ret = clReleaseMemObject(output_buffer);
+}
+
+cl_mem GPU::MatrixTimesColumnVector(const float* vector, const cl_mem matrix, const int vec_width, const int matrix_width)
+{
+    cl_int ret;
+    pthread_mutex_lock(&mutex);
+
+    cl_program program = BuildFromFile("../OpenCL/vec_mat_mul.cl", "");
+    cl_kernel kernel = clCreateKernel(program, "matrix_times_column_vector", &ret);
+
+    cl_mem vector_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, vec_width * sizeof(float), nullptr, &ret);
+    cl_mem output_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_WRITE, matrix_width * sizeof(float), nullptr, &ret);
+
+    ret = clEnqueueWriteBuffer(kernelData.command_queue, vector_buffer, CL_TRUE, 0, vec_width * sizeof(float), vector, NULL, nullptr, nullptr);
+
+    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &vector_buffer);
+    ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), &matrix);
+    ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), &output_buffer);
+    ret = clSetKernelArg(kernel, 3, sizeof(int), &vec_width);
+
+    int dimensions = 1;
+    size_t global_work_size[] = { matrix_width };
+    size_t max_local_work_size = GetMaxLocalWorkSize();
+    while(global_work_size[0] % max_local_work_size != 0)
+    {
+        max_local_work_size--;
+    }    
+    size_t local_work_size[] = { max_local_work_size};
+
+    // ret = clFinish(kernelData.command_queue);
+
+    ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, 0, global_work_size, local_work_size, 0, nullptr, nullptr);
+
+    ret = clFinish(kernelData.command_queue);
+
+    ret = clReleaseMemObject(vector_buffer);
+    ret = clReleaseKernel(kernel);
+    ret = clReleaseProgram(program);
+    pthread_mutex_unlock(&mutex);
+
+    return output_buffer;
+}
+
+cl_mem GPU::MatrixTimesColumnVector(const cl_mem vector, const cl_mem matrix, const int vec_width, const int matrix_width)
+{
+    cl_int ret;
+    pthread_mutex_lock(&mutex);
+
+    cl_program program = BuildFromFile("../OpenCL/vec_mat_mul.cl", "");
+    cl_kernel kernel = clCreateKernel(program, "matrix_times_column_vector", &ret);
+
+    cl_mem output_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_WRITE, matrix_width * sizeof(float), nullptr, &ret);
+
+    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &vector);
+    ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), &matrix);
+    ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), &output_buffer);
+    ret = clSetKernelArg(kernel, 3, sizeof(int), &vec_width);
+
+    int dimensions = 1;
+    size_t global_work_size[] = { matrix_width };
+    size_t max_local_work_size = GetMaxLocalWorkSize();
+    while(global_work_size[0] % max_local_work_size != 0)
+    {
+        max_local_work_size--;
+    }    
+    size_t local_work_size[] = { max_local_work_size};
+
+    // ret = clFinish(kernelData.command_queue);
+
+    ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, 0, global_work_size, local_work_size, 0, nullptr, nullptr);
+
+    ret = clFinish(kernelData.command_queue);
+
+    ret = clReleaseKernel(kernel);
+    ret = clReleaseProgram(program);
+    pthread_mutex_unlock(&mutex);
+
+    return output_buffer;
+}
+
+cl_mem GPU::TransposedMatrixTimesColumnVector(const cl_mem vector, const cl_mem matrix, const int vec_width, const int matrix_width)
+{
+    cl_int ret;
+    pthread_mutex_lock(&mutex);
+
+    cl_program program = BuildFromFile("../OpenCL/vec_mat_mul.cl", "");
+    cl_kernel kernel = clCreateKernel(program, "transposed_matrix_times_column_vector", &ret);
+
+    cl_mem output_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_WRITE, matrix_width * sizeof(float), nullptr, &ret);
+
+    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &vector);
+    ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), &matrix);
+    ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), &output_buffer);
+    ret = clSetKernelArg(kernel, 3, sizeof(int), &vec_width);
+
+    int dimensions = 1;
+    size_t global_work_size[] = { matrix_width };
+    size_t max_local_work_size = GetMaxLocalWorkSize();
+    while(global_work_size[0] % max_local_work_size != 0)
+    {
+        max_local_work_size--;
+    }    
+    size_t local_work_size[] = { max_local_work_size};
+
+    // ret = clFinish(kernelData.command_queue);
+
+    ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, 0, global_work_size, local_work_size, 0, nullptr, nullptr);
+
+    ret = clFinish(kernelData.command_queue);
+
+    ret = clReleaseKernel(kernel);
+    ret = clReleaseProgram(program);
+    pthread_mutex_unlock(&mutex);
+
+    return output_buffer;
+}
+
+cl_mem GPU::ColumnVectorTimesRowVector(const cl_mem A, const cl_mem B, const int A_size, const int B_size)
+{
+    cl_int ret;
+
+    cl_program program = BuildFromFile("../OpenCL/vec_vec_mul.cl", "");
+    cl_kernel kernel = clCreateKernel(program, "column_vector_times_row_vector", &ret);
+
+    cl_mem output = clCreateBuffer(kernelData.context, CL_MEM_READ_WRITE, A_size * B_size * sizeof(float), nullptr, &ret);
+
+    int dimensions = 2;
+    size_t global_work_size[] = { A_size, B_size };
+    size_t max_local_work_size = GetMaxLocalWorkSize();
+    size_t local_work_size[] = { max_local_work_size, max_local_work_size};
+    while(global_work_size[0] % local_work_size[0] != 0){
+        local_work_size[0]--;
+    }    
+    while(global_work_size[1] % local_work_size[1] != 0){
+        local_work_size[1]--;
+    }
+
+    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &A);
+    ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), &B);
+    ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), &output);
+    ret = clSetKernelArg(kernel, 3, sizeof(int), &B_size);
+
+    ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, 0, global_work_size, local_work_size, 0, nullptr, nullptr);
+
+    ret = clFinish(kernelData.command_queue);
+
+    ret = clReleaseKernel(kernel);
+    ret = clReleaseProgram(program);
+
+    return output;
+}
+
+void GPU::VectorIncrement(cl_mem A, const cl_mem B, const int size)
+{
+    cl_int ret;
+    cl_program program = BuildFromFile("../OpenCL/vec_add.cl", "");
+
+    cl_kernel kernel = clCreateKernel(program, "vec_add_single", &ret);
+
+    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &A);
+    ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), &B);
+
+    const int dimensions = 1;
+    size_t global_work_size[] = { size };
+
+    size_t local_size = GetMaxLocalWorkSize();
+    while(global_work_size[0] % local_size != 0)
+    {
+        local_size--;
+    }    
+    size_t local_work_size[] = { local_size};
+
+    ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, 0, global_work_size, local_work_size, 0, nullptr, nullptr);
+
+    ret = clFinish(kernelData.command_queue);
+ 
+    ret = clReleaseKernel(kernel);
+    ret = clReleaseProgram(program);
+}
+
+cl_mem GPU::HadamardProduct(const cl_mem A, const cl_mem B, const int size)
+{
+    cl_int ret;
+    cl_program program = BuildFromFile("../OpenCL/hadamard_product.cl", "");
+
+    cl_mem output = clCreateBuffer(kernelData.context, CL_MEM_READ_WRITE, size * sizeof(float), nullptr, &ret);
+    
+    cl_kernel kernel = clCreateKernel(program, "hadamard_product", &ret);
+
+    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &A);
+    ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), &B);
+    ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), &output);
+
+    const int dimensions = 1;
+    size_t global_work_size[] = { size };
+    size_t local_size = GetMaxLocalWorkSize();
+    while(global_work_size[0] % local_size != 0)
+    {
+        local_size--;
+    }    
+    size_t local_work_size[] = { local_size};
+
+    ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, 0, global_work_size, local_work_size, 0, nullptr, nullptr);
+
+    ret = clFinish(kernelData.command_queue);
+
+    ret = clReleaseKernel(kernel);
+    ret = clReleaseProgram(program);
+
+    return output;
+}
+
+cl_mem GPU::SquareErrorGradient(const cl_mem output, const cl_mem expected, const int size)
+{
+    cl_int ret;
+
+    cl_mem res = clCreateBuffer(kernelData.context, CL_MEM_READ_WRITE, size * sizeof(float), nullptr, &ret);
+
+    cl_program program = BuildFromFile("../OpenCL/SquareErrorFunction.cl", "");
+    cl_kernel kernel = clCreateKernel(program, "square_error_gradient", &ret);
+
+    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &output);
+    ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), &expected);
+    ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), &res);
+
+    const int dimensions = 1;
+    size_t global_work_size[] = { size };
+    size_t local_size = GetMaxLocalWorkSize();
+    while(global_work_size[0] % local_size != 0)
+    {
+        local_size--;
+    }    
+    size_t local_work_size[] = { local_size};
+
+    ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, 0, global_work_size, local_work_size, 0, nullptr, nullptr);
+
+    ret = clFinish(kernelData.command_queue);
+
+    ret = clReleaseProgram(program);
+    ret = clReleaseKernel(kernel);
+
+    return res;
+}
+
+void GPU::BackPropagate(const cl_mem input, const cl_mem expected_output, const float* LayerSize, const int LayerNum, const float learningRate, cl_mem* weightSubbuffers, cl_mem* biasSubbuffers, ActivationMethodsEnum* activationMethods)
+{
+    cl_int ret;
+    // Note: Input Layer Excluded.
+    cl_mem* activations = (cl_mem*)malloc((LayerNum - 1) * sizeof(cl_mem));
+
+    cl_mem inp = MatrixTimesColumnVector(input, weightSubbuffers[0], LayerSize[1], LayerSize[0]);
+    VectorIncrement(inp, biasSubbuffers[0], LayerSize[1]);
+    activations[0] = inp;
+    for(int layer = 2; layer < LayerNum; layer++)
+    {
+        cl_mem layerOutput = MatrixTimesColumnVector(inp, weightSubbuffers[layer - 1], LayerSize[layer], LayerSize[layer - 1]);
+        VectorIncrement(layerOutput, biasSubbuffers[layer - 1], LayerSize[layer]);
+        activations[layer - 1] = layerOutput;
+        inp = layerOutput;
+    }
+
+    cl_mem delta_last_layer;
+    if(activationMethods[LayerNum - 2] == e_None){
+        cl_mem derivative_of_last_layer_function = SquareErrorGradient(activations[LayerNum - 2], expected_output, LayerSize[LayerNum - 1]);
+    }else{
+        return;
+    }
+
+    // Note: Input Layer Excluded.
+    cl_mem* delta = (cl_mem*)malloc((LayerNum - 1) * sizeof(cl_mem));
+    delta[LayerNum - 2] = delta_last_layer;
+    for(int i = LayerNum - 2; i > 0; i--){
+        delta[i - 1] = TransposedMatrixTimesColumnVector(delta[i], weightSubbuffers[i], LayerSize[i + 1], LayerSize[i]);
+    }
+
+    for(int i = 0; i < LayerNum - 1; i++){
+        cl_mem derivative = ColumnVectorTimesRowVector(delta[i], activations[i], LayerSize[i + 1], LayerSize[i]);
+        VectorIncrement(weightSubbuffers[i], derivative, LayerSize[i + 1] * LayerSize[i]);
+        VectorIncrement(biasSubbuffers[i], delta[i], LayerSize[i + 1]);
+        ret = clReleaseMemObject(derivative);
+    }
+
+    //Clean up
+    for(int i = 0; i < LayerNum - 1; i++){
+        ret = clReleaseMemObject(activations[i]);
+        ret = clReleaseMemObject(delta[0]);
+    }
+    free(activations);
+    free(delta);
+
+    return;
 }

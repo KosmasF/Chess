@@ -1,17 +1,16 @@
 CC = g++
-CL = ld
-CFLAGS = -g -fPIC
+CFLAGS = -g -fPIC -Wall -O0
 
 SOURCES = $(wildcard *.cpp)
 OBJECTS = $(patsubst %.cpp,%.o,$(SOURCES))
 
-LDFLAGS = -relocatable
+LDFLAGS = -shared
 INC = -I/usr/include -I../NeuralNetwork
 
-LIBRARY = libgpu.o
+LIBRARY = libgpu.so
 
 $(LIBRARY) : $(OBJECTS)
-	$(CL) $(LDFLAGS) -o  $(LIBRARY) $(OBJECTS)
+	$(CC) $(LDFLAGS) -o  $(LIBRARY) $(OBJECTS)
 
 $(OBJECTS) : %.o : %.cpp	
 	$(CC) $(INC) $(CFLAGS)  -c $^ -o $@

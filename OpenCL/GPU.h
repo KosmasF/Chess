@@ -40,8 +40,10 @@ struct KernelData {
 
 #endif //__OPENCL_CL_H
 
+//  #include <CL/cl.h>
 class GPU
 {
+    friend class GpuNeuralNetwork;
 public:
     GPU();
     ~GPU();
@@ -58,6 +60,19 @@ public:
     void SetHiddenLayerForwardNeuronDerivative(float* forwardNeuronDerivatives, const int* LayerSize, const float* weights, const int* weights_buffer_lookup_table, int layer);
     void VectorIncrement(float* A, const float* B, const int size);
     void ApplyActivationMethod(float* input, int length, ActivationMethodsEnum activationMethod);
+
+#ifdef __OPENCL_CL_H
+    cl_mem MatrixTimesColumnVector(const float* vector, const cl_mem matrix, const int vec_width, const int matrix_width);
+    cl_mem MatrixTimesColumnVector(const cl_mem vector, const cl_mem matrix, const int vec_width, const int matrix_width);
+    cl_mem TransposedMatrixTimesColumnVector(const cl_mem vector, const cl_mem matrix, const int vec_width, const int matrix_width);
+    cl_mem ColumnVectorTimesRowVector(const cl_mem A, const cl_mem B, const int A_size, const int B_size);
+    void VectorIncrement(cl_mem A, const cl_mem B, const int size);
+
+    cl_mem HadamardProduct(const cl_mem A, const cl_mem B, const int size);
+    cl_mem SquareErrorGradient(const cl_mem output, const cl_mem expected, const int size);
+
+    void BackPropagate(const cl_mem input, const cl_mem expected_output, const float* LayerSize, const int LayerNum, const float learningRate, cl_mem* weightSubbuffers, cl_mem* biasSubbuffers, ActivationMethodsEnum* activationMethods);
+#endif
 private:
     pthread_mutex_t mutex;
 #ifdef __OPENCL_CL_H // If we have opecl included in inside the .lib
