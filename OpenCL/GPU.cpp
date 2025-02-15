@@ -874,21 +874,13 @@ cl_mem GPU::ColumnVectorTimesRowVector(const cl_mem A, const cl_mem B, const int
 
     int dimensions = 2;
     size_t global_work_size[] = { A_size, B_size };
-    size_t max_local_work_size = GetMaxLocalWorkSize();
-    size_t local_work_size[] = { max_local_work_size, max_local_work_size};
-    while(global_work_size[0] % local_work_size[0] != 0){
-        local_work_size[0]--;
-    }    
-    while(global_work_size[1] % local_work_size[1] != 0){
-        local_work_size[1]--;
-    }
 
     ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &A);
     ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), &B);
     ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), &output);
     ret = clSetKernelArg(kernel, 3, sizeof(int), &B_size);
 
-    ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, 0, global_work_size, local_work_size, 0, nullptr, nullptr);
+    ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, 0, global_work_size, nullptr, 0, nullptr, nullptr);
 
     ret = clFinish(kernelData.command_queue);
 
@@ -1023,7 +1015,7 @@ void GPU::BackPropagate(const cl_mem input, const cl_mem expected_output, const 
 
     for(int i = 0; i < LayerNum - 1; i++){
         ScaleVector(delta[i], -learningRate, LayerSize[i + 1]);
-        cl_mem derivative = ColumnVectorTimesRowVector(delta[i], activations[i], LayerSize[i + 1], LayerSize[i]);
+        cl_mem derivative = ColumnVectorTimesRowVector(delta[i], activations[i  ], LayerSize[i + 1], LayerSize[i]);
         VectorIncrement(weightSubbuffers[i], derivative, LayerSize[i + 1] * LayerSize[i]);
         VectorIncrement(biasSubbuffers[i], delta[i], LayerSize[i + 1]);
         ret = clReleaseMemObject(derivative);
@@ -1032,7 +1024,7 @@ void GPU::BackPropagate(const cl_mem input, const cl_mem expected_output, const 
     //Clean up
     for(int i = 0; i < LayerNum - 1; i++){
         ret = clReleaseMemObject(activations[i]);
-        ret = clReleaseMemObject(delta[0]);
+        ret = clReleaseMemObject(delta[i]);
     }
     free(activations);
     free(delta);
