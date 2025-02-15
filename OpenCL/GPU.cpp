@@ -1009,7 +1009,7 @@ void GPU::BackPropagate(const cl_mem input, const cl_mem expected_output, const 
 
     cl_mem delta_last_layer;
     if(activationMethods[LayerNum - 2] == e_None){
-        cl_mem derivative_of_last_layer_function = SquareErrorGradient(activations[LayerNum - 2], expected_output, LayerSize[LayerNum - 1]);
+        delta_last_layer = SquareErrorGradient(activations[LayerNum - 2], expected_output, LayerSize[LayerNum - 1]);
     }else{
         return;
     }
@@ -1022,6 +1022,7 @@ void GPU::BackPropagate(const cl_mem input, const cl_mem expected_output, const 
     }
 
     for(int i = 0; i < LayerNum - 1; i++){
+        ScaleVector(delta[i], -learningRate, LayerSize[i + 1]);
         cl_mem derivative = ColumnVectorTimesRowVector(delta[i], activations[i], LayerSize[i + 1], LayerSize[i]);
         VectorIncrement(weightSubbuffers[i], derivative, LayerSize[i + 1] * LayerSize[i]);
         VectorIncrement(biasSubbuffers[i], delta[i], LayerSize[i + 1]);
@@ -1037,6 +1038,33 @@ void GPU::BackPropagate(const cl_mem input, const cl_mem expected_output, const 
     free(delta);
 
     return;
+}
+
+void GPU::ScaleVector(cl_mem vec, const float scalar, const int size)
+{
+    cl_int ret;
+
+    cl_program program = BuildFromFile("../OpenCL/ScalarVectorMultiplication.cl", "");
+    cl_kernel kernel = clCreateKernel(program, "scale_vector", &ret);
+
+    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &vec);
+    ret = clSetKernelArg(kernel, 1, sizeof(int), &scalar);
+
+    const int dimensions = 1;
+    size_t global_work_size[] = { size };
+    size_t local_size = GetMaxLocalWorkSize();
+    while(global_work_size[0] % local_size != 0)
+    {
+        local_size--;
+    }    
+    size_t local_work_size[] = { local_size};
+
+    ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, 0, global_work_size, local_work_size, 0, nullptr, nullptr);
+
+    ret = clFinish(kernelData.command_queue);
+
+    ret = clReleaseKernel(kernel);
+    ret = clReleaseProgram(program);
 }
 
 void GPU::BackPropagate(const float *input, const float *expected_output, const int *LayerSize, const int LayerNum, const float learningRate, cl_mem *weightSubbuffers, cl_mem *biasSubbuffers, ActivationMethodsEnum *activationMethods)

@@ -6,7 +6,7 @@ GpuNeuralNetwork::GpuNeuralNetwork(int *layerSize, int layerNum, ActivationMetho
     cl_int ret;
 
     // Copy the LayerSize array
-    layerSize = (int*)malloc(layerNum * sizeof(int));
+    LayerSize = (int*)malloc(layerNum * sizeof(int));
     memcpy(LayerSize, layerSize, layerNum * sizeof(int));
 
     int numberOfWeights = 0;

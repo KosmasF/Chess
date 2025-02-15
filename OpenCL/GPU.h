@@ -71,6 +71,9 @@ public:
     cl_mem HadamardProduct(const cl_mem A, const cl_mem B, const int size);
     cl_mem SquareErrorGradient(const cl_mem output, const cl_mem expected, const int size);
 
+    cl_mem ScalarVectorMultiplication(const cl_mem vec, const float scalar, const int size);
+    void ScaleVector(cl_mem vec, const float scalar, const int size);
+
     void BackPropagate(const float* input, const float* expected_output, const int* LayerSize, const int LayerNum, const float learningRate, cl_mem* weightSubbuffers, cl_mem* biasSubbuffers, ActivationMethodsEnum* activationMethods); 
     void BackPropagate(const cl_mem input, const cl_mem expected_output, const int* LayerSize, const int LayerNum, const float learningRate, cl_mem* weightSubbuffers, cl_mem* biasSubbuffers, ActivationMethodsEnum* activationMethods);
 #endif
