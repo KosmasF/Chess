@@ -990,7 +990,7 @@ cl_mem GPU::SquareErrorGradient(const cl_mem output, const cl_mem expected, cons
     return res;
 }
 
-void GPU::BackPropagate(const cl_mem input, const cl_mem expected_output, const float* LayerSize, const int LayerNum, const float learningRate, cl_mem* weightSubbuffers, cl_mem* biasSubbuffers, ActivationMethodsEnum* activationMethods)
+void GPU::BackPropagate(const cl_mem input, const cl_mem expected_output, const int *LayerSize, const int LayerNum, const float learningRate, cl_mem *weightSubbuffers, cl_mem *biasSubbuffers, ActivationMethodsEnum *activationMethods)
 {
     cl_int ret;
     // Note: Input Layer Excluded.
@@ -1037,4 +1037,20 @@ void GPU::BackPropagate(const cl_mem input, const cl_mem expected_output, const 
     free(delta);
 
     return;
+}
+
+void GPU::BackPropagate(const float *input, const float *expected_output, const int *LayerSize, const int LayerNum, const float learningRate, cl_mem *weightSubbuffers, cl_mem *biasSubbuffers, ActivationMethodsEnum *activationMethods)
+{
+    cl_int ret;
+
+    cl_mem input_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, LayerSize[0] * sizeof(float), nullptr, &ret);
+    cl_mem output_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, LayerSize[LayerNum - 1] * sizeof(float), nullptr, &ret);
+
+    ret = clEnqueueWriteBuffer(kernelData.command_queue, input_buffer, CL_TRUE, 0, LayerSize[0] * sizeof(float), input, 0, nullptr, nullptr);
+    ret = clEnqueueWriteBuffer(kernelData.command_queue, output_buffer, CL_TRUE, 0, LayerSize[LayerNum - 1], expected_output, 0, nullptr, nullptr);
+
+    BackPropagate(input_buffer, output_buffer, LayerSize, LayerNum, learningRate, weightSubbuffers, biasSubbuffers, activationMethods);
+
+    ret = clReleaseMemObject(input_buffer);
+    ret = clReleaseMemObject(output_buffer);    
 }

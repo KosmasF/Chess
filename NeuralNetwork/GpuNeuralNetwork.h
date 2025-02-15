@@ -23,7 +23,8 @@ public:
     ~GpuNeuralNetwork();
 
     cl_mem Generate(float* input, bool freeInput);
-    cl_mem BackPropagate(float* input, float* output, float learningRate);
+    float* GenerateAndCopyToMem(float* input, bool freeInput);
+    void BackPropagate(float* input, float* output, float learningRate);
     void Save(const char* path);
 private:
     GPU* gpu;

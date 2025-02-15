@@ -136,23 +136,35 @@ GpuNeuralNetwork::~GpuNeuralNetwork()
     free(ActivationMethods);
     free(weightSubbuffers);
     free(biasSubbuffers);
+    clReleaseMemObject(weights);
+    clReleaseMemObject(biases);
 }
 
 cl_mem GpuNeuralNetwork::Generate(float *input, bool freeInput)
 {
-    cl_mem inp = gpu->vector_matrix_multiplication(input, weights, LayerSize[1], LayerSize[0]);
+    cl_mem inp = gpu->MatrixTimesColumnVector(input, weights, LayerSize[1], LayerSize[0]);
     gpu->VectorIncrement(inp, biases, LayerSize[1]);
     if(freeInput) {
         free(input);
     }
     for(int layer = 2; layer < LayerNum; layer++)
     {
-        cl_mem layerOutput = gpu->vector_matrix_multiplication(inp, weightSubbuffers[layer - 1], LayerSize[layer], LayerSize[layer - 1]);
+        cl_mem layerOutput = gpu->MatrixTimesColumnVector(inp, weightSubbuffers[layer - 1], LayerSize[layer], LayerSize[layer - 1]);
         gpu->VectorIncrement(layerOutput, biasSubbuffers[layer - 1], LayerSize[layer]);
         clReleaseMemObject(inp);
         inp = layerOutput;
     }
     return inp;
+}
+
+float* GpuNeuralNetwork::GenerateAndCopyToMem(float* input, bool freeInput)
+{
+    cl_int ret;
+    cl_mem out = Generate(input, freeInput);
+    float* res = (float*)malloc(LayerSize[LayerNum - 1] * sizeof(float));
+    ret = clEnqueueReadBuffer(gpu->kernelData.command_queue, out, CL_TRUE, 0, LayerSize[LayerNum - 1] * sizeof(float), res, 0, nullptr, nullptr);
+    ret = clReleaseMemObject(out);
+    return res;
 }
 
 void GpuNeuralNetwork::Save(const char *path)
@@ -183,7 +195,7 @@ void GpuNeuralNetwork::Save(const char *path)
     return;
 }
 
-cl_mem GpuNeuralNetwork::BackPropagate(float *input, float *output, float learningRate)
+void GpuNeuralNetwork::BackPropagate(float *input, float *output, float learningRate)
 {
-    return cl_mem();
+    gpu->BackPropagate(input, output, LayerSize, LayerNum, learningRate, weightSubbuffers, biasSubbuffers, ActivationMethods);
 }
