@@ -1013,11 +1013,11 @@ void GPU::BackPropagate(const cl_mem input, const cl_mem expected_output, const 
         delta[i - 1] = TransposedMatrixTimesColumnVector(delta[i], weightSubbuffers[i], LayerSize[i + 1], LayerSize[i]);
     }
 
-    for(int i = 0; i < LayerNum - 1; i++){
+    for(int i = 1; i < LayerNum - 1; i++){
         ScaleVector(delta[i], -learningRate, LayerSize[i + 1]);
-        cl_mem derivative = ColumnVectorTimesRowVector(delta[i], activations[i  ], LayerSize[i + 1], LayerSize[i]);
+        cl_mem derivative = ColumnVectorTimesRowVector(delta[i], i == 0 ? input : activations[i - 1], LayerSize[i + 1], LayerSize[i]);
         VectorIncrement(weightSubbuffers[i], derivative, LayerSize[i + 1] * LayerSize[i]);
-        VectorIncrement(biasSubbuffers[i], delta[i], LayerSize[i + 1]);
+        // VectorIncrement(biasSubbuffers[i], delta[i], LayerSize[i + 1]);
         ret = clReleaseMemObject(derivative);
     }
 
@@ -1067,7 +1067,7 @@ void GPU::BackPropagate(const float *input, const float *expected_output, const 
     cl_mem output_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, LayerSize[LayerNum - 1] * sizeof(float), nullptr, &ret);
 
     ret = clEnqueueWriteBuffer(kernelData.command_queue, input_buffer, CL_TRUE, 0, LayerSize[0] * sizeof(float), input, 0, nullptr, nullptr);
-    ret = clEnqueueWriteBuffer(kernelData.command_queue, output_buffer, CL_TRUE, 0, LayerSize[LayerNum - 1], expected_output, 0, nullptr, nullptr);
+    ret = clEnqueueWriteBuffer(kernelData.command_queue, output_buffer, CL_TRUE, 0, LayerSize[LayerNum - 1] * sizeof(float), expected_output, 0, nullptr, nullptr);//WHY I FORGOT SIZEOF(FLOAT), I AM A DUMB
 
     BackPropagate(input_buffer, output_buffer, LayerSize, LayerNum, learningRate, weightSubbuffers, biasSubbuffers, activationMethods);
 

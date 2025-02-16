@@ -24,9 +24,9 @@ GpuNeuralNetwork::GpuNeuralNetwork(int *layerSize, int layerNum, ActivationMetho
     weights = clCreateBuffer(gpu->kernelData.context, CL_MEM_READ_WRITE, numberOfWeights * sizeof(float), nullptr, nullptr);
     biases = clCreateBuffer(gpu->kernelData.context, CL_MEM_READ_WRITE, numberOfNeurons * sizeof(float), nullptr, nullptr);
 
-    float weightsNum = 1.f;
+    // float weightsNum = 1.f;
     float biasesNum = 0.f;
-    ret = clEnqueueFillBuffer(gpu->kernelData.command_queue, weights, &weightsNum, sizeof(float), 0, numberOfWeights * sizeof(float), 0, nullptr, nullptr);
+    // ret = clEnqueueFillBuffer(gpu->kernelData.command_queue, weights, &weightsNum, sizeof(float), 0, numberOfWeights * sizeof(float), 0, nullptr, nullptr);
     ret = clEnqueueFillBuffer(gpu->kernelData.command_queue, biases, &biasesNum, sizeof(float), 0, numberOfNeurons * sizeof(float), 0, nullptr, nullptr);
 
     // Copy the activation methods
@@ -46,6 +46,12 @@ GpuNeuralNetwork::GpuNeuralNetwork(int *layerSize, int layerNum, ActivationMetho
         weightSubbuffers[i - 1] = clCreateSubBuffer(weights, CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION, &region, nullptr);
         buffer += size;
     }
+    for(int i = 0; i < layerNum - 1; i++)
+    {
+        float num = 1.f / (layerSize[i] * layerSize[i + 1]);
+        ret = clEnqueueFillBuffer(gpu->kernelData.command_queue, weightSubbuffers[i], &num, sizeof(float), 0, layerSize[i] * layerSize[i + 1] * sizeof(float), 0, nullptr, nullptr);
+    }
+
 
     buffer = 0;
     for(int i = 1; i < layerNum; i++){
@@ -142,14 +148,14 @@ GpuNeuralNetwork::~GpuNeuralNetwork()
 
 cl_mem GpuNeuralNetwork::Generate(float *input, bool freeInput)
 {
-    cl_mem inp = gpu->MatrixTimesColumnVector(input, weights, LayerSize[1], LayerSize[0]);
+    cl_mem inp = gpu->MatrixTimesColumnVector(input, weights, LayerSize[0], LayerSize[1]);
     gpu->VectorIncrement(inp, biases, LayerSize[1]);
     if(freeInput) {
         free(input);
     }
     for(int layer = 2; layer < LayerNum; layer++)
     {
-        cl_mem layerOutput = gpu->MatrixTimesColumnVector(inp, weightSubbuffers[layer - 1], LayerSize[layer], LayerSize[layer - 1]);
+        cl_mem layerOutput = gpu->MatrixTimesColumnVector(inp, weightSubbuffers[layer - 1], LayerSize[layer - 1], LayerSize[layer]);
         gpu->VectorIncrement(layerOutput, biasSubbuffers[layer - 1], LayerSize[layer]);
         clReleaseMemObject(inp);
         inp = layerOutput;
