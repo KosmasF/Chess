@@ -1013,11 +1013,11 @@ void GPU::BackPropagate(const cl_mem input, const cl_mem expected_output, const 
         delta[i - 1] = TransposedMatrixTimesColumnVector(delta[i], weightSubbuffers[i], LayerSize[i + 1], LayerSize[i]);
     }
 
-    for(int i = 1; i < LayerNum - 1; i++){
+    for(int i = 0; i < LayerNum - 1; i++){
         ScaleVector(delta[i], -learningRate, LayerSize[i + 1]);
         cl_mem derivative = ColumnVectorTimesRowVector(delta[i], i == 0 ? input : activations[i - 1], LayerSize[i + 1], LayerSize[i]);
         VectorIncrement(weightSubbuffers[i], derivative, LayerSize[i + 1] * LayerSize[i]);
-        // VectorIncrement(biasSubbuffers[i], delta[i], LayerSize[i + 1]);
+        VectorIncrement(biasSubbuffers[i], delta[i], LayerSize[i + 1]);
         ret = clReleaseMemObject(derivative);
     }
 
