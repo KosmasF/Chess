@@ -681,7 +681,7 @@ void GPU::VectorIncrement(float* A, const float* B, const int size)
     ret = clReleaseMemObject(C_buffer);
 }
 
-void GPU::ApplyActivationMethod(float *input, int length, ActivationMethodsEnum activationMethod)
+void GPU::ApplyActivationMethod(float* input, int length, ActivationMethodsEnum activationMethod)
 {
     const char* method;
     switch (activationMethod)
@@ -746,6 +746,62 @@ void GPU::ApplyActivationMethod(float *input, int length, ActivationMethodsEnum 
     ret = clReleaseProgram(program);
     ret = clReleaseMemObject(input_buffer);
     ret = clReleaseMemObject(output_buffer);
+}
+
+void GPU::ApplyActivationMethod(cl_mem input, int length, ActivationMethodsEnum activationMethod)
+{
+   const char* method;
+    switch (activationMethod)
+    {
+        case e_reLU:
+            break;
+        case e_liL:
+            break;
+        case e_Sigmoid:
+            method = "sigmoid_same";
+            break;
+        case e_Sigmoid_sym:
+            method = "sigmoid_sym_same";
+            break;
+        case e_FastSigmoid:
+            break;
+        case e_NonNegativeLinear:
+            break;
+        case e_NonNegativeLimitedLinear:
+            break;
+        case e_None:
+            return;
+        case e_Smoothened:
+            break;
+        case e_invalid:
+            break;
+        method = nullptr;
+        break;
+    }
+
+    cl_int ret;
+    cl_program program = BuildFromFile("../OpenCL/activation_methods.cl", "");
+
+    cl_kernel kernel = clCreateKernel(program, method, &ret);
+
+    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &input);
+
+    const int dimentions = 1;
+    size_t global_work_size[] = {length};
+
+    size_t local_size = GetMaxLocalWorkSize();
+    while(global_work_size[0] % local_size != 0)
+    {
+        local_size--;
+    }    
+    size_t local_work_size[] = { local_size};
+
+    ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimentions, 0, global_work_size, local_work_size, 0, nullptr, nullptr);
+
+    ret = clFinish(kernelData.command_queue);
+
+    ret = clReleaseKernel(kernel);
+    ret = clReleaseProgram(program);
 }
 
 cl_mem GPU::MatrixTimesColumnVector(const float* vector, const cl_mem matrix, const int vec_width, const int matrix_width)
@@ -950,6 +1006,33 @@ cl_mem GPU::HadamardProduct(const cl_mem A, const cl_mem B, const int size)
     return output;
 }
 
+void GPU::HadamardProductOperator(cl_mem A, const cl_mem B, const int size)
+{
+    cl_int ret;
+    cl_program program = BuildFromFile("../OpenCL/hadamard_product.cl", "");
+    
+    cl_kernel kernel = clCreateKernel(program, "hadamard_product_operator", &ret);
+
+    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &A);
+    ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), &B);
+
+    const int dimensions = 1;
+    size_t global_work_size[] = { size };
+    size_t local_size = GetMaxLocalWorkSize();
+    while(global_work_size[0] % local_size != 0)
+    {
+        local_size--;
+    }    
+    size_t local_work_size[] = { local_size};
+
+    ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, 0, global_work_size, local_work_size, 0, nullptr, nullptr);
+
+    ret = clFinish(kernelData.command_queue);
+
+    ret = clReleaseKernel(kernel);
+    ret = clReleaseProgram(program);
+}
+
 cl_mem GPU::SquareErrorGradient(const cl_mem output, const cl_mem expected, const int size)
 {
     cl_int ret;
@@ -995,22 +1078,53 @@ void GPU::BackPropagate(const cl_mem input, const cl_mem expected_output, const 
     {
         cl_mem layerOutput = MatrixTimesColumnVector(inp, weightSubbuffers[layer - 1], LayerSize[layer], LayerSize[layer - 1]);
         VectorIncrement(layerOutput, biasSubbuffers[layer - 1], LayerSize[layer]);
+        ApplyActivationMethod(layerOutput, LayerSize[layer], activationMethods[layer - 1]);
         activations[layer - 1] = layerOutput;
         inp = layerOutput;
     }
 
-    cl_mem delta_last_layer;
-    if(activationMethods[LayerNum - 2] == e_None){
-        delta_last_layer = SquareErrorGradient(activations[LayerNum - 2], expected_output, LayerSize[LayerNum - 1]);
-    }else{
-        return;
+    cl_mem delta_last_layer = SquareErrorGradient(activations[LayerNum - 2], expected_output, LayerSize[LayerNum - 1]);;
+    switch(activationMethods[LayerNum - 2])
+    {
+        case e_None:
+            break;
+        case e_Sigmoid:
+            {
+                cl_mem sigmoid_derivative = SigmoidDerivative(activations[LayerNum - 2], LayerSize[LayerNum - 1]);
+                HadamardProductOperator(delta_last_layer, sigmoid_derivative, LayerSize[LayerNum - 1]);
+                ret = clReleaseMemObject(sigmoid_derivative);
+            }
+            break;
+        default:
+            printf("Activation Method Not Supported\n");
+            return;
     }
+    // if(activationMethods[LayerNum - 2] == e_None){
+    //     delta_last_layer = SquareErrorGradient(activations[LayerNum - 2], expected_output, LayerSize[LayerNum - 1]);
+    // }else{
+    //     return;
+    // }
 
     // Note: Input Layer Excluded.
     cl_mem* delta = (cl_mem*)malloc((LayerNum - 1) * sizeof(cl_mem));
     delta[LayerNum - 2] = delta_last_layer;
     for(int i = LayerNum - 2; i > 0; i--){
         delta[i - 1] = TransposedMatrixTimesColumnVector(delta[i], weightSubbuffers[i], LayerSize[i + 1], LayerSize[i]);
+        switch(activationMethods[i - 1])
+        {
+            case e_None:
+                break;
+            case e_Sigmoid:
+                {
+                    cl_mem sigmoid_derivative = SigmoidDerivative(activations[i - 1], LayerSize[i]);
+                    HadamardProductOperator(delta[i - 1], sigmoid_derivative, LayerSize[i]);
+                    ret = clReleaseMemObject(sigmoid_derivative);
+                }
+                break;
+            default:
+                printf("Activation Method Not Supported\n");
+                return;
+        }
     }
 
     for(int i = 0; i < LayerNum - 1; i++){
@@ -1073,4 +1187,35 @@ void GPU::BackPropagate(const float *input, const float *expected_output, const 
 
     ret = clReleaseMemObject(input_buffer);
     ret = clReleaseMemObject(output_buffer);    
+}
+
+cl_mem GPU::SigmoidDerivative(const cl_mem vec, const int size)
+{
+    cl_int ret;
+
+    cl_program program = BuildFromFile("../OpenCL/SigmoidDerivative.cl", "");
+    cl_kernel kernel = clCreateKernel(program, "sigmoid_derivative", &ret);
+
+    cl_mem output = clCreateBuffer(kernelData.context, CL_MEM_READ_WRITE, size * sizeof(float), nullptr, &ret);
+
+    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &vec);
+    ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), &output);
+
+    const int dimensions = 1;
+    size_t global_work_size[] = { size };
+    size_t local_size = GetMaxLocalWorkSize();
+    while(global_work_size[0] % local_size != 0)
+    {
+        local_size--;
+    }
+    size_t local_work_size[] = { local_size};
+
+    ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, 0, global_work_size, local_work_size, 0, nullptr, nullptr);
+
+    ret = clFinish(kernelData.command_queue);
+
+    ret = clReleaseKernel(kernel);
+    ret = clReleaseProgram(program);
+
+    return output;
 }

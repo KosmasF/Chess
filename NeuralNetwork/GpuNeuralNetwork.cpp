@@ -157,6 +157,7 @@ cl_mem GpuNeuralNetwork::Generate(float *input, bool freeInput)
     {
         cl_mem layerOutput = gpu->MatrixTimesColumnVector(inp, weightSubbuffers[layer - 1], LayerSize[layer - 1], LayerSize[layer]);
         gpu->VectorIncrement(layerOutput, biasSubbuffers[layer - 1], LayerSize[layer]);
+        gpu->ApplyActivationMethod(layerOutput, LayerSize[layer], ActivationMethods[layer - 1]);
         clReleaseMemObject(inp);
         inp = layerOutput;
     }

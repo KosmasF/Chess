@@ -62,6 +62,8 @@ public:
     void ApplyActivationMethod(float* input, int length, ActivationMethodsEnum activationMethod);
 
 #ifdef __OPENCL_CL_H
+    void ApplyActivationMethod(cl_mem input, int length, ActivationMethodsEnum activationMethod);
+
     cl_mem MatrixTimesColumnVector(const float* vector, const cl_mem matrix, const int vec_width, const int matrix_width);
     cl_mem MatrixTimesColumnVector(const cl_mem vector, const cl_mem matrix, const int vec_width, const int matrix_width);
     cl_mem TransposedMatrixTimesColumnVector(const cl_mem vector, const cl_mem matrix, const int vec_width, const int matrix_width);
@@ -69,10 +71,14 @@ public:
     void VectorIncrement(cl_mem A, const cl_mem B, const int size);
 
     cl_mem HadamardProduct(const cl_mem A, const cl_mem B, const int size);
+    void HadamardProductOperator(cl_mem A, const cl_mem B, const int size);
+
     cl_mem SquareErrorGradient(const cl_mem output, const cl_mem expected, const int size);
 
     cl_mem ScalarVectorMultiplication(const cl_mem vec, const float scalar, const int size);
     void ScaleVector(cl_mem vec, const float scalar, const int size);
+
+    cl_mem SigmoidDerivative(const cl_mem vec, const int size);
 
     void BackPropagate(const float* input, const float* expected_output, const int* LayerSize, const int LayerNum, const float learningRate, cl_mem* weightSubbuffers, cl_mem* biasSubbuffers, ActivationMethodsEnum* activationMethods); 
     void BackPropagate(const cl_mem input, const cl_mem expected_output, const int* LayerSize, const int LayerNum, const float learningRate, cl_mem* weightSubbuffers, cl_mem* biasSubbuffers, ActivationMethodsEnum* activationMethods);
