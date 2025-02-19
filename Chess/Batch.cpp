@@ -144,7 +144,7 @@ float Batch::calcVowelBranchTransformed(NeuralNetwork *nn, float mutationRate, f
 
     free(data.data);
 
-    float* NNoutput = nn->Generate(dft_status);
+      float* NNoutput = nn->Generate(dft_status);
     float expected[4] = {
         vowels[2].backness,
         vowels[2].height,
