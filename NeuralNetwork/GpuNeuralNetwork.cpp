@@ -21,7 +21,7 @@ GpuNeuralNetwork::GpuNeuralNetwork(int *layerSize, int layerNum, ActivationMetho
         numberOfNeurons += layerSize[i];
     }
 
-    pthread_mutex_lock(&gpu->mutex);
+    // pthread_mutex_lock(&gpu->mutex);
 
     // Allocate memory for the weights and biases
     weights = clCreateBuffer(gpu->kernelData.context, CL_MEM_READ_WRITE, numberOfWeights * sizeof(float), nullptr, nullptr);
@@ -67,7 +67,7 @@ GpuNeuralNetwork::GpuNeuralNetwork(int *layerSize, int layerNum, ActivationMetho
         buffer += size;
     }
 
-    pthread_mutex_unlock(&gpu->mutex);
+    // pthread_mutex_unlock(&gpu->mutex);
 }
 
 GpuNeuralNetwork::GpuNeuralNetwork(const char *path, GPU *gpu)
@@ -108,7 +108,7 @@ GpuNeuralNetwork::GpuNeuralNetwork(const char *path, GPU *gpu)
         fread(biasesData, sizeof(float), numberOfNeurons, file);
         fclose(file);
 
-        pthread_mutex_lock(&gpu->mutex);
+        // pthread_mutex_lock(&gpu->mutex);
         weights = clCreateBuffer(gpu->kernelData.context, CL_MEM_READ_WRITE, numberOfWeights * sizeof(float), nullptr, nullptr);
         biases = clCreateBuffer(gpu->kernelData.context, CL_MEM_READ_WRITE, numberOfNeurons * sizeof(float), nullptr, nullptr);
         clEnqueueWriteBuffer(gpu->kernelData.command_queue, weights, CL_TRUE, 0, numberOfWeights * sizeof(float), weightsData, 0, nullptr, nullptr);
@@ -140,7 +140,7 @@ GpuNeuralNetwork::GpuNeuralNetwork(const char *path, GPU *gpu)
             biasSubbuffers[i - 1] = clCreateSubBuffer(biases, CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION, &region, nullptr);
             buffer += size;
         }
-        pthread_mutex_unlock(&gpu->mutex);
+        // pthread_mutex_unlock(&gpu->mutex);
     }
 }
 
@@ -158,7 +158,7 @@ GpuNeuralNetwork::GpuNeuralNetwork(GpuNeuralNetwork &other)
     numberOfWeights = other.numberOfWeights;
     numberOfNeurons = other.numberOfNeurons;
 
-    pthread_mutex_lock(&(gpu->mutex));
+    // pthread_mutex_lock(&(gpu->mutex));
     weights = clCreateBuffer(gpu->kernelData.context, CL_MEM_READ_WRITE, numberOfWeights * sizeof(float), nullptr, nullptr);
     biases = clCreateBuffer(gpu->kernelData.context, CL_MEM_READ_WRITE, numberOfNeurons * sizeof(float), nullptr, nullptr);
     clEnqueueCopyBuffer(gpu->kernelData.command_queue, other.weights, weights, 0, 0, numberOfWeights * sizeof(float), 0, nullptr, nullptr);
@@ -189,7 +189,7 @@ GpuNeuralNetwork::GpuNeuralNetwork(GpuNeuralNetwork &other)
         biasSubbuffers[i - 1] = clCreateSubBuffer(biases, CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION, &region, nullptr);
         buffer += size;
     }
-    pthread_mutex_unlock(&gpu->mutex);
+    // pthread_mutex_unlock(&gpu->mutex);
 }
 
 GpuNeuralNetwork::~GpuNeuralNetwork()
@@ -225,10 +225,10 @@ float* GpuNeuralNetwork::GenerateAndCopyToMem(float* input, bool freeInput)
     cl_int ret;
     cl_mem out = Generate(input, freeInput);
     float* res = (float*)malloc(LayerSize[LayerNum - 1] * sizeof(float));
-    pthread_mutex_lock(&gpu->mutex);
+    // pthread_mutex_lock(&gpu->mutex);
     ret = clEnqueueReadBuffer(gpu->kernelData.command_queue, out, CL_TRUE, 0, LayerSize[LayerNum - 1] * sizeof(float), res, 0, nullptr, nullptr);
     ret = clReleaseMemObject(out);
-    pthread_mutex_unlock(&gpu->mutex);
+    // pthread_mutex_unlock(&gpu->mutex);
     return res;
 }
 

@@ -427,7 +427,7 @@ float* GPU::BackPropagate(const float* activations, const float* expectedOutput,
 
     // pthread_mutex_lock(&mutex);
 
-    cl_program program = BuildFromFile("../OpenCL/back_prop.cl", "-cl-std=CL2.0");
+    cl_program program = BuildFromFile("../OpenCL/back_prop.cl", "");
 
     cl_int ret;
 

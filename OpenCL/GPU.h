@@ -84,8 +84,8 @@ public:
     void BackPropagate(const cl_mem input, const cl_mem expected_output, const int* LayerSize, const int LayerNum, const float learningRate, cl_mem* weightSubbuffers, cl_mem* biasSubbuffers, ActivationMethodsEnum* activationMethods);
 #endif
 private:
-    pthread_mutex_t mutex;
-    pthread_mutexattr_t mutex_attr;
+    // pthread_mutex_t mutex;
+    // pthread_mutexattr_t mutex_attr;
 #ifdef __OPENCL_CL_H // If we have opecl included in inside the .lib
 
     KernelData kernelData;
