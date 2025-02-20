@@ -9,12 +9,13 @@ GpuNeuralNetwork::GpuNeuralNetwork(int *layerSize, int layerNum, ActivationMetho
     LayerSize = (int*)malloc(layerNum * sizeof(int));
     memcpy(LayerSize, layerSize, layerNum * sizeof(int));
 
-    int numberOfWeights = 0;
+    numberOfWeights = 0;
     for(int layer = 1; layer < layerNum; layer++)
     {
         numberOfWeights += layerSize[layer] * layerSize[layer - 1];
     }
-    int numberOfNeurons = 0;
+
+    numberOfNeurons = 0;
     for(int i = 1; i < layerNum; i++)// i = 1 because the input layer is excluded
     {
         numberOfNeurons += layerSize[i];
@@ -91,35 +92,35 @@ GpuNeuralNetwork::GpuNeuralNetwork(const char *path, GPU *gpu)
         fread(LayerSize, sizeof(int), LayerNum, file);
         ActivationMethods = (ActivationMethodsEnum*)malloc((LayerNum - 1) * sizeof(ActivationMethodsEnum));
         fread(ActivationMethods, sizeof(ActivationMethodsEnum), LayerNum - 1, file);
-        int numberOfWeights = 0;
+        numberOfWeights = 0;
         for(int layer = 1; layer < LayerNum; layer++)
         {
             numberOfWeights += LayerSize[layer] * LayerSize[layer - 1];
         }
         float *weightsData = (float*)malloc(numberOfWeights * sizeof(float));
         fread(weightsData, sizeof(float), numberOfWeights, file);
-        int layerNum = 0;
+        numberOfNeurons = 0;
         for(int i = 1; i < LayerNum; i++)
         {
-            layerNum += LayerSize[i];
+            numberOfNeurons += LayerSize[i];
         }
-        float *biasesData = (float*)malloc(layerNum * sizeof(float));
-        fread(biasesData, sizeof(float), layerNum, file);
+        float *biasesData = (float*)malloc(numberOfNeurons * sizeof(float));
+        fread(biasesData, sizeof(float), numberOfNeurons, file);
         fclose(file);
 
         pthread_mutex_lock(&gpu->mutex);
         weights = clCreateBuffer(gpu->kernelData.context, CL_MEM_READ_WRITE, numberOfWeights * sizeof(float), nullptr, nullptr);
-        biases = clCreateBuffer(gpu->kernelData.context, CL_MEM_READ_WRITE, layerNum * sizeof(float), nullptr, nullptr);
+        biases = clCreateBuffer(gpu->kernelData.context, CL_MEM_READ_WRITE, numberOfNeurons * sizeof(float), nullptr, nullptr);
         clEnqueueWriteBuffer(gpu->kernelData.command_queue, weights, CL_TRUE, 0, numberOfWeights * sizeof(float), weightsData, 0, nullptr, nullptr);
-        clEnqueueWriteBuffer(gpu->kernelData.command_queue, biases, CL_TRUE, 0, layerNum * sizeof(float), biasesData, 0, nullptr, nullptr);
+        clEnqueueWriteBuffer(gpu->kernelData.command_queue, biases, CL_TRUE, 0, numberOfNeurons * sizeof(float), biasesData, 0, nullptr, nullptr);
         free(weightsData);
         free(biasesData);
 
-        weightSubbuffers = (cl_mem*)malloc((layerNum - 1) * sizeof(cl_mem));
-        biasSubbuffers = (cl_mem*)malloc((layerNum - 1) * sizeof(cl_mem));
+        weightSubbuffers = (cl_mem*)malloc((numberOfNeurons - 1) * sizeof(cl_mem));
+        biasSubbuffers = (cl_mem*)malloc((numberOfNeurons - 1) * sizeof(cl_mem));
 
         size_t buffer = 0;
-        for(int i = 1; i < layerNum; i++){
+        for(int i = 1; i < numberOfNeurons; i++){
             size_t size = LayerSize[i] * LayerSize[i - 1];
             cl_buffer_region region = {
                 .origin = buffer * sizeof(float),
@@ -130,7 +131,7 @@ GpuNeuralNetwork::GpuNeuralNetwork(const char *path, GPU *gpu)
         }
 
         buffer = 0;
-        for(int i = 1; i < layerNum; i++){
+        for(int i = 1; i < numberOfNeurons; i++){
             size_t size = LayerSize[i];
             cl_buffer_region region = {
                 .origin = buffer * sizeof(float),
@@ -141,6 +142,13 @@ GpuNeuralNetwork::GpuNeuralNetwork(const char *path, GPU *gpu)
         }
         pthread_mutex_unlock(&gpu->mutex);
     }
+}
+
+GpuNeuralNetwork::GpuNeuralNetwork(GpuNeuralNetwork &other)
+{
+    float* data = other.Data();
+    Load((char*)data);
+    free(data);
 }
 
 GpuNeuralNetwork::~GpuNeuralNetwork()
@@ -209,7 +217,125 @@ void GpuNeuralNetwork::Save(const char *path)
     return;
 }
 
+void GpuNeuralNetwork::AddToWeights(float *data)
+{
+    cl_int ret;
+
+    cl_mem data_buffer = clCreateBuffer(gpu->kernelData.context, CL_MEM_READ_ONLY, numberOfWeights * sizeof(float), nullptr, &ret);
+    ret = clEnqueueWriteBuffer(gpu->kernelData.command_queue, data_buffer, CL_TRUE, 0, numberOfWeights * sizeof(float), data, 0, nullptr, nullptr);
+
+    gpu->VectorIncrement(weights, data_buffer, numberOfWeights * sizeof(float));
+
+    ret = clReleaseMemObject(data_buffer);
+}
+
 void GpuNeuralNetwork::BackPropagate(float *input, float *output, float learningRate)
 {
     gpu->BackPropagate(input, output, LayerSize, LayerNum, learningRate, weightSubbuffers, biasSubbuffers, ActivationMethods);
+}
+
+float* GpuNeuralNetwork::Data()
+{
+    size_t total_size = sizeof(int) + LayerNum*sizeof(int) + sizeof(ActivationMethodsEnum)*(LayerNum - 1) + sizeof(float)*numberOfWeights + numberOfNeurons*sizeof(float);
+    char* data = (char*)malloc(total_size);
+    size_t offset = 0;
+
+    // fwrite(&LayerNum, sizeof(int), 1, file);
+    memcpy(data + offset, &LayerNum, sizeof(int));
+    offset += sizeof(int);
+    // fwrite(LayerSize, sizeof(int), LayerNum, file);
+    memcpy(data + offset, LayerSize, LayerNum*sizeof(int));
+    offset += LayerNum*sizeof(int);
+    // fwrite(ActivationMethods, sizeof(ActivationMethodsEnum), LayerNum - 1, file);
+    memcpy(data + offset, ActivationMethods, sizeof(ActivationMethodsEnum) * (LayerNum - 1));
+    offset += sizeof(ActivationMethodsEnum)*(LayerNum - 1);
+    float *weightsData = (float*)malloc(numberOfWeights * sizeof(float));
+    clEnqueueReadBuffer(gpu->kernelData.command_queue, weights, CL_TRUE, 0, numberOfWeights * sizeof(float), weightsData, 0, nullptr, nullptr);
+    // fwrite(weightsData, sizeof(float), numberOfWeights, file);
+    memcpy(data + offset, weightsData, sizeof(float)*numberOfWeights);
+    offset += sizeof(float)*numberOfWeights;
+    free(weightsData);
+    float *biasesData = (float*)malloc(numberOfNeurons * sizeof(float));
+    clEnqueueReadBuffer(gpu->kernelData.command_queue, biases, CL_TRUE, 0, numberOfNeurons * sizeof(float), biasesData, 0, nullptr, nullptr);
+    // fwrite(biasesData, sizeof(float), numberOfNeurons, file);
+    memcpy(data + offset, biasesData, numberOfNeurons*sizeof(float));
+    offset += sizeof(float)*numberOfNeurons;
+    free(biasesData);
+    return (float*)data;
+}
+
+void GpuNeuralNetwork::Load(char *data)
+{
+    size_t offset = 0;
+
+    // fread(&LayerNum, sizeof(int), 1, file);
+    memcpy(&LayerNum, data + offset, sizeof(int));
+    offset+=sizeof(int);
+
+    LayerSize = (int*)malloc(LayerNum * sizeof(int));
+    // fread(LayerSize, sizeof(int), LayerNum, file);
+    memcpy(LayerSize, data+offset, LayerNum*sizeof(int));
+    offset+=LayerNum*sizeof(int);
+
+    ActivationMethods = (ActivationMethodsEnum*)malloc((LayerNum - 1) * sizeof(ActivationMethodsEnum));
+    // fread(ActivationMethods, sizeof(ActivationMethodsEnum), LayerNum - 1, file);
+    memcpy(ActivationMethods, data+offset, (LayerNum - 1) * sizeof(ActivationMethodsEnum));
+    offset += (LayerNum - 1) * sizeof(ActivationMethodsEnum);
+
+    numberOfWeights = 0;
+    for(int layer = 1; layer < LayerNum; layer++)
+    {
+        numberOfWeights += LayerSize[layer] * LayerSize[layer - 1];
+    }
+    float *weightsData = (float*)malloc(numberOfWeights * sizeof(float));
+    // fread(weightsData, sizeof(float), numberOfWeights, file);
+    memcpy(weightsData, data+offset, numberOfWeights * sizeof(float));
+    offset += numberOfWeights * sizeof(float);
+
+
+    numberOfNeurons = 0;
+    for(int i = 1; i < LayerNum; i++)
+    {
+        numberOfNeurons += LayerSize[i];
+    }
+    float *biasesData = (float*)malloc(numberOfNeurons * sizeof(float));
+    // fread(biasesData, sizeof(float), numberOfNeurons, file);
+    memcpy(biasesData, data+offset, numberOfNeurons * sizeof(float));
+    offset+= numberOfNeurons * sizeof(float);
+    // fclose(file);
+
+    pthread_mutex_lock(&gpu->mutex);
+    cl_int ret;
+    weights = clCreateBuffer(gpu->kernelData.context, CL_MEM_READ_WRITE, numberOfWeights * sizeof(float), nullptr, &ret);
+    biases = clCreateBuffer(gpu->kernelData.context, CL_MEM_READ_WRITE, numberOfNeurons * sizeof(float), nullptr, nullptr);
+    clEnqueueWriteBuffer(gpu->kernelData.command_queue, weights, CL_TRUE, 0, numberOfWeights * sizeof(float), weightsData, 0, nullptr, nullptr);
+    clEnqueueWriteBuffer(gpu->kernelData.command_queue, biases, CL_TRUE, 0, numberOfNeurons * sizeof(float), biasesData, 0, nullptr, nullptr);
+    free(weightsData);
+    free(biasesData);
+
+    weightSubbuffers = (cl_mem*)malloc((numberOfNeurons - 1) * sizeof(cl_mem));
+    biasSubbuffers = (cl_mem*)malloc((numberOfNeurons - 1) * sizeof(cl_mem));
+
+    size_t buffer = 0;
+    for(int i = 1; i < numberOfNeurons; i++){
+        size_t size = LayerSize[i] * LayerSize[i - 1];
+        cl_buffer_region region = {
+            .origin = buffer * sizeof(float),
+            .size = size * sizeof(float)
+        };
+        weightSubbuffers[i - 1] = clCreateSubBuffer(weights, CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION, &region, nullptr);
+        buffer += size;
+    }
+
+    buffer = 0;
+    for(int i = 1; i < numberOfNeurons; i++){
+        size_t size = LayerSize[i];
+        cl_buffer_region region = {
+            .origin = buffer * sizeof(float),
+            .size = size * sizeof(float)
+        };
+        biasSubbuffers[i - 1] = clCreateSubBuffer(biases, CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION, &region, nullptr);
+        buffer += size;
+    }
+    pthread_mutex_unlock(&gpu->mutex);
 }

@@ -10,6 +10,7 @@
 
 class GpuNeuralNetwork{
 public:
+    friend void generation();
     /// @brief Create a new Neural Network which is run and trained on the GPU.
     /// @param layerSize The number of neurons in each layer
     /// @param layerNum  The number of layers
@@ -20,12 +21,18 @@ public:
     /// @param path The path relative to the executable
     /// @param gpu The GPU to run the network on
     GpuNeuralNetwork(const char* path, GPU* gpu);
+    GpuNeuralNetwork(GpuNeuralNetwork& other);
     ~GpuNeuralNetwork();
 
     cl_mem Generate(float* input, bool freeInput);
     float* GenerateAndCopyToMem(float* input, bool freeInput);
     void BackPropagate(float* input, float* output, float learningRate);
     void Save(const char* path);
+
+    float* Data();
+    void Load(char* data);
+
+    void AddToWeights(float* data);
 private:
     GPU* gpu;
 
@@ -41,4 +48,7 @@ private:
     cl_mem* biasSubbuffers;
 
     ActivationMethodsEnum* ActivationMethods;
+
+    int numberOfWeights;
+    int numberOfNeurons;
 };
