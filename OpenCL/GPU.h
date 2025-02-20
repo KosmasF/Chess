@@ -85,6 +85,7 @@ public:
 #endif
 private:
     pthread_mutex_t mutex;
+    pthread_mutexattr_t mutex_attr;
 #ifdef __OPENCL_CL_H // If we have opecl included in inside the .lib
 
     KernelData kernelData;

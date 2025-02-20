@@ -8,11 +8,13 @@
 GPU::GPU()
 {
     //--------------------------------Setup---------------------------------------------
-    pthread_mutexattr_t attr;
-    pthread_mutexattr_init(&attr);
-    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-    pthread_mutex_init(&mutex, &attr);
-    pthread_mutexattr_destroy(&attr);
+    // pthread_mutexattr_init(&mutex_attr);
+    // pthread_mutexattr_settype(&mutex_attr, // PTHREAD_MUTEX_RECURSIVE);
+    // pthread_mutex_init(&mutex, &mutex_attr);
+    // int protocol;
+    // pthread_mutexattr_getprotocol(&mutex_attr, &protocol);
+    // printf("Mutex protocol: %d\n", protocol); // Should print 0 (// PTHREAD_PRIO_NONE)
+
     kernelData = Setup();
 	printf("GPU SETTING UP!!!\n");
 
@@ -26,7 +28,8 @@ GPU::~GPU()
     cl_uint ret;
     ret = clReleaseCommandQueue(kernelData.command_queue);
     ret = clReleaseContext(kernelData.context);
-    ret = pthread_mutex_destroy(&mutex);
+    // ret = pthread_mutex_destroy(&mutex);
+    // pthread_mutexattr_destroy(&mutex_attr);
 }
 
 cl_uint GPU::GetPlatformIndex(cl_platform_id* platforms, cl_uint ret_num_platforms) {
@@ -422,7 +425,7 @@ float* GPU::BackPropagate(const float* activations, const float* expectedOutput,
     // memset(forwardNeuronsDerivatives, 0, (NeuronNum) * sizeof(float));
 
 
-    pthread_mutex_lock(&mutex);
+    // pthread_mutex_lock(&mutex);
 
     cl_program program = BuildFromFile("../OpenCL/back_prop.cl", "-cl-std=CL2.0");
 
@@ -495,9 +498,9 @@ float* GPU::BackPropagate(const float* activations, const float* expectedOutput,
 
             ret = clEnqueueReadBuffer(kernelData.command_queue, forward_neuron_derivatives_buffer, CL_TRUE, 0, NeuronNum * sizeof(float), forwardNeuronsDerivatives, 0, nullptr, nullptr);
 
-            pthread_mutex_unlock(&mutex);
+            // pthread_mutex_unlock(&mutex);
             SetHiddenLayerForwardNeuronDerivative(forwardNeuronsDerivatives, LayerSize, weights, weights_buffer_lookup_table, layer);
-            pthread_mutex_lock(&mutex);
+            // pthread_mutex_lock(&mutex);
 
             ret = clEnqueueWriteBuffer(kernelData.command_queue, forward_neuron_derivatives_buffer, CL_TRUE, 0, NeuronNum * sizeof(float), forwardNeuronsDerivatives, 0, nullptr, nullptr);
         }
@@ -534,7 +537,7 @@ float* GPU::BackPropagate(const float* activations, const float* expectedOutput,
     ret = clReleaseMemObject(forward_neuron_derivatives_buffer);
     ret = clReleaseMemObject(data_buffer);
 
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
 
     free(forwardNeuronsDerivatives);
     free((void*)activations);
@@ -560,7 +563,7 @@ float* GPU::vector_matrix_multiplication(const float* vector, const float* matri
 {
     cl_int ret;
     float* output = (float*)malloc(matrix_width * sizeof(float));
-    pthread_mutex_lock(&mutex);
+    // pthread_mutex_lock(&mutex);
 
     cl_program program = BuildFromFile("../OpenCL/vec_mat_mul.cl", "");
     cl_kernel kernel = clCreateKernel(program, "transposed_matrix_times_column_vector", &ret);
@@ -599,7 +602,7 @@ float* GPU::vector_matrix_multiplication(const float* vector, const float* matri
     ret = clReleaseMemObject(output_buffer);
     ret = clReleaseKernel(kernel);
     ret = clReleaseProgram(program);
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
 
     return output;
 }
@@ -647,7 +650,7 @@ void GPU::SetHiddenLayerForwardNeuronDerivative(float* forwardNeuronDerivatives,
 void GPU::VectorIncrement(float* A, const float* B, const int size)
 {
     cl_int ret;
-    pthread_mutex_lock(&mutex);
+    // pthread_mutex_lock(&mutex);
     cl_program program = BuildFromFile("../OpenCL/vec_add.cl", "");
 
     cl_mem A_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, size * sizeof(float), nullptr, &ret);
@@ -679,7 +682,7 @@ void GPU::VectorIncrement(float* A, const float* B, const int size)
 
     ret = clEnqueueReadBuffer(kernelData.command_queue, C_buffer, CL_TRUE, 0, size * sizeof(float), A, 0, nullptr, nullptr);
  
-    pthread_mutex_lock(&mutex);
+    // pthread_mutex_lock(&mutex);
 
     ret = clReleaseKernel(kernel);
     ret = clReleaseProgram(program);
@@ -787,7 +790,7 @@ void GPU::ApplyActivationMethod(cl_mem input, int length, ActivationMethodsEnum 
     }
 
     cl_int ret;
-    pthread_mutex_lock(&mutex);
+    // pthread_mutex_lock(&mutex);
     cl_program program = BuildFromFile("../OpenCL/activation_methods.cl", "");
 
     cl_kernel kernel = clCreateKernel(program, method, &ret);
@@ -810,13 +813,13 @@ void GPU::ApplyActivationMethod(cl_mem input, int length, ActivationMethodsEnum 
 
     ret = clReleaseKernel(kernel);
     ret = clReleaseProgram(program);
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
 }
 
 cl_mem GPU::MatrixTimesColumnVector(const float* vector, const cl_mem matrix, const int vec_width, const int matrix_width)
 {
     cl_int ret;
-    pthread_mutex_lock(&mutex);
+    // pthread_mutex_lock(&mutex);
 
     cl_program program = BuildFromFile("../OpenCL/vec_mat_mul.cl", "");
     cl_kernel kernel = clCreateKernel(program, "matrix_times_column_vector", &ret);
@@ -849,7 +852,7 @@ cl_mem GPU::MatrixTimesColumnVector(const float* vector, const cl_mem matrix, co
     ret = clReleaseMemObject(vector_buffer);
     ret = clReleaseKernel(kernel);
     ret = clReleaseProgram(program);
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
 
     return output_buffer;
 }
@@ -857,7 +860,7 @@ cl_mem GPU::MatrixTimesColumnVector(const float* vector, const cl_mem matrix, co
 cl_mem GPU::MatrixTimesColumnVector(const cl_mem vector, const cl_mem matrix, const int vec_width, const int matrix_width)
 {
     cl_int ret;
-    pthread_mutex_lock(&mutex);
+    // pthread_mutex_lock(&mutex);
 
     cl_program program = BuildFromFile("../OpenCL/vec_mat_mul.cl", "");
     cl_kernel kernel = clCreateKernel(program, "matrix_times_column_vector", &ret);
@@ -886,7 +889,7 @@ cl_mem GPU::MatrixTimesColumnVector(const cl_mem vector, const cl_mem matrix, co
 
     ret = clReleaseKernel(kernel);
     ret = clReleaseProgram(program);
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
 
     return output_buffer;
 }
@@ -894,7 +897,7 @@ cl_mem GPU::MatrixTimesColumnVector(const cl_mem vector, const cl_mem matrix, co
 cl_mem GPU::TransposedMatrixTimesColumnVector(const cl_mem vector, const cl_mem matrix, const int vec_width, const int matrix_width)
 {
     cl_int ret;
-    pthread_mutex_lock(&mutex);
+    // pthread_mutex_lock(&mutex);
 
     cl_program program = BuildFromFile("../OpenCL/vec_mat_mul.cl", "");
     cl_kernel kernel = clCreateKernel(program, "transposed_matrix_times_column_vector", &ret);
@@ -923,7 +926,7 @@ cl_mem GPU::TransposedMatrixTimesColumnVector(const cl_mem vector, const cl_mem 
 
     ret = clReleaseKernel(kernel);
     ret = clReleaseProgram(program);
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
 
     return output_buffer;
 }
@@ -931,7 +934,7 @@ cl_mem GPU::TransposedMatrixTimesColumnVector(const cl_mem vector, const cl_mem 
 cl_mem GPU::ColumnVectorTimesRowVector(const cl_mem A, const cl_mem B, const int A_size, const int B_size)
 {
     cl_int ret;
-    pthread_mutex_lock(&mutex);
+    // pthread_mutex_lock(&mutex);
 
     cl_program program = BuildFromFile("../OpenCL/vec_vec_mul.cl", "");
     cl_kernel kernel = clCreateKernel(program, "column_vector_times_row_vector", &ret);
@@ -952,7 +955,7 @@ cl_mem GPU::ColumnVectorTimesRowVector(const cl_mem A, const cl_mem B, const int
 
     ret = clReleaseKernel(kernel);
     ret = clReleaseProgram(program);
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
 
     return output;
 }
@@ -960,7 +963,7 @@ cl_mem GPU::ColumnVectorTimesRowVector(const cl_mem A, const cl_mem B, const int
 void GPU::VectorIncrement(cl_mem A, const cl_mem B, const int size)
 {
     cl_int ret;
-    pthread_mutex_lock(&mutex);
+    // pthread_mutex_lock(&mutex);
     cl_program program = BuildFromFile("../OpenCL/vec_add.cl", "");
 
     cl_kernel kernel = clCreateKernel(program, "vec_add_single", &ret);
@@ -984,7 +987,7 @@ void GPU::VectorIncrement(cl_mem A, const cl_mem B, const int size)
  
     ret = clReleaseKernel(kernel);
     ret = clReleaseProgram(program);
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
 }
 
 cl_mem GPU::HadamardProduct(const cl_mem A, const cl_mem B, const int size)
@@ -1022,7 +1025,7 @@ cl_mem GPU::HadamardProduct(const cl_mem A, const cl_mem B, const int size)
 void GPU::HadamardProductOperator(cl_mem A, const cl_mem B, const int size)
 {
     cl_int ret;
-    pthread_mutex_lock(&mutex);
+    // pthread_mutex_lock(&mutex);
     cl_program program = BuildFromFile("../OpenCL/hadamard_product.cl", "");
     
     cl_kernel kernel = clCreateKernel(program, "hadamard_product_operator", &ret);
@@ -1045,13 +1048,13 @@ void GPU::HadamardProductOperator(cl_mem A, const cl_mem B, const int size)
 
     ret = clReleaseKernel(kernel);
     ret = clReleaseProgram(program);
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
 }
 
 cl_mem GPU::SquareErrorGradient(const cl_mem output, const cl_mem expected, const int size)
 {
     cl_int ret;
-    pthread_mutex_lock(&mutex);
+    // pthread_mutex_lock(&mutex);
 
     cl_mem res = clCreateBuffer(kernelData.context, CL_MEM_READ_WRITE, size * sizeof(float), nullptr, &ret);
 
@@ -1077,7 +1080,7 @@ cl_mem GPU::SquareErrorGradient(const cl_mem output, const cl_mem expected, cons
 
     ret = clReleaseProgram(program);
     ret = clReleaseKernel(kernel);
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
 
     return res;
 }
@@ -1088,7 +1091,7 @@ void GPU::BackPropagate(const cl_mem input, const cl_mem expected_output, const 
     // Note: Input Layer Excluded.
     cl_mem* activations = (cl_mem*)malloc((LayerNum - 1) * sizeof(cl_mem));
 
-    pthread_mutex_lock(&mutex);
+    // pthread_mutex_lock(&mutex);
 
     cl_mem inp = MatrixTimesColumnVector(input, weightSubbuffers[0], LayerSize[1], LayerSize[0]);
     VectorIncrement(inp, biasSubbuffers[0], LayerSize[1]);
@@ -1154,7 +1157,7 @@ void GPU::BackPropagate(const cl_mem input, const cl_mem expected_output, const 
         ret = clReleaseMemObject(derivative);
     }
 
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
 
     //Clean up
     for(int i = 0; i < LayerNum - 1; i++){
@@ -1170,7 +1173,7 @@ void GPU::BackPropagate(const cl_mem input, const cl_mem expected_output, const 
 void GPU::ScaleVector(cl_mem vec, const float scalar, const int size)
 {
     cl_int ret;
-    pthread_mutex_lock(&mutex);
+    // pthread_mutex_lock(&mutex);
 
     cl_program program = BuildFromFile("../OpenCL/ScalarVectorMultiplication.cl", "");
     cl_kernel kernel = clCreateKernel(program, "scale_vector", &ret);
@@ -1193,13 +1196,13 @@ void GPU::ScaleVector(cl_mem vec, const float scalar, const int size)
 
     ret = clReleaseKernel(kernel);
     ret = clReleaseProgram(program);
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
 }
 
 void GPU::BackPropagate(const float *input, const float *expected_output, const int *LayerSize, const int LayerNum, const float learningRate, cl_mem *weightSubbuffers, cl_mem *biasSubbuffers, ActivationMethodsEnum *activationMethods)
 {
     cl_int ret;
-    pthread_mutex_lock(&mutex);
+    // pthread_mutex_lock(&mutex);
 
     cl_mem input_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, LayerSize[0] * sizeof(float), nullptr, &ret);
     cl_mem output_buffer = clCreateBuffer(kernelData.context, CL_MEM_READ_ONLY, LayerSize[LayerNum - 1] * sizeof(float), nullptr, &ret);
@@ -1209,7 +1212,7 @@ void GPU::BackPropagate(const float *input, const float *expected_output, const 
 
     BackPropagate(input_buffer, output_buffer, LayerSize, LayerNum, learningRate, weightSubbuffers, biasSubbuffers, activationMethods);
 
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
 
     ret = clReleaseMemObject(input_buffer);
     ret = clReleaseMemObject(output_buffer);    
@@ -1218,7 +1221,7 @@ void GPU::BackPropagate(const float *input, const float *expected_output, const 
 cl_mem GPU::SigmoidDerivative(const cl_mem vec, const int size)
 {
     cl_int ret;
-    pthread_mutex_lock(&mutex);
+    // pthread_mutex_lock(&mutex);
 
     cl_program program = BuildFromFile("../OpenCL/SigmoidDerivative.cl", "");
     cl_kernel kernel = clCreateKernel(program, "sigmoid_derivative", &ret);
@@ -1244,7 +1247,7 @@ cl_mem GPU::SigmoidDerivative(const cl_mem vec, const int size)
     ret = clReleaseKernel(kernel);
     ret = clReleaseProgram(program);
 
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
 
     return output;
 }

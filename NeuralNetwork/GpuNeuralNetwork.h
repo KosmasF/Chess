@@ -29,9 +29,6 @@ public:
     void BackPropagate(float* input, float* output, float learningRate);
     void Save(const char* path);
 
-    float* Data();
-    void Load(char* data);
-
     void AddToWeights(float* data);
 private:
     GPU* gpu;
