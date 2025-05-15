@@ -272,7 +272,7 @@ void GpuNeuralNetwork::AddToWeights(float *data)
     ret = clReleaseMemObject(data_buffer);
 }
 
-void GpuNeuralNetwork::BackPropagate(float *input, float *output, float learningRate)
+void GpuNeuralNetwork::BackPropagate(float *input, float *output, float learningRate, ErrorFunction error)
 {
-    gpu->BackPropagate(input, output, LayerSize, LayerNum, learningRate, weightSubbuffers, biasSubbuffers, ActivationMethods);
+    gpu->BackPropagateAndApply(input, output, LayerSize, LayerNum, learningRate, weightSubbuffers, biasSubbuffers, ActivationMethods, error);
 }

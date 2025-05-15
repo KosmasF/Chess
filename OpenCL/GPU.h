@@ -11,6 +11,13 @@
 #pragma warning (disable : 4996)
 #endif //_MSVC_LANG
 
+enum ErrorFunction
+{
+    SQUARED_ERROR,
+    NONE,
+    ABSOLUTE_ERROR
+};
+
 #ifdef __OPENCL_CL_H // If we have opecl included in inside the .lib
 struct FileData {
     const char* src;
@@ -50,7 +57,7 @@ public:
 
     float* AvgVector(float** vectors, float numVectors, float vectorLength);
     //Note: activation is freed automatically
-    float* BackPropagate(const float* activations, const float* expectedOutput, const int* LayerSize, const int LayerNum, const float mutationRate, const int weightsNum, const float* weights, const int* weights_buffer_lookup_table);
+    float* BackPropagateSquaredLoss(const float* activations, const float* expectedOutput, const int* LayerSize, const int LayerNum, const float mutationRate, const int weightsNum, const float* weights, const int* weights_buffer_lookup_table);
     //In this function the matrix gets flipped to suit my needs, ne careful!
     float* vector_matrix_multiplication(const float* vector, const float* matrix, const int vec_width, const int matrix_width);
     // void Setup_vector_matrix_multiplication();
@@ -74,14 +81,17 @@ public:
     void HadamardProductOperator(cl_mem A, const cl_mem B, const int size);
 
     cl_mem SquareErrorGradient(const cl_mem output, const cl_mem expected, const int size);
+    cl_mem AbsoluteErrorGradient(const cl_mem output, const cl_mem expected, const int size);
+
 
     cl_mem ScalarVectorMultiplication(const cl_mem vec, const float scalar, const int size);
     void ScaleVector(cl_mem vec, const float scalar, const int size);
 
     cl_mem SigmoidDerivative(const cl_mem vec, const int size);
 
-    void BackPropagate(const float* input, const float* expected_output, const int* LayerSize, const int LayerNum, const float learningRate, cl_mem* weightSubbuffers, cl_mem* biasSubbuffers, ActivationMethodsEnum* activationMethods); 
-    void BackPropagate(const cl_mem input, const cl_mem expected_output, const int* LayerSize, const int LayerNum, const float learningRate, cl_mem* weightSubbuffers, cl_mem* biasSubbuffers, ActivationMethodsEnum* activationMethods);
+    void BackPropagateAndApply(const float* input, const float* expected_output, const int* LayerSize, const int LayerNum, const float learningRate, cl_mem* weightSubbuffers, cl_mem* biasSubbuffers, ActivationMethodsEnum* activationMethods, ErrorFunction error); 
+    void BackPropagateAndApply(const cl_mem input, const cl_mem expected_output, const int* LayerSize, const int LayerNum, const float learningRate, cl_mem* weightSubbuffers, cl_mem* biasSubbuffers, ActivationMethodsEnum* activationMethods, ErrorFunction error);
+
 #endif
 private:
     // pthread_mutex_t mutex;

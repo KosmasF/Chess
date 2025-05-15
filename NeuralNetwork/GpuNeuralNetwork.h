@@ -26,7 +26,7 @@ public:
 
     cl_mem Generate(float* input, bool freeInput);
     float* GenerateAndCopyToMem(float* input, bool freeInput);
-    void BackPropagate(float* input, float* output, float learningRate);
+    void BackPropagate(float* input, float* output, float learningRate, ErrorFunction error);
     void Save(const char* path);
 
     void AddToWeights(float* data);

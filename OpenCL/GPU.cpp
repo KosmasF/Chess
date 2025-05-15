@@ -401,7 +401,7 @@ float* GPU::AvgVector(float** vectors,const float numVectors, float vectorLength
     return output;
 }
 
-float* GPU::BackPropagate(const float* activations, const float* expectedOutput, const int* LayerSize, const int LayerNum, const float mutationRate, const int weightsNum, const float* weights, const int* weights_buffer_lookup_table)
+float* GPU::BackPropagateSquaredLoss(const float* activations, const float* expectedOutput, const int* LayerSize, const int LayerNum, const float mutationRate, const int weightsNum, const float* weights, const int* weights_buffer_lookup_table)
 {
     float* data = (float*)malloc(sizeof(float) * weightsNum);
     //data[0] = 100.f;
@@ -975,13 +975,8 @@ void GPU::VectorIncrement(cl_mem A, const cl_mem B, const int size)
     size_t global_work_size[] = { size };
 
     size_t local_size = GetMaxLocalWorkSize();
-    while(global_work_size[0] % local_size != 0)
-    {
-        local_size--;
-    }    
-    size_t local_work_size[] = { local_size};
 
-    ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, 0, global_work_size, local_work_size, 0, nullptr, nullptr);
+    ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, 0, global_work_size, nullptr, 0, nullptr, nullptr);
 
     ret = clFinish(kernelData.command_queue);
  
@@ -1085,7 +1080,41 @@ cl_mem GPU::SquareErrorGradient(const cl_mem output, const cl_mem expected, cons
     return res;
 }
 
-void GPU::BackPropagate(const cl_mem input, const cl_mem expected_output, const int *LayerSize, const int LayerNum, const float learningRate, cl_mem *weightSubbuffers, cl_mem *biasSubbuffers, ActivationMethodsEnum *activationMethods)
+cl_mem GPU::AbsoluteErrorGradient(const cl_mem output, const cl_mem expected, const int size)
+{
+    cl_int ret;
+    // pthread_mutex_lock(&mutex);
+
+    cl_mem res = clCreateBuffer(kernelData.context, CL_MEM_READ_WRITE, size * sizeof(float), nullptr, &ret);
+
+    cl_program program = BuildFromFile("../OpenCL/AbsoluteErrorFunction.cl", "");
+    cl_kernel kernel = clCreateKernel(program, "square_error_function", &ret);
+
+    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), &output);
+    ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), &expected);
+    ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), &res);
+
+    const int dimensions = 1;
+    size_t global_work_size[] = { size };
+    size_t local_size = GetMaxLocalWorkSize();
+    while(global_work_size[0] % local_size != 0)
+    {
+        local_size--;
+    }    
+    size_t local_work_size[] = { local_size};
+
+    ret = clEnqueueNDRangeKernel(kernelData.command_queue, kernel, dimensions, 0, global_work_size, local_work_size, 0, nullptr, nullptr);
+
+    ret = clFinish(kernelData.command_queue);
+
+    ret = clReleaseProgram(program);
+    ret = clReleaseKernel(kernel);
+    // pthread_mutex_unlock(&mutex);
+
+    return res;
+}
+
+void GPU::BackPropagateAndApply(const cl_mem input, const cl_mem expected_output, const int *LayerSize, const int LayerNum, const float learningRate, cl_mem *weightSubbuffers, cl_mem *biasSubbuffers, ActivationMethodsEnum *activationMethods, ErrorFunction error)
 {
     cl_int ret;
     // Note: Input Layer Excluded.
@@ -1105,7 +1134,26 @@ void GPU::BackPropagate(const cl_mem input, const cl_mem expected_output, const 
         inp = layerOutput;
     }
 
-    cl_mem delta_last_layer = SquareErrorGradient(activations[LayerNum - 2], expected_output, LayerSize[LayerNum - 1]);;
+    cl_mem delta_last_layer;
+    switch (error)
+    {
+        case SQUARED_ERROR:
+            delta_last_layer = SquareErrorGradient(activations[LayerNum - 2], expected_output, LayerSize[LayerNum - 1]);
+            break;
+        case NONE:
+            {
+                delta_last_layer = clCreateBuffer(kernelData.context, CL_MEM_READ_WRITE, LayerSize[LayerNum - 1] * sizeof(float), nullptr, &ret);
+                float pattern = 1.f;
+                ret = clEnqueueFillBuffer(kernelData.command_queue, delta_last_layer, &pattern, sizeof(float), 0, LayerSize[LayerNum - 1] * sizeof(float), 0, nullptr, nullptr);
+                ret = clFinish(kernelData.command_queue);
+            }
+        case ABSOLUTE_ERROR:
+            delta_last_layer = AbsoluteErrorGradient(activations[LayerNum - 2], expected_output, LayerSize[LayerNum - 1]);
+            break;
+        default:
+            printf("Error Function Not Supported\n");
+            return;
+    }   
     switch(activationMethods[LayerNum - 2])
     {
         case e_None:
@@ -1199,7 +1247,7 @@ void GPU::ScaleVector(cl_mem vec, const float scalar, const int size)
     // pthread_mutex_unlock(&mutex);
 }
 
-void GPU::BackPropagate(const float *input, const float *expected_output, const int *LayerSize, const int LayerNum, const float learningRate, cl_mem *weightSubbuffers, cl_mem *biasSubbuffers, ActivationMethodsEnum *activationMethods)
+void GPU::BackPropagateAndApply(const float *input, const float *expected_output, const int *LayerSize, const int LayerNum, const float learningRate, cl_mem *weightSubbuffers, cl_mem *biasSubbuffers, ActivationMethodsEnum *activationMethods, ErrorFunction error)
 {
     cl_int ret;
     // pthread_mutex_lock(&mutex);
@@ -1210,7 +1258,7 @@ void GPU::BackPropagate(const float *input, const float *expected_output, const 
     ret = clEnqueueWriteBuffer(kernelData.command_queue, input_buffer, CL_TRUE, 0, LayerSize[0] * sizeof(float), input, 0, nullptr, nullptr);
     ret = clEnqueueWriteBuffer(kernelData.command_queue, output_buffer, CL_TRUE, 0, LayerSize[LayerNum - 1] * sizeof(float), expected_output, 0, nullptr, nullptr);//WHY I FORGOT SIZEOF(FLOAT), I AM A DUMB
 
-    BackPropagate(input_buffer, output_buffer, LayerSize, LayerNum, learningRate, weightSubbuffers, biasSubbuffers, activationMethods);
+    BackPropagateAndApply(input_buffer, output_buffer, LayerSize, LayerNum, learningRate, weightSubbuffers, biasSubbuffers, activationMethods, error);
 
     // pthread_mutex_unlock(&mutex);
 
